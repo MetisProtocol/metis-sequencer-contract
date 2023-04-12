@@ -1,0 +1,66 @@
+{
+  "name": "@metis-seq/contracts",
+  "version": "0.1.2",
+  "description": "Ethereum smart contracts that power the Metis sequencer.",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/metis-seq/contracts"
+  },
+  "keywords": [
+    "metis"
+  ],
+  "author": "",
+  "license": "GPL-2.0-or-later",
+  "bugs": {
+    "url": "https://github.com/metis-seq/contracts/issues"
+  },
+  "homepage": "https://metis.io/",
+  "files": [
+    "contracts/",
+    "artifacts/contracts/**/*.json",
+    "!artifacts/contracts/**/*.dbg.json"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "compile_watch": "npx hardhat watch compilation",
+    "test": "npx hardhat test",
+    "test_watch": "npx hardhat watch test",
+    "deploy": "hardhat run scripts/deploy.js --network goerli",
+    "verify": "hardhat run scripts/verify_pool.js --network mainnet"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.6",
+    "@nomiclabs/hardhat-etherscan": "^3.0.3",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "@openzeppelin/hardhat-upgrades": "^1.17.0",
+    "@openzeppelin/test-helpers": "^0.5.15",
+    "@uniswap/v2-core": "1.0.1",
+    "arb-ts": "^1.0.0-beta.4",
+    "chai": "^4.3.6",
+    "ethereum-waffle": "^3.4.4",
+    "ethers": "^5.6.5",
+    "hardhat": "^2.9.9",
+    "hardhat-deploy": "^0.11.4",
+    "hardhat-gas-reporter": "^1.0.8",
+    "keccak256": "^1.0.6",
+    "merkletreejs": "^0.2.31",
+    "solidity-coverage": "^0.7.21"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.6.0",
+    "@poanet/solidity-flattener": "^3.0.7",
+    "openzeppelin-solidity": "2.2.0",
+    "@uniswap/lib": "^4.0.1-alpha",
+    "@uniswap/v3-core": "^1.0.1",
+    "abi-decoder": "^2.4.0",
+    "dotenv": "^16.0.1",
+    "hardhat-watcher": "^2.3.0",
+    "solidity-rlp": "^2.0.7"
+  }
+}
