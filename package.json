@@ -31,8 +31,8 @@
     "compile_watch": "npx hardhat watch compilation",
     "test": "npx hardhat test",
     "test_watch": "npx hardhat watch test",
-    "deploy": "hardhat run scripts/deploy.js --network goerli",
-    "verify": "hardhat run scripts/verify_pool.js --network mainnet"
+    "deploy": "hardhat run scripts/deploy.js --network localhost",
+    "verify": "hardhat run scripts/verify_pool.js --network localhost"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.6",

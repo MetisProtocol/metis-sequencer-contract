@@ -8,7 +8,6 @@ contract Registry is Governable {
     bytes32 private constant VALIDATOR_SHARE = keccak256("validatorShare");
     bytes32 private constant SLASHING_MANAGER = keccak256("slashingManager");
 
-
     mapping(bytes32 => address) public contractMap;
     event ContractMapUpdated(bytes32 indexed key, address indexed previousContract, address indexed newContract);
 

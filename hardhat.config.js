@@ -40,7 +40,7 @@ module.exports = {
       allowUnlimitedContractSize: true,
     },
     localhost: {
-      url: "http://localhost:8545",
+      url: "http://127.0.0.1:8545",
     },
     mainnet: {
       url: process.env.MAINNET_RPC !== undefined ? process.env.MAINNET_RPC : "",
