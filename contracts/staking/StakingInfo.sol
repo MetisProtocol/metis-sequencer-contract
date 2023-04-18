@@ -43,7 +43,7 @@ contract StakingInfo is Ownable {
     /// @dev Emitted when validator stakes in '_stakeFor()' in StakeManager.
     /// @param signer validator address.
     /// @param validatorId unique integer to identify a validator.
-    /// @param nonce to synchronize the events in heimdal.
+    /// @param nonce to synchronize the events in themis.
     /// @param activationEpoch validator's first epoch as proposer.
     /// @param amount staking amount.
     /// @param total total staking amount.
@@ -73,7 +73,7 @@ contract StakingInfo is Ownable {
     /// @dev Emitted when validator unstakes in '_unstake()'.
     /// @param user address of the validator.
     /// @param validatorId unique integer to identify a validator.
-    /// @param nonce to synchronize the events in heimdal.
+    /// @param nonce to synchronize the events in themis.
     /// @param deactivationEpoch last epoch for validator.
     /// @param amount staking amount.
     event UnstakeInit(
@@ -86,7 +86,7 @@ contract StakingInfo is Ownable {
 
     /// @dev Emitted when the validator public key is updated in 'updateSigner()'.
     /// @param validatorId unique integer to identify a validator.
-    /// @param nonce to synchronize the events in heimdal.
+    /// @param nonce to synchronize the events in themis.
     /// @param oldSigner old address of the validator.
     /// @param newSigner new address of the validator.
     /// @param signerPubkey public key of the validator.
@@ -116,7 +116,7 @@ contract StakingInfo is Ownable {
 
     /// @dev Emitted when validator confirms the auction bid and at the time of restaking in confirmAuctionBid() and restake().
     /// @param validatorId unique integer to identify a validator.
-    /// @param nonce to synchronize the events in heimdal.
+    /// @param nonce to synchronize the events in themis.
     /// @param newAmount the updated stake amount.
     event StakeUpdate(
         uint256 indexed validatorId,

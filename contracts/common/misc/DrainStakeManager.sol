@@ -28,7 +28,7 @@ contract DrainStakeManager is StakeManagerStorage, Initializable {
     // Overriding isOwner from Ownable.sol because owner() and transferOwnership() have been overridden by UpgradableProxy
     function isOwner() public view returns (bool) {
         address _owner;
-        bytes32 position = keccak256("matic.network.proxy.owner");
+        bytes32 position = keccak256("metis.io.proxy.owner");
         assembly {
             _owner := sload(position)
         }

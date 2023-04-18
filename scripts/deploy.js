@@ -22,8 +22,7 @@ const main = async () => {
   let testToken = await deployTestToken('Test ERC20', 'TST20');
   let stakeManager = await deployStakeManager();
   const StakeManager = await hre.ethers.getContractFactory("StakeManager");
-  const stakeManagerObj = await StakeManager.attach(stakeManager.address)
-
+  // const stakeManagerObj = await StakeManager.attach(stakeManager.address)
 
   let stakeManagerProxy = await deployStakeManagerProxy('0x0000000000000000000000000000000000000000');
 
@@ -90,7 +89,7 @@ async function deployGovernance() {
   const Governance = await hre.ethers.getContractFactory("Governance");
   governanceDeployed = await Governance.deploy();
   console.log("governance deployed to:", governanceDeployed.address);
-  console.log(verifyStr, process.env.HARDHAT_NETWORK, governanceDeployed.address);
+  // console.log(verifyStr, process.env.HARDHAT_NETWORK, governanceDeployed.address);
   return governanceDeployed
 }
 
@@ -150,9 +149,9 @@ async function deployStakeManagerProxy(stakeManagerAddress) {
   return stakeManagerProxyDeployed
 }
 
-async function deploySlashingManager(registryAddress, stakingInfoAddress, hemidallId) {
+async function deploySlashingManager(registryAddress, stakingInfoAddress, themisId) {
   const SlashingManager = await hre.ethers.getContractFactory("SlashingManager");
-  slashingManagerDeployed = await SlashingManager.deploy(registryAddress, stakingInfoAddress, hemidallId);
+  slashingManagerDeployed = await SlashingManager.deploy(registryAddress, stakingInfoAddress, themisId);
   console.log("SlashingManager deployed to:", slashingManagerDeployed.address);
   return slashingManagerDeployed
 }
