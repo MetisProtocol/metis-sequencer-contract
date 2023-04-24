@@ -1,15 +1,14 @@
-pragma solidity 0.5.17;
+pragma solidity ^0.8.0;
 
-import {IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {Registry} from "../../common/Registry.sol";
 import {GovernanceLockable} from "../../common/mixin/GovernanceLockable.sol";
-import {RootChainable} from "../../common/mixin/RootChainable.sol";
 import {StakingInfo} from "../StakingInfo.sol";
 import {StakingNFT} from "./StakingNFT.sol";
 import {ValidatorShareFactory} from "../validatorShare/ValidatorShareFactory.sol";
 
-contract StakeManagerStorage is GovernanceLockable, RootChainable {
+abstract contract StakeManagerStorage is GovernanceLockable {
     enum Status {Inactive, Active, Locked, Unstaked}
 
     struct Auction {
@@ -35,7 +34,7 @@ contract StakeManagerStorage is GovernanceLockable, RootChainable {
         uint256 reward;
         uint256 activationEpoch;
         uint256 deactivationEpoch;
-        uint256 jailTime;
+        // uint256 jailTime;
         address signer;
         address contractAddress;
         Status status;

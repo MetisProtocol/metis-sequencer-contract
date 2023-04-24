@@ -1,18 +1,18 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.8.0;
 
 contract DelegateProxyForwarder {
     function delegatedFwd(address _dst, bytes memory _calldata) internal {
         // solium-disable-next-line security/no-inline-assembly
         assembly {
             let result := delegatecall(
-                sub(gas, 10000),
+                sub(gas(), 10000),
                 _dst,
                 add(_calldata, 0x20),
                 mload(_calldata),
                 0,
                 0
             )
-            let size := returndatasize
+            let size := returndatasize()
 
             let ptr := mload(0x40)
             returndatacopy(ptr, 0, size)
@@ -29,7 +29,7 @@ contract DelegateProxyForwarder {
         }
     }
     
-    function isContract(address _target) internal view returns (bool) {
+    function isContract(address _target) virtual internal view returns (bool) {
         if (_target == address(0)) {
             return false;
         }

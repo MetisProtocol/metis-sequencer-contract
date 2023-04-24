@@ -1,13 +1,13 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.8.0;
 
 import {ERCProxy} from "./ERCProxy.sol";
 import {DelegateProxyForwarder} from "./DelegateProxyForwarder.sol";
 
-contract DelegateProxy is ERCProxy, DelegateProxyForwarder {
-    function proxyType() external pure returns (uint256 proxyTypeId) {
+abstract contract DelegateProxy is ERCProxy, DelegateProxyForwarder {
+    function proxyType() override external pure returns (uint256 proxyTypeId) {
         // Upgradeable proxy
         proxyTypeId = 2;
     }
 
-    function implementation() external view returns (address);
+    function implementation() virtual override external view returns (address);
 }

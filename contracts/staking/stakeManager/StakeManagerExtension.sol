@@ -1,13 +1,13 @@
-pragma solidity 0.5.17;
+pragma solidity ^0.8.0;
 
-import {IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-import {SafeMath} from "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Registry} from "../../common/Registry.sol";
 import {GovernanceLockable} from "../../common/mixin/GovernanceLockable.sol";
 import {IStakeManager} from "./IStakeManager.sol";
 import {StakeManagerStorage} from "./StakeManagerStorage.sol";
 import {StakeManagerStorageExtension} from "./StakeManagerStorageExtension.sol";
-import {Math} from "openzeppelin-solidity/contracts/math/Math.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Initializable} from "../../common/mixin/Initializable.sol";
 import {EventsHub} from "../EventsHub.sol";
 import {ValidatorShare} from "../validatorShare/ValidatorShare.sol";
@@ -80,8 +80,8 @@ contract StakeManagerExtension is StakeManagerStorage, Initializable, StakeManag
 
     function confirmAuctionBid(
         uint256 validatorId,
-        uint256 heimdallFee, /** for new validator */
-        IStakeManager stakeManager
+        uint256 heimdallFee, 
+        IStakeManager stakeManager 
     ) external {
         Auction storage auction = validatorAuction[validatorId];
         address auctionUser = auction.user;
@@ -128,7 +128,7 @@ contract StakeManagerExtension is StakeManagerStorage, Initializable, StakeManag
     function migrateValidatorsData(uint256 validatorIdFrom, uint256 validatorIdTo) external {       
         for (uint256 i = validatorIdFrom; i < validatorIdTo; ++i) {
             ValidatorShare contractAddress = ValidatorShare(validators[i].contractAddress);
-            if (contractAddress != ValidatorShare(0)) {
+            if (contractAddress != ValidatorShare(address(0))) {
                 // move validator rewards out from ValidatorShare contract
                 validators[i].reward = contractAddress.validatorRewards_deprecated().add(INITIALIZED_AMOUNT);
                 validators[i].delegatedAmount = contractAddress.activeAmount();
@@ -173,7 +173,7 @@ contract StakeManagerExtension is StakeManagerStorage, Initializable, StakeManag
 
     function _getOrCacheEventsHub() private returns(EventsHub) {
         EventsHub _eventsHub = EventsHub(eventsHub);
-        if (_eventsHub == EventsHub(0x0)) {
+        if (_eventsHub == EventsHub(address(0))) {
             _eventsHub = EventsHub(Registry(registry).contractMap(keccak256("eventsHub")));
             eventsHub = address(_eventsHub);
         }

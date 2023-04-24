@@ -1,4 +1,4 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.8.0;
 import {DelegateProxy} from "./DelegateProxy.sol";
 import {ProxyStorage} from "./ProxyStorage.sol";
 
@@ -11,13 +11,13 @@ contract Proxy is ProxyStorage, DelegateProxy {
         updateImplementation(_proxyTo);
     }
 
-    function() external payable {
+    fallback() external payable {
         // require(currentContract != 0, "If app code has not been set yet, do not call");
         // Todo: filter out some calls or handle in the end fallback
         delegatedFwd(proxyTo, msg.data);
     }
 
-    function implementation() external view returns (address) {
+    function implementation() override external view returns (address) {
         return proxyTo;
     }
 
@@ -28,7 +28,7 @@ contract Proxy is ProxyStorage, DelegateProxy {
         proxyTo = _newProxyTo;
     }
 
-    function isContract(address _target) internal view returns (bool) {
+    function isContract(address _target) override internal view returns (bool) {
         if (_target == address(0)) {
             return false;
         }

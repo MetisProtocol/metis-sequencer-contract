@@ -1,4 +1,4 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.8.0;
 
 contract Lockable {
     bool public locked;
@@ -12,11 +12,11 @@ contract Lockable {
         require(!locked, "locked");
     }
 
-    function lock() public {
+    function lock() virtual public {
         locked = true;
     }
 
-    function unlock() public {
+    function unlock() virtual public {
         locked = false;
     }
 }

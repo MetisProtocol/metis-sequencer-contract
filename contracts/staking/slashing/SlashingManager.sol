@@ -1,9 +1,9 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.8.0;
 
-import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import {SafeMath} from "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {RLPReader} from "solidity-rlp/contracts/RLPReader.sol";
-import {IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {BytesLib} from "../../common/lib/BytesLib.sol";
 import {ECVerify} from "../../common/lib/ECVerify.sol";
@@ -105,7 +105,9 @@ contract SlashingManager is ISlashingManager, Ownable {
                 lastAdd = signer;
                 uint256 amount;
                 uint256 delegatedAmount;
-                (amount,,,,,,,,,,,delegatedAmount,) = stakeManager.validators(validatorId);
+                // (amount,,,,,,,,,,,delegatedAmount,) = stakeManager.validators(validatorId);
+                (amount,,,,,,,,,,delegatedAmount,) = stakeManager.validators(validatorId);
+
 
                 // add delegation power
                 amount = amount.add(delegatedAmount);

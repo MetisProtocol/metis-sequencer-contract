@@ -1,12 +1,13 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.8.0;
 
 import { StakeManagerStorage } from "../../staking/stakeManager/StakeManagerStorage.sol";
 import { GovernanceLockable } from "../mixin/GovernanceLockable.sol";
 import {IValidatorShare} from "../../staking/validatorShare/IValidatorShare.sol";
 import {Initializable} from "../../common/mixin/Initializable.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 // Inheriting from Initializable as well to keep the storage layout same
-contract DrainStakeManager is StakeManagerStorage, Initializable {
+contract DrainStakeManager is StakeManagerStorage, Initializable, Ownable {
     constructor() public GovernanceLockable(address(0x0)) {}
 
     function drain(address destination, uint amount) external onlyOwner {

@@ -1,6 +1,6 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.8.0;
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 library BytesLib {
     function concat(bytes memory _preBytes, bytes memory _postBytes)

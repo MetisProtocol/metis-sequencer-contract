@@ -1,12 +1,12 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.8.0;
 
 import {Registry} from "../common/Registry.sol";
-import {SafeMath} from "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 
 // dummy interface to avoid cyclic dependency
-contract IStakeManagerLocal {
+abstract contract IStakeManagerLocal {
     enum Status {Inactive, Active, Locked, Unstaked}
 
     struct Validator {
@@ -25,15 +25,16 @@ contract IStakeManagerLocal {
     uint256 public activeAmount; // delegation amount from validator contract
     uint256 public validatorRewards;
 
-    function currentValidatorSetTotalStake() public view returns (uint256);
+    function currentValidatorSetTotalStake() virtual public view returns (uint256);
 
     // signer to Validator mapping
     function signerToValidator(address validatorAddress)
+        virtual
         public
         view
         returns (uint256);
 
-    function isValidator(uint256 validatorId) public view returns (bool);
+    function isValidator(uint256 validatorId) virtual public view returns (bool);
 }
 
 contract StakingInfo is Ownable {

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.8.0;
 
 import {DelegateProxy} from "./DelegateProxy.sol";
 
@@ -14,7 +14,7 @@ contract UpgradableProxy is DelegateProxy {
         setImplementation(_proxyTo);
     }
 
-    function() external payable {
+    fallback() external payable {
         // require(currentContract != 0, "If app code has not been set yet, do not call");
         // Todo: filter out some calls or handle in the end fallback
         delegatedFwd(loadImplementation(), msg.data);
@@ -38,11 +38,11 @@ contract UpgradableProxy is DelegateProxy {
         return _owner;
     }
 
-    function implementation() external view returns (address) {
+    function implementation() override external view returns (address) {
         return loadImplementation();
     }
 
-    function loadImplementation() internal view returns(address) {
+    function loadImplementation() virtual internal view returns(address) {
         address _impl;
         bytes32 position = IMPLEMENTATION_SLOT;
         assembly {
@@ -76,7 +76,8 @@ contract UpgradableProxy is DelegateProxy {
     function updateAndCall(address _newProxyTo, bytes memory data) payable public onlyProxyOwner {
         updateImplementation(_newProxyTo);
 
-        (bool success, bytes memory returnData) = address(this).call.value(msg.value)(data);
+        // (bool success, bytes memory returnData) = address(this).call.value(msg.value)(data);
+        (bool success, bytes memory returnData) = address(this).call{value:msg.value}(data);
         require(success, string(returnData));
     }
 

@@ -1,14 +1,15 @@
-pragma solidity 0.5.17;
+pragma solidity ^0.8.0;
 
-import {IERC20} from "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-import {Math} from "openzeppelin-solidity/contracts/math/Math.sol";
-import {SafeMath} from "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {RLPReader} from "solidity-rlp/contracts/RLPReader.sol";
 
 import {BytesLib} from "../../common/lib/BytesLib.sol";
 import {ECVerify} from "../../common/lib/ECVerify.sol";
 import {Merkle} from "../../common/lib/Merkle.sol";
 import {GovernanceLockable} from "../../common/mixin/GovernanceLockable.sol";
+
 import {DelegateProxyForwarder} from "../../common/misc/DelegateProxyForwarder.sol";
 import {Registry} from "../../common/Registry.sol";
 import {IStakeManager} from "./IStakeManager.sol";
@@ -22,13 +23,15 @@ import {StakeManagerStorageExtension} from "./StakeManagerStorageExtension.sol";
 import {IGovernance} from "../../common/governance/IGovernance.sol";
 import {Initializable} from "../../common/mixin/Initializable.sol";
 import {StakeManagerExtension} from "./StakeManagerExtension.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract StakeManager is
+abstract contract StakeManager is
     StakeManagerStorage,
     Initializable,
     IStakeManager,
     DelegateProxyForwarder,
-    StakeManagerStorageExtension
+    StakeManagerStorageExtension,
+    Ownable
 {
     using SafeMath for uint256;
     using Merkle for bytes32;
@@ -67,11 +70,11 @@ contract StakeManager is
         require(validators[validatorId].contractAddress == msg.sender, "Invalid contract address");
     }
 
-    constructor() public GovernanceLockable(address(0x0)) initializer {}
+    constructor() GovernanceLockable(address(0x0)) initializer {}
 
     function initialize(
         address _registry,
-        address _rootchain,
+        // address _rootchain,
         address _token,
         address _NFTContract,
         address _stakingLogger,
@@ -84,7 +87,7 @@ contract StakeManager is
         extensionCode = _extensionCode;
         governance = IGovernance(_governance);
         registry = _registry;
-        rootChain = _rootchain;
+        // rootChain = _rootchain;
         token = IERC20(_token);
         NFTContract = StakingNFT(_NFTContract);
         logger = StakingInfo(_stakingLogger);
@@ -120,38 +123,38 @@ contract StakeManager is
         Public View Methods
      */
 
-    function getRegistry() public view returns (address) {
+    function getRegistry() override public view returns (address) {
         return registry;
     }
 
     /**
         @dev Owner of validator slot NFT
      */
-    function ownerOf(uint256 tokenId) public view returns (address) {
+    function ownerOf(uint256 tokenId) override public view returns (address) {
         return NFTContract.ownerOf(tokenId);
     }
 
-    function epoch() public view returns (uint256) {
+    function epoch() override public view returns (uint256) {
         return currentEpoch;
     }
 
-    function withdrawalDelay() public view returns (uint256) {
+    function withdrawalDelay() override public view returns (uint256) {
         return WITHDRAWAL_DELAY;
     }
 
-    function validatorStake(uint256 validatorId) public view returns (uint256) {
+    function validatorStake(uint256 validatorId) override public view returns (uint256) {
         return validators[validatorId].amount;
     }
 
-    function getValidatorId(address user) public view returns (uint256) {
+    function getValidatorId(address user)  public view returns (uint256) {
         return NFTContract.tokenOfOwnerByIndex(user, 0);
     }
 
-    function delegatedAmount(uint256 validatorId) public view returns (uint256) {
+    function delegatedAmount(uint256 validatorId) override public view returns (uint256) {
         return validators[validatorId].delegatedAmount;
     }
 
-    function delegatorsReward(uint256 validatorId) public view returns (uint256) {
+    function delegatorsReward(uint256 validatorId) override public view returns (uint256) {
         uint256 _delegatorsReward;
         if (validators[validatorId].deactivationEpoch == 0) {
             (, _delegatorsReward) = _evaluateValidatorAndDelegationReward(validatorId);
@@ -354,7 +357,7 @@ contract StakeManager is
         _transferToken(msg.sender, withdrawAmount);
     }
 
-    function totalStakedFor(address user) external view returns (uint256) {
+    function totalStakedFor(address user) override external view returns (uint256) {
         if (user == address(0x0) || NFTContract.balanceOf(user) == 0) {
             return 0;
         }
@@ -366,7 +369,7 @@ contract StakeManager is
         uint256 amount,
         bool _acceptDelegation,
         bytes calldata _signerPubkey
-    ) external onlyWhenUnlocked {
+    ) override external onlyWhenUnlocked {
         delegatedFwd(
             extensionCode,
             abi.encodeWithSelector(
@@ -382,7 +385,7 @@ contract StakeManager is
     function confirmAuctionBid(
         uint256 validatorId,
         uint256 heimdallFee /** for new validator */
-    ) external onlyWhenUnlocked {
+    ) override external onlyWhenUnlocked {
         delegatedFwd(
             extensionCode,
             abi.encodeWithSelector(
@@ -401,7 +404,7 @@ contract StakeManager is
         uint256 auctionAmount,
         bool acceptDelegation,
         bytes calldata signerPubkey
-    ) external {
+    ) override external {
         require(msg.sender == address(this), "not allowed");
         // dethrone
         _transferAndTopUp(auctionUser, auctionUser, heimdallFee, 0);
@@ -411,7 +414,7 @@ contract StakeManager is
         logger.logConfirmAuction(newValidatorId, validatorId, auctionAmount);
     }
 
-    function unstake(uint256 validatorId) external onlyStaker(validatorId) {
+    function unstake(uint256 validatorId) override external onlyStaker(validatorId) {
         require(validatorAuction[validatorId].amount == 0);
 
         Status status = validators[validatorId].status;
@@ -429,7 +432,7 @@ contract StakeManager is
         uint256 validatorId,
         uint256 amount,
         address delegator
-    ) external returns (bool) {
+    ) override external returns (bool) {
         require(
             validators[validatorId].contractAddress == msg.sender ||
                 Registry(registry).getSlashingManagerAddress() == msg.sender,
@@ -442,20 +445,21 @@ contract StakeManager is
         uint256 validatorId,
         uint256 amount,
         address delegator
-    ) external onlyDelegation(validatorId) returns (bool) {
+    ) override external onlyDelegation(validatorId) returns (bool) {
         return token.transferFrom(delegator, address(this), amount);
     }
 
     function stakeFor(
         address user,
         uint256 amount,
-        uint256 heimdallFee,
+        // uint256 heimdallFee,
         bool acceptDelegation,
         bytes memory signerPubkey
     ) public onlyWhenUnlocked {
         require(currentValidatorSetSize() < validatorThreshold, "no more slots");
         require(amount >= minDeposit, "not enough deposit");
-        _transferAndTopUp(user, msg.sender, heimdallFee, amount);
+        // _transferAndTopUp(user, msg.sender, heimdallFee, amount);
+        _transferAndTopUp(user, msg.sender, 0, amount);
         _stakeFor(user, amount, acceptDelegation, signerPubkey);
     }
 
@@ -478,7 +482,7 @@ contract StakeManager is
         NFTContract.burn(validatorId);
 
         validators[validatorId].amount = 0;
-        validators[validatorId].jailTime = 0;
+        // validators[validatorId].jailTime = 0;
         validators[validatorId].signer = address(0);
 
         signerToValidator[validators[validatorId].signer] = INCORRECT_VALIDATOR_ID;
@@ -532,7 +536,7 @@ contract StakeManager is
         IValidatorShare(validators[toValidatorId].contractAddress).migrateIn(msg.sender, amount);
     }
 
-    function updateValidatorState(uint256 validatorId, int256 amount) public onlyDelegation(validatorId) {
+    function updateValidatorState(uint256 validatorId, int256 amount) override public onlyDelegation(validatorId) {
         if (amount > 0) {
             // deposit during shares purchase
             require(delegationEnabled, "Delegation is disabled");
@@ -558,7 +562,7 @@ contract StakeManager is
         validators[validatorId].delegatedAmount = validators[validatorId].delegatedAmount.add(amount);
     }
 
-    function decreaseValidatorDelegatedAmount(uint256 validatorId, uint256 amount) public onlyDelegation(validatorId) {
+    function decreaseValidatorDelegatedAmount(uint256 validatorId, uint256 amount) override public onlyDelegation(validatorId) {
         validators[validatorId].delegatedAmount = validators[validatorId].delegatedAmount.sub(amount);
     }
 
@@ -585,81 +589,81 @@ contract StakeManager is
         latestSignerUpdateEpoch[validatorId] = _currentEpoch;
     }
 
-    function checkSignatures(
-        uint256 blockInterval,
-        bytes32 voteHash,
-        bytes32 stateRoot,
-        address proposer,
-        uint256[3][] calldata sigs
-    ) external onlyRootChain returns (uint256) {
-        uint256 _currentEpoch = currentEpoch;
-        uint256 signedStakePower;
-        address lastAdd;
-        uint256 totalStakers = validatorState.stakerCount;
+    // function checkSignatures(
+    //     uint256 blockInterval,
+    //     bytes32 voteHash,
+    //     bytes32 stateRoot,
+    //     address proposer,
+    //     uint256[3][] calldata sigs
+    // ) override external onlyRootChain returns (uint256) {
+    //     uint256 _currentEpoch = currentEpoch;
+    //     uint256 signedStakePower;
+    //     address lastAdd;
+    //     uint256 totalStakers = validatorState.stakerCount;
 
-        UnsignedValidatorsContext memory unsignedCtx;
-        unsignedCtx.unsignedValidators = new uint256[](signers.length + totalStakers);
-        unsignedCtx.validators = signers;
-        unsignedCtx.validatorIndex = 0;
-        unsignedCtx.totalValidators = signers.length;
+    //     UnsignedValidatorsContext memory unsignedCtx;
+    //     unsignedCtx.unsignedValidators = new uint256[](signers.length + totalStakers);
+    //     unsignedCtx.validators = signers;
+    //     unsignedCtx.validatorIndex = 0;
+    //     unsignedCtx.totalValidators = signers.length;
 
-        UnstakedValidatorsContext memory unstakeCtx;
-        unstakeCtx.deactivatedValidators = new uint256[](signers.length + totalStakers);
+    //     UnstakedValidatorsContext memory unstakeCtx;
+    //     unstakeCtx.deactivatedValidators = new uint256[](signers.length + totalStakers);
 
-        for (uint256 i = 0; i < sigs.length; ++i) {
-            address signer = ECVerify.ecrecovery(voteHash, sigs[i]);
+    //     for (uint256 i = 0; i < sigs.length; ++i) {
+    //         address signer = ECVerify.ecrecovery(voteHash, sigs[i]);
 
-            if (signer == lastAdd) {
-                // if signer signs twice, just skip this signature
-                continue;
-            }
+    //         if (signer == lastAdd) {
+    //             // if signer signs twice, just skip this signature
+    //             continue;
+    //         }
 
-            if (signer < lastAdd) {
-                // if signatures are out of order - break out, it is not possible to keep track of unsigned validators
-                break;
-            }
+    //         if (signer < lastAdd) {
+    //             // if signatures are out of order - break out, it is not possible to keep track of unsigned validators
+    //             break;
+    //         }
 
-            uint256 validatorId = signerToValidator[signer];
-            uint256 amount = validators[validatorId].amount;
-            Status status = validators[validatorId].status;
-            unstakeCtx.deactivationEpoch = validators[validatorId].deactivationEpoch;
+    //         uint256 validatorId = signerToValidator[signer];
+    //         uint256 amount = validators[validatorId].amount;
+    //         Status status = validators[validatorId].status;
+    //         unstakeCtx.deactivationEpoch = validators[validatorId].deactivationEpoch;
 
-            if (_isValidator(status, amount, unstakeCtx.deactivationEpoch, _currentEpoch)) {
-                lastAdd = signer;
+    //         if (_isValidator(status, amount, unstakeCtx.deactivationEpoch, _currentEpoch)) {
+    //             lastAdd = signer;
 
-                signedStakePower = signedStakePower.add(validators[validatorId].delegatedAmount).add(amount);
+    //             signedStakePower = signedStakePower.add(validators[validatorId].delegatedAmount).add(amount);
 
-                if (unstakeCtx.deactivationEpoch != 0) {
-                    // this validator not a part of signers list anymore
-                    unstakeCtx.deactivatedValidators[unstakeCtx.validatorIndex] = validatorId;
-                    unstakeCtx.validatorIndex++;
-                } else {
-                    unsignedCtx = _fillUnsignedValidators(unsignedCtx, signer);
-                }
-            } else if (status == Status.Locked) {
-                // TODO fix double unsignedValidators appearance
-                // make sure that jailed validator doesn't get his rewards too
-                unsignedCtx.unsignedValidators[unsignedCtx.unsignedValidatorIndex] = validatorId;
-                unsignedCtx.unsignedValidatorIndex++;
-                unsignedCtx.validatorIndex++;
-            }
-        }
+    //             if (unstakeCtx.deactivationEpoch != 0) {
+    //                 // this validator not a part of signers list anymore
+    //                 unstakeCtx.deactivatedValidators[unstakeCtx.validatorIndex] = validatorId;
+    //                 unstakeCtx.validatorIndex++;
+    //             } else {
+    //                 unsignedCtx = _fillUnsignedValidators(unsignedCtx, signer);
+    //             }
+    //         } else if (status == Status.Locked) {
+    //             // TODO fix double unsignedValidators appearance
+    //             // make sure that jailed validator doesn't get his rewards too
+    //             unsignedCtx.unsignedValidators[unsignedCtx.unsignedValidatorIndex] = validatorId;
+    //             unsignedCtx.unsignedValidatorIndex++;
+    //             unsignedCtx.validatorIndex++;
+    //         }
+    //     }
 
-        // find the rest of validators without signature
-        unsignedCtx = _fillUnsignedValidators(unsignedCtx, address(0));
+    //     // find the rest of validators without signature
+    //     unsignedCtx = _fillUnsignedValidators(unsignedCtx, address(0));
 
-        return
-            _increaseRewardAndAssertConsensus(
-                blockInterval,
-                proposer,
-                signedStakePower,
-                stateRoot,
-                unsignedCtx.unsignedValidators,
-                unsignedCtx.unsignedValidatorIndex,
-                unstakeCtx.deactivatedValidators,
-                unstakeCtx.validatorIndex
-            );
-    }
+    //     return
+    //         _increaseRewardAndAssertConsensus(
+    //             blockInterval,
+    //             proposer,
+    //             signedStakePower,
+    //             stateRoot,
+    //             unsignedCtx.unsignedValidators,
+    //             unsignedCtx.unsignedValidatorIndex,
+    //             unstakeCtx.deactivatedValidators,
+    //             unstakeCtx.validatorIndex
+    //         );
+    // }
 
     function updateCommissionRate(uint256 validatorId, uint256 newCommissionRate) external onlyStaker(validatorId) {
         _updateRewards(validatorId);
@@ -674,7 +678,7 @@ contract StakeManager is
         );
     }
 
-    function withdrawDelegatorsReward(uint256 validatorId) public onlyDelegation(validatorId) returns (uint256) {
+    function withdrawDelegatorsReward(uint256 validatorId) override public onlyDelegation(validatorId) returns (uint256) {
         _updateRewards(validatorId);
 
         uint256 totalReward = validators[validatorId].delegatorsReward.sub(INITIALIZED_AMOUNT);
@@ -682,7 +686,7 @@ contract StakeManager is
         return totalReward;
     }
 
-    function slash(bytes calldata _slashingInfoList) external returns (uint256) {
+    function slash(bytes calldata _slashingInfoList) override external returns (uint256) {
         require(Registry(registry).getSlashingManagerAddress() == msg.sender, "Not slash manager");
 
         RLPReader.RLPItem[] memory slashingInfoList = _slashingInfoList.toRlpItem().toList();
@@ -733,7 +737,7 @@ contract StakeManager is
         require(validators[validatorId].deactivationEpoch == 0, "Already unstaking");
 
         uint256 _currentEpoch = currentEpoch;
-        require(validators[validatorId].jailTime <= _currentEpoch, "Incomplete jail period");
+        // require(validators[validatorId].jailTime <= _currentEpoch, "Incomplete jail period");
 
         uint256 amount = validators[validatorId].amount;
         require(amount >= minDeposit);
@@ -948,13 +952,13 @@ contract StakeManager is
         // attempt to save gas in case if rewards were updated previosuly
         if (initialRewardPerStake < currentRewardPerStake) {
             uint256 validatorsStake = validators[validatorId].amount;
-            uint256 delegatedAmount = validators[validatorId].delegatedAmount;
-            if (delegatedAmount > 0) {
-                uint256 combinedStakePower = validatorsStake.add(delegatedAmount);
+            uint256 _delegatedAmount = validators[validatorId].delegatedAmount;
+            if (_delegatedAmount > 0) {
+                uint256 combinedStakePower = validatorsStake.add(_delegatedAmount);
                 _increaseValidatorRewardWithDelegation(
                     validatorId,
                     validatorsStake,
-                    delegatedAmount,
+                    _delegatedAmount,
                     _getEligibleValidatorReward(
                         validatorId,
                         combinedStakePower,
@@ -1003,19 +1007,19 @@ contract StakeManager is
     function _increaseValidatorRewardWithDelegation(
         uint256 validatorId,
         uint256 validatorsStake,
-        uint256 delegatedAmount,
+        uint256 _delegatedAmount,
         uint256 reward
     ) private {
-        uint256 combinedStakePower = delegatedAmount.add(validatorsStake);
-        (uint256 validatorReward, uint256 delegatorsReward) =
+        uint256 combinedStakePower = _delegatedAmount.add(validatorsStake);
+        (uint256 newValidatorReward, uint256 newDelegatorsReward) =
             _getValidatorAndDelegationReward(validatorId, validatorsStake, reward, combinedStakePower);
 
-        if (delegatorsReward > 0) {
-            validators[validatorId].delegatorsReward = validators[validatorId].delegatorsReward.add(delegatorsReward);
+        if (newDelegatorsReward > 0) {
+            validators[validatorId].delegatorsReward = validators[validatorId].delegatorsReward.add(newDelegatorsReward);
         }
 
-        if (validatorReward > 0) {
-            validators[validatorId].reward = validators[validatorId].reward.add(validatorReward);
+        if (newValidatorReward > 0) {
+            validators[validatorId].reward = validators[validatorId].reward.add(newValidatorReward);
         }
     }
 
@@ -1029,24 +1033,24 @@ contract StakeManager is
             return (0, 0);
         }
 
-        uint256 validatorReward = validatorsStake.mul(reward).div(combinedStakePower);
+        uint256 newValidatorReward = validatorsStake.mul(reward).div(combinedStakePower);
 
         // add validator commission from delegation reward
         uint256 commissionRate = validators[validatorId].commissionRate;
         if (commissionRate > 0) {
-            validatorReward = validatorReward.add(
-                reward.sub(validatorReward).mul(commissionRate).div(MAX_COMMISION_RATE)
+            newValidatorReward = newValidatorReward.add(
+                reward.sub(newValidatorReward).mul(commissionRate).div(MAX_COMMISION_RATE)
             );
         }
 
-        uint256 delegatorsReward = reward.sub(validatorReward);
-        return (validatorReward, delegatorsReward);
+        uint256 newDelegatorsReward = reward.sub(newValidatorReward);
+        return (newValidatorReward, newDelegatorsReward);
     }
 
     function _evaluateValidatorAndDelegationReward(uint256 validatorId)
         private
         view
-        returns (uint256 validatorReward, uint256 delegatorsReward)
+        returns (uint256 , uint256 )
     {
         uint256 validatorsStake = validators[validatorId].amount;
         uint256 combinedStakePower = validatorsStake.add(validators[validatorId].delegatedAmount);
@@ -1067,7 +1071,7 @@ contract StakeManager is
         }
 
         uint256 _currentEpoch = currentEpoch;
-        validators[validatorId].jailTime = _currentEpoch.add(jailCheckpoints);
+        // validators[validatorId].jailTime = _currentEpoch.add(jailCheckpoints);
         validators[validatorId].status = Status.Locked;
         logger.logJailed(validatorId, _currentEpoch, validators[validatorId].signer);
         return validators[validatorId].amount.add(validators[validatorId].delegatedAmount);
@@ -1092,7 +1096,7 @@ contract StakeManager is
             amount: amount,
             activationEpoch: _currentEpoch,
             deactivationEpoch: 0,
-            jailTime: 0,
+            // jailTime: 0,
             signer: signer,
             contractAddress: acceptDelegation
                 ? validatorShareFactory.create(validatorId, address(_logger), registry)
@@ -1228,6 +1232,6 @@ contract StakeManager is
             (swapSigner, signers[i - 1]) = (signers[i - 1], swapSigner);
         }
 
-        signers.length = totalSigners - 1;
+        // signers.length = totalSigners - 1;
     }
 }

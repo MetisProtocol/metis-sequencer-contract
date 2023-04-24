@@ -1,4 +1,4 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.8.0;
 
 import {ValidatorShareProxy} from "./ValidatorShareProxy.sol";
 import {ValidatorShare} from "./ValidatorShare.sol";
@@ -13,7 +13,7 @@ contract ValidatorShareFactory {
         proxy.transferOwnership(msg.sender);
 
         address proxyAddr = address(proxy);
-        (bool success, bytes memory data) = proxyAddr.call.gas(gasleft())(
+        (bool success, bytes memory data) = proxyAddr.call{gas:gasleft()}(
             abi.encodeWithSelector(
                 ValidatorShare(proxyAddr).initialize.selector, 
                 validatorId, 

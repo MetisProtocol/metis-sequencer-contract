@@ -1,13 +1,13 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.8.0;
 import { Lockable } from "./Lockable.sol";
-import { Ownable } from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract OwnableLockable is Lockable, Ownable {
-    function lock() public onlyOwner {
+    function lock() virtual override public onlyOwner {
         super.lock();
     }
 
-    function unlock() public onlyOwner {
+    function unlock() virtual override public onlyOwner {
         super.unlock();
     }
 }

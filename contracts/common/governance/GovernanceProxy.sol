@@ -1,4 +1,4 @@
-pragma solidity ^0.5.2;
+pragma solidity ^0.8.0;
 
 import {Proxy} from "../misc/Proxy.sol";
 

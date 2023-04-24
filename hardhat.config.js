@@ -11,22 +11,22 @@ require("@openzeppelin/hardhat-upgrades");
 module.exports = {
   solidity: {
     compilers: [
-      {
-        version: "0.5.17",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
-      },
+      // {
+      //   version: "0.5.17",
+      //   settings: {
+      //     optimizer: {
+      //       enabled: true,
+      //       runs: 200,
+      //     },
+      //   },
+      // },
       {
         version: "0.8.2",
         settings: {
           optimizer: {
-            enabled: true,
-            runs: 200,
-          },
+            runs: 5000,
+            enabled: true
+          }
         },
       },
     ],
@@ -53,39 +53,13 @@ module.exports = {
     goerli: {
       url: process.env.GOERLI_RPC !== undefined ? process.env.GOERLI_RPC : "",
       accounts: process.env.DEVNET_PRIVKEY !== undefined ? [process.env.DEVNET_PRIVKEY] : [],
-    },
-    arbitrumOne: {
-      url: process.env.ARBITRUM_ONE_RPC!== undefined ? process.env.ARBITRUM_ONE_RPC : "",
-      accounts: process.env.DEVNET_PRIVKEY !== undefined ? [process.env.DEVNET_PRIVKEY] : [],
-    },
-    arbitrumOneTestnet: {
-      url: process.env.ARBITRUM_TESTNET_RPC !== undefined ? process.env.ARBITRUM_TESTNET_RPC : "",
-      accounts: process.env.DEVNET_PRIVKEY !== undefined ? [process.env.DEVNET_PRIVKEY] : [],
-    },
-    bsc: {
-      url: process.env.BSC_MAINNET_PRC  !== undefined ? process.env.BSC_MAINNET_PRC : "",
-      accounts: process.env.DEVNET_PRIVKEY !== undefined ? [process.env.DEVNET_PRIVKEY] : [],
-    },
-    bscTestnet: {
-      url: process.env.BSC_TESTNET_PRC !== undefined ? process.env.BSC_TESTNET_PRC : "" ,
-      accounts: process.env.DEVNET_PRIVKEY !== undefined ? [process.env.DEVNET_PRIVKEY] : [],
-    },
-    polygon: {
-      url: process.env.MATIC_RPC !== undefined ? process.env.MATIC_RPC : "",
-      accounts: process.env.DEVNET_PRIVKEY !== undefined ? [process.env.DEVNET_PRIVKEY] : [],
     }
   },
   etherscan: {
     apiKey: {
       mainnet: process.env.ETHERSCAN_API_KEY,
       rinkeby: process.env.ETHERSCAN_API_KEY,
-      goerli: process.env.ETHERSCAN_API_KEY,
-      arbitrumOne: process.env.ARBISCAN_API_KEY,
-      arbitrumTestnet: process.env.ARBISCAN_API_KEY,
-      bsc: process.env.BSC_API_KEY,
-      // bscMainnet: '8MVZUIQXS1AIGTFT4ICQYDYQXKB5FJ3TND',
-      bscTestnet: process.env.BSC_API_KEY,
-      polygon: process.env.MATIC_API_KEY,
+      goerli: process.env.ETHERSCAN_API_KEY
     }
   },
   watcher: {
