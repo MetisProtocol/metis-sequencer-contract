@@ -482,7 +482,7 @@ abstract contract StakeManager is
         NFTContract.burn(validatorId);
 
         validators[validatorId].amount = 0;
-        // validators[validatorId].jailTime = 0;
+        validators[validatorId].jailTime = 0;
         validators[validatorId].signer = address(0);
 
         signerToValidator[validators[validatorId].signer] = INCORRECT_VALIDATOR_ID;
@@ -737,7 +737,7 @@ abstract contract StakeManager is
         require(validators[validatorId].deactivationEpoch == 0, "Already unstaking");
 
         uint256 _currentEpoch = currentEpoch;
-        // require(validators[validatorId].jailTime <= _currentEpoch, "Incomplete jail period");
+        require(validators[validatorId].jailTime <= _currentEpoch, "Incomplete jail period");
 
         uint256 amount = validators[validatorId].amount;
         require(amount >= minDeposit);
@@ -1036,7 +1036,7 @@ abstract contract StakeManager is
         uint256 newValidatorReward = validatorsStake.mul(reward).div(combinedStakePower);
 
         // add validator commission from delegation reward
-        uint256 commissionRate = validators[validatorId].commissionRate;
+        uint256 commissionRate = validators[validatorId].commission.commissionRate;
         if (commissionRate > 0) {
             newValidatorReward = newValidatorReward.add(
                 reward.sub(newValidatorReward).mul(commissionRate).div(MAX_COMMISION_RATE)
@@ -1071,7 +1071,7 @@ abstract contract StakeManager is
         }
 
         uint256 _currentEpoch = currentEpoch;
-        // validators[validatorId].jailTime = _currentEpoch.add(jailCheckpoints);
+        validators[validatorId].jailTime = _currentEpoch.add(jailCheckpoints);
         validators[validatorId].status = Status.Locked;
         logger.logJailed(validatorId, _currentEpoch, validators[validatorId].signer);
         return validators[validatorId].amount.add(validators[validatorId].delegatedAmount);
@@ -1096,14 +1096,16 @@ abstract contract StakeManager is
             amount: amount,
             activationEpoch: _currentEpoch,
             deactivationEpoch: 0,
-            // jailTime: 0,
+            jailTime: 0,
             signer: signer,
             contractAddress: acceptDelegation
                 ? validatorShareFactory.create(validatorId, address(_logger), registry)
                 : address(0x0),
+            commission: Commission({
+                commissionRate: 0,
+                lastCommissionUpdate: 0
+            }),
             status: Status.Active,
-            commissionRate: 0,
-            lastCommissionUpdate: 0,
             delegatorsReward: INITIALIZED_AMOUNT,
             delegatedAmount: 0,
             initialRewardPerStake: rewardPerStake

@@ -132,7 +132,7 @@ contract StakeManagerExtension is StakeManagerStorage, Initializable, StakeManag
                 // move validator rewards out from ValidatorShare contract
                 validators[i].reward = contractAddress.validatorRewards_deprecated().add(INITIALIZED_AMOUNT);
                 validators[i].delegatedAmount = contractAddress.activeAmount();
-                validators[i].commissionRate = contractAddress.commissionRate_deprecated();
+                validators[i].commission.commissionRate = contractAddress.commissionRate_deprecated();
             } else {
                 validators[i].reward = validators[i].reward.add(INITIALIZED_AMOUNT);
             }
@@ -158,7 +158,7 @@ contract StakeManagerExtension is StakeManagerStorage, Initializable, StakeManag
 
     function updateCommissionRate(uint256 validatorId, uint256 newCommissionRate) external {
         uint256 _epoch = currentEpoch;
-        uint256 _lastCommissionUpdate = validators[validatorId].lastCommissionUpdate;
+        uint256 _lastCommissionUpdate = validators[validatorId].commission.lastCommissionUpdate;
 
         require( // withdrawalDelay == dynasty
             (_lastCommissionUpdate.add(WITHDRAWAL_DELAY) <= _epoch) || _lastCommissionUpdate == 0, // For initial setting of commission rate
@@ -166,9 +166,9 @@ contract StakeManagerExtension is StakeManagerStorage, Initializable, StakeManag
         );
 
         require(newCommissionRate <= MAX_COMMISION_RATE, "Incorrect value");
-        _getOrCacheEventsHub().logUpdateCommissionRate(validatorId, newCommissionRate, validators[validatorId].commissionRate);
-        validators[validatorId].commissionRate = newCommissionRate;
-        validators[validatorId].lastCommissionUpdate = _epoch;
+        _getOrCacheEventsHub().logUpdateCommissionRate(validatorId, newCommissionRate, validators[validatorId].commission.commissionRate);
+        validators[validatorId].commission.commissionRate = newCommissionRate;
+        validators[validatorId].commission.lastCommissionUpdate = _epoch;
     }
 
     function _getOrCacheEventsHub() private returns(EventsHub) {

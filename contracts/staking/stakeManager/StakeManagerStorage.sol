@@ -29,17 +29,21 @@ abstract contract StakeManagerStorage is GovernanceLockable {
         int256 stakerCount;
     }
 
+    struct Commission {
+        uint256 commissionRate;
+        uint256 lastCommissionUpdate;
+    }
+
     struct Validator {
         uint256 amount;
         uint256 reward;
         uint256 activationEpoch;
         uint256 deactivationEpoch;
-        // uint256 jailTime;
+        uint256 jailTime;
         address signer;
         address contractAddress;
         Status status;
-        uint256 commissionRate;
-        uint256 lastCommissionUpdate;
+        Commission commission; 
         uint256 delegatorsReward;
         uint256 delegatedAmount;
         uint256 initialRewardPerStake;
