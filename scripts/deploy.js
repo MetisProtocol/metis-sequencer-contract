@@ -1,6 +1,6 @@
 const { ethers, upgrades } = require("hardhat");
 require("@nomiclabs/hardhat-etherscan");
-const utils = require('./utils')
+const fs = require('fs')
 
 const verifyStr = "npx hardhat verify --network";
 
@@ -29,12 +29,15 @@ const main = async () => {
   const StakeManagerProxy = await hre.ethers.getContractFactory("StakeManagerProxy");
   const stakeManagerProxyObj = await StakeManagerProxy.attach(stakeManagerProxy.address)
   
+  // let ABI = [
+  //   "function initialize(address _registry,address _rootchain,address _token,address _NFTContract,address _stakingLogger,address _validatorShareFactory,address _governance,address _owner,address _extensionCode)"
+  // ];
+
   let ABI = [
-    "function initialize(address _registry,address _rootchain,address _token,address _NFTContract,address _stakingLogger,address _validatorShareFactory,address _governance,address _owner,address _extensionCode)"
+    "function initialize(address _registry,address _token,address _NFTContract,address _stakingLogger,address _validatorShareFactory,address _governance,address _owner,address _extensionCode)"
   ];
   let iface = new ethers.utils.Interface(ABI);
   let initializeEncodeData = iface.encodeFunctionData("initialize", [registry.address,
-        '0x0000000000000000000000000000000000000000',
         testToken.address,
         stakingNFT.address,
         stakingInfo.address,
@@ -80,8 +83,7 @@ const main = async () => {
       }
     }
   }
-  utils.writeContractAddresses(contractAddresses)
-
+  await writeContractAddresses(contractAddresses)
   // await verify();
 };
 
@@ -162,6 +164,14 @@ async function deployValidatorShare(registryAddress, stakingInfoAddress, stakeMa
   console.log("ValidatorShare deployed to:", validatorShareDeployed.address);
   return validatorShareDeployed
 }
+
+async function writeContractAddresses(contractAddresses) {
+  fs.writeFileSync(
+    `${process.cwd()}/contractAddresses.json`,
+    JSON.stringify(contractAddresses, null, 2) // Indent 2 spaces
+  )
+}
+
 
 async function verify() {
   await hre.run("verify:verify", {

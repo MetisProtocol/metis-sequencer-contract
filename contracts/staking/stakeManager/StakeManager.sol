@@ -25,7 +25,7 @@ import {Initializable} from "../../common/mixin/Initializable.sol";
 import {StakeManagerExtension} from "./StakeManagerExtension.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
-abstract contract StakeManager is
+contract StakeManager is
     StakeManagerStorage,
     Initializable,
     IStakeManager,
@@ -455,7 +455,7 @@ abstract contract StakeManager is
         // uint256 heimdallFee,
         bool acceptDelegation,
         bytes memory signerPubkey
-    ) public onlyWhenUnlocked {
+    ) override public  onlyWhenUnlocked {
         require(currentValidatorSetSize() < validatorThreshold, "no more slots");
         require(amount >= minDeposit, "not enough deposit");
         // _transferAndTopUp(user, msg.sender, heimdallFee, amount);

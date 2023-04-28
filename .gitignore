@@ -10,6 +10,4 @@ bin
 .DS_Store
 .history
 .VSCodeCounter
-yarn.lock
-marketmaker/contract/abigen
-marketmaker/marketmaker
+contractAddresses.json

@@ -11,20 +11,11 @@ require("@openzeppelin/hardhat-upgrades");
 module.exports = {
   solidity: {
     compilers: [
-      // {
-      //   version: "0.5.17",
-      //   settings: {
-      //     optimizer: {
-      //       enabled: true,
-      //       runs: 200,
-      //     },
-      //   },
-      // },
       {
         version: "0.8.2",
         settings: {
           optimizer: {
-            runs: 5000,
+            runs: 200,
             enabled: true
           }
         },

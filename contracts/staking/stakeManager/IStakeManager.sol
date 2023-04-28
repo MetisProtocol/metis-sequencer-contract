@@ -30,18 +30,18 @@ abstract contract IStakeManager {
     function stakeFor(
         address user,
         uint256 amount,
-        uint256 heimdallFee,
+        // uint256 heimdallFee,
         bool acceptDelegation,
         bytes memory signerPubkey
     ) virtual public;
 
-    function checkSignatures(
-        uint256 blockInterval,
-        bytes32 voteHash,
-        bytes32 stateRoot,
-        address proposer,
-        uint[3][] calldata sigs
-    ) virtual external returns (uint256);
+    // function checkSignatures(
+    //     uint256 blockInterval,
+    //     bytes32 voteHash,
+    //     bytes32 stateRoot,
+    //     address proposer,
+    //     uint[3][] calldata sigs
+    // ) virtual external returns (uint256);
 
     function updateValidatorState(uint256 validatorId, int256 amount) virtual public;
 
