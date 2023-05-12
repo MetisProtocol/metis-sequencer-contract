@@ -172,7 +172,6 @@ async function writeContractAddresses(contractAddresses) {
   )
 }
 
-
 async function verify() {
   await hre.run("verify:verify", {
     address: pool,

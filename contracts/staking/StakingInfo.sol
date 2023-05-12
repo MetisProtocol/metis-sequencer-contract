@@ -4,7 +4,6 @@ import {Registry} from "../common/Registry.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-
 // dummy interface to avoid cyclic dependency
 abstract contract IStakeManagerLocal {
     enum Status {Inactive, Active, Locked, Unstaked}

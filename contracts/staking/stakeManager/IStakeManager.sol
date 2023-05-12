@@ -9,7 +9,7 @@ abstract contract IStakeManager {
         bytes calldata signerPubkey
     ) virtual external;
 
-    function confirmAuctionBid(uint256 validatorId, uint256 heimdallFee) virtual external;
+    function confirmAuctionBid(uint256 validatorId, uint256 themisFee) virtual external;
 
     function transferFunds(
         uint256 validatorId,
@@ -30,7 +30,7 @@ abstract contract IStakeManager {
     function stakeFor(
         address user,
         uint256 amount,
-        // uint256 heimdallFee,
+        // uint256 themisFee,
         bool acceptDelegation,
         bytes memory signerPubkey
     ) virtual public;
@@ -67,7 +67,7 @@ abstract contract IStakeManager {
 
     function dethroneAndStake(
         address auctionUser,
-        uint256 heimdallFee,
+        uint256 themisFee,
         uint256 validatorId,
         uint256 auctionAmount,
         bool acceptDelegation,

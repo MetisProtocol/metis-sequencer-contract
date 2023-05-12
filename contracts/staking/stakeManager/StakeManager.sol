@@ -99,7 +99,7 @@ contract StakeManager is
         dynasty = 886; // unit: epoch 50 days
         CHECKPOINT_REWARD = 20188 * (10**18); // update via governance
         minDeposit = (10**18); // in ERC20 token
-        minHeimdallFee = (10**18); // in ERC20 token
+        minThemisFee = (10**18); // in ERC20 token
         checkPointBlockInterval = 1024;
         signerUpdateLimit = 100;
 
@@ -299,9 +299,9 @@ contract StakeManager is
         signerUpdateLimit = _limit;
     }
 
-    function updateMinAmounts(uint256 _minDeposit, uint256 _minHeimdallFee) public onlyGovernance {
+    function updateMinAmounts(uint256 _minDeposit, uint256 _minThemisFee) public onlyGovernance {
         minDeposit = _minDeposit;
-        minHeimdallFee = _minHeimdallFee;
+        minThemisFee = _minThemisFee;
     }
 
     function drainValidatorShares(
@@ -337,8 +337,8 @@ contract StakeManager is
         Public Methods
      */
 
-    function topUpForFee(address user, uint256 heimdallFee) public onlyWhenUnlocked {
-        _transferAndTopUp(user, msg.sender, heimdallFee, 0);
+    function topUpForFee(address user, uint256 themisFee) public onlyWhenUnlocked {
+        _transferAndTopUp(user, msg.sender, themisFee, 0);
     }
 
     function claimFee(
@@ -384,14 +384,14 @@ contract StakeManager is
 
     function confirmAuctionBid(
         uint256 validatorId,
-        uint256 heimdallFee /** for new validator */
+        uint256 themisFee /** for new validator */
     ) override external onlyWhenUnlocked {
         delegatedFwd(
             extensionCode,
             abi.encodeWithSelector(
                 StakeManagerExtension(extensionCode).confirmAuctionBid.selector,
                 validatorId,
-                heimdallFee,
+                themisFee,
                 address(this)
             )
         );
@@ -399,7 +399,7 @@ contract StakeManager is
 
     function dethroneAndStake(
         address auctionUser,
-        uint256 heimdallFee,
+        uint256 themisFee,
         uint256 validatorId,
         uint256 auctionAmount,
         bool acceptDelegation,
@@ -407,7 +407,7 @@ contract StakeManager is
     ) override external {
         require(msg.sender == address(this), "not allowed");
         // dethrone
-        _transferAndTopUp(auctionUser, auctionUser, heimdallFee, 0);
+        _transferAndTopUp(auctionUser, auctionUser, themisFee, 0);
         _unstake(validatorId, currentEpoch);
 
         uint256 newValidatorId = _stakeFor(auctionUser, auctionAmount, acceptDelegation, signerPubkey);
@@ -452,13 +452,13 @@ contract StakeManager is
     function stakeFor(
         address user,
         uint256 amount,
-        // uint256 heimdallFee,
+        // uint256 themisFee,
         bool acceptDelegation,
         bytes memory signerPubkey
     ) override public  onlyWhenUnlocked {
         require(currentValidatorSetSize() < validatorThreshold, "no more slots");
         require(amount >= minDeposit, "not enough deposit");
-        // _transferAndTopUp(user, msg.sender, heimdallFee, amount);
+        // _transferAndTopUp(user, msg.sender, themisFee, amount);
         _transferAndTopUp(user, msg.sender, 0, amount);
         _stakeFor(user, amount, acceptDelegation, signerPubkey);
     }
@@ -907,7 +907,7 @@ contract StakeManager is
         Validator storage _proposer = validators[proposerId];
         _proposer.reward = _proposer.reward.add(_proposerBonus);
 
-        // update stateMerkleTree root for accounts balance on heimdall chain
+        // update stateMerkleTree root for accounts balance on themis chain
         accountStateRoot = stateRoot;
 
         uint256 newRewardPerStake =
@@ -1191,14 +1191,14 @@ contract StakeManager is
         uint256 fee,
         uint256 additionalAmount
     ) private {
-        require(fee >= minHeimdallFee, "fee too small");
+        require(fee >= minThemisFee, "fee too small");
         _transferTokenFrom(from, address(this), fee.add(additionalAmount));
-        totalHeimdallFee = totalHeimdallFee.add(fee);
+        totalThemisFee = totalThemisFee.add(fee);
         logger.logTopUpFee(user, fee);
     }
 
     function _claimFee(address user, uint256 amount) private {
-        totalHeimdallFee = totalHeimdallFee.sub(amount);
+        totalThemisFee = totalThemisFee.sub(amount);
         logger.logClaimFee(user, amount);
     }
 

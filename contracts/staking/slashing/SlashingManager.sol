@@ -29,11 +29,11 @@ contract SlashingManager is ISlashingManager, Ownable {
     constructor(
         address _registry,
         address _logger,
-        string memory _heimdallId
+        string memory _themisId
     ) public {
         registry = Registry(_registry);
         logger = StakingInfo(_logger);
-        heimdallId = keccak256(abi.encodePacked(_heimdallId));
+        themisId = keccak256(abi.encodePacked(_themisId));
     }
 
     function updateSlashedAmounts(bytes memory data, bytes memory sigs) public {
@@ -128,8 +128,8 @@ contract SlashingManager is ISlashingManager, Ownable {
     }
 
     // Housekeeping function. @todo remove later
-    function setHeimdallId(string memory _heimdallId) public onlyOwner {
-        heimdallId = keccak256(abi.encodePacked(_heimdallId));
+    function setThemisId(string memory _themisId) public onlyOwner {
+        themisId = keccak256(abi.encodePacked(_themisId));
     }
 
     // Housekeeping function. @todo remove later
