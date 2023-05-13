@@ -5,7 +5,6 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {RLPReader} from "solidity-rlp/contracts/RLPReader.sol";
 
-import {BytesLib} from "../../common/lib/BytesLib.sol";
 import {ECVerify} from "../../common/lib/ECVerify.sol";
 import {Merkle} from "../../common/lib/Merkle.sol";
 import {GovernanceLockable} from "../../common/mixin/GovernanceLockable.sol";
@@ -38,19 +37,19 @@ contract StakeManager is
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
-    struct UnsignedValidatorsContext {
-        uint256 unsignedValidatorIndex;
-        uint256 validatorIndex;
-        uint256[] unsignedValidators;
-        address[] validators;
-        uint256 totalValidators;
-    }
+    // struct UnsignedValidatorsContext {
+    //     uint256 unsignedValidatorIndex;
+    //     uint256 validatorIndex;
+    //     uint256[] unsignedValidators;
+    //     address[] validators;
+    //     uint256 totalValidators;
+    // }
 
-    struct UnstakedValidatorsContext {
-        uint256 deactivationEpoch;
-        uint256[] deactivatedValidators;
-        uint256 validatorIndex;
-    }
+    // struct UnstakedValidatorsContext {
+    //     uint256 deactivationEpoch;
+    //     uint256[] deactivatedValidators;
+    //     uint256 validatorIndex;
+    // }
 
     modifier onlyStaker(uint256 validatorId) {
         _assertStaker(validatorId);
@@ -83,41 +82,41 @@ contract StakeManager is
         address _owner,
         address _extensionCode
     ) external initializer {
-        require(isContract(_extensionCode), "auction impl incorrect");
-        extensionCode = _extensionCode;
-        governance = IGovernance(_governance);
-        registry = _registry;
+        require(isContract(_extensionCode), "auction impl incorrect"); // 检查auction impl
+        extensionCode = _extensionCode; // ？？
+        governance = IGovernance(_governance);  // gov合约地址
+        registry = _registry;  // registry合约地址
         // rootChain = _rootchain;
-        token = IERC20(_token);
-        NFTContract = StakingNFT(_NFTContract);
-        logger = StakingInfo(_stakingLogger);
-        validatorShareFactory = ValidatorShareFactory(_validatorShareFactory);
+        token = IERC20(_token);  // stake或者奖励分发使用的那个代币
+        NFTContract = StakingNFT(_NFTContract); // NFT合约，每个validator对应一个nft
+        logger = StakingInfo(_stakingLogger); // staking info合约
+        validatorShareFactory = ValidatorShareFactory(_validatorShareFactory);  // validator delegate奖励份额工厂合约
         _transferOwnership(_owner);
 
-        WITHDRAWAL_DELAY = (2**13); // unit: epoch
-        currentEpoch = 1;
-        dynasty = 886; // unit: epoch 50 days
-        CHECKPOINT_REWARD = 20188 * (10**18); // update via governance
+        WITHDRAWAL_DELAY = (2**13); // unit: epoch 提现延迟时间，默认超大数，会通过updateDynastyValue方法进行更新
+        currentEpoch = 1;  // 默认从第1个epoch开始
+        dynasty = 886; // unit: epoch 50 days  ？？这个参
+        CHECKPOINT_REWARD = 20188 * (10**18); // 每个batchsubmit提交， update via governance
         minDeposit = (10**18); // in ERC20 token
-        minThemisFee = (10**18); // in ERC20 token
-        checkPointBlockInterval = 1024;
-        signerUpdateLimit = 100;
+        // minThemisFee = (10**18); // in ERC20 token, TODO: remove
+        checkPointBlockInterval = 1024;  // 多少个区块提交一次batch
+        signerUpdateLimit = 100; // signer更新次数限制
 
-        validatorThreshold = 7; //128
-        NFTCounter = 1;
-        auctionPeriod = (2**13) / 4; // 1 week in epochs
-        proposerBonus = 10; // 10 % of total rewards
-        delegationEnabled = true;
+        validatorThreshold = 7; //128 允许最大的验证节点数量
+        NFTCounter = 1; // validator id
+        auctionPeriod = (2**13) / 4; // 1 week in epochs 拍卖validator槽位周期
+        proposerBonus = 10; // 10 % of total rewards, 发起slash用户的奖励分成
+        delegationEnabled = true; // 是否开启delegate
     }
 
-    function isOwner() public view returns (bool) {
-        address _owner;
-        bytes32 position = keccak256("metis.io.proxy.owner");
-        assembly {
-            _owner := sload(position)
-        }
-        return msg.sender == _owner;
-    }
+    // function isOwner() public view returns (bool) {
+    //     address _owner;
+    //     bytes32 position = keccak256("metis.io.proxy.owner");
+    //     assembly {
+    //         _owner := sload(position)
+    //     }
+    //     return msg.sender == _owner;
+    // }
 
     /**
         Public View Methods
@@ -134,26 +133,32 @@ contract StakeManager is
         return NFTContract.ownerOf(tokenId);
     }
 
+    // 查询当前epoch
     function epoch() override public view returns (uint256) {
         return currentEpoch;
     }
 
+    // 查询退出时间
     function withdrawalDelay() override public view returns (uint256) {
         return WITHDRAWAL_DELAY;
     }
 
+    // 查询验证节点stake数量
     function validatorStake(uint256 validatorId) override public view returns (uint256) {
         return validators[validatorId].amount;
     }
 
+    // 根据地址获取validator id
     function getValidatorId(address user)  public view returns (uint256) {
         return NFTContract.tokenOfOwnerByIndex(user, 0);
     }
 
+    // 查询验证节点抵押数量
     function delegatedAmount(uint256 validatorId) override public view returns (uint256) {
         return validators[validatorId].delegatedAmount;
     }
 
+    // 查询被代理抵押数量
     function delegatorsReward(uint256 validatorId) override public view returns (uint256) {
         uint256 _delegatorsReward;
         if (validators[validatorId].deactivationEpoch == 0) {
@@ -162,6 +167,7 @@ contract StakeManager is
         return validators[validatorId].delegatorsReward.add(_delegatorsReward).sub(INITIALIZED_AMOUNT);
     }
 
+    // 查询某个验证节点的总奖励
     function validatorReward(uint256 validatorId) public view returns (uint256) {
         uint256 _validatorReward;
         if (validators[validatorId].deactivationEpoch == 0) {
@@ -170,14 +176,17 @@ contract StakeManager is
         return validators[validatorId].reward.add(_validatorReward).sub(INITIALIZED_AMOUNT);
     }
 
+    // 查询当前验证节点数量
     function currentValidatorSetSize() public view returns (uint256) {
         return validatorState.stakerCount;
     }
 
+    // 查询验证节点总抵押数量
     function currentValidatorSetTotalStake() public view returns (uint256) {
         return validatorState.amount;
     }
 
+    // 查询某个验证节点的合约地址
     function getValidatorContract(uint256 validatorId) public view returns (address) {
         return validators[validatorId].contractAddress;
     }
@@ -209,14 +218,13 @@ contract StakeManager is
         currentEpoch = _currentEpoch;
     }
 
+    // 设置staking代币
     function setStakingToken(address _token) public onlyGovernance {
         require(_token != address(0x0));
         token = IERC20(_token);
     }
 
-    /**
-        @dev Change the number of validators required to allow a passed header root
-     */
+    // 设置允许的最大验证节点数量
     function updateValidatorThreshold(uint256 newThreshold) public onlyGovernance {
         require(newThreshold != 0);
         logger.logThresholdChange(newThreshold, validatorThreshold);
@@ -228,6 +236,7 @@ contract StakeManager is
         checkPointBlockInterval = _blocks;
     }
 
+    // 设置batch提交奖励
     function updateCheckpointReward(uint256 newReward) public onlyGovernance {
         require(newReward != 0);
         logger.logRewardUpdate(newReward, CHECKPOINT_REWARD);
@@ -250,8 +259,8 @@ contract StakeManager is
         );
     }
 
-    // New implementation upgrade
-
+    
+    // 修改验证节点id
     function migrateValidatorsData(uint256 validatorIdFrom, uint256 validatorIdTo) public onlyOwner {
         delegatedFwd(
             extensionCode,
@@ -275,6 +284,7 @@ contract StakeManager is
         validators[validatorId].contractAddress = newContractAddress;
     }
 
+    // 更新退出时间
     function updateDynastyValue(uint256 newDynasty) public onlyGovernance {
         require(newDynasty > 0);
         logger.logDynastyValueChange(newDynasty, dynasty);
@@ -289,6 +299,7 @@ contract StakeManager is
         replacementCoolDown = currentEpoch.add(forNCheckpoints);
     }
 
+    // 更新proposer的奖励比例
     function updateProposerBonus(uint256 newProposerBonus) public onlyGovernance {
         logger.logProposerBonusChange(newProposerBonus, proposerBonus);
         require(newProposerBonus <= MAX_PROPOSER_BONUS, "too big");
@@ -299,11 +310,17 @@ contract StakeManager is
         signerUpdateLimit = _limit;
     }
 
-    function updateMinAmounts(uint256 _minDeposit, uint256 _minThemisFee) public onlyGovernance {
+    // function updateMinAmounts(uint256 _minDeposit, uint256 _minThemisFee) public onlyGovernance {
+    //     minDeposit = _minDeposit;
+    //     minThemisFee = _minThemisFee;
+    // }
+
+    // 更新最小stake数量
+    function updateMinAmounts(uint256 _minDeposit) public onlyGovernance {
         minDeposit = _minDeposit;
-        minThemisFee = _minThemisFee;
     }
 
+    // 提出share池子中的指定数量代币
     function drainValidatorShares(
         uint256 validatorId,
         address tokenAddr,
@@ -315,6 +332,7 @@ contract StakeManager is
         IValidatorShare(contractAddr).drain(tokenAddr, destination, amount);
     }
 
+    // 提出指定数量的代币
     function drain(address destination, uint256 amount) external onlyGovernance {
         _transferToken(destination, amount);
     }
@@ -337,26 +355,27 @@ contract StakeManager is
         Public Methods
      */
 
-    function topUpForFee(address user, uint256 themisFee) public onlyWhenUnlocked {
-        _transferAndTopUp(user, msg.sender, themisFee, 0);
-    }
+    // function topUpForFee(address user, uint256 themisFee) public onlyWhenUnlocked {
+    //     _transferAndTopUp(user, msg.sender, themisFee, 0);
+    // }
 
-    function claimFee(
-        uint256 accumFeeAmount,
-        uint256 index,
-        bytes memory proof
-    ) public {
-        //Ignoring other params because rewards' distribution is on chain
-        require(
-            keccak256(abi.encode(msg.sender, accumFeeAmount)).checkMembership(index, accountStateRoot, proof),
-            "Wrong acc proof"
-        );
-        uint256 withdrawAmount = accumFeeAmount.sub(userFeeExit[msg.sender]);
-        _claimFee(msg.sender, withdrawAmount);
-        userFeeExit[msg.sender] = accumFeeAmount;
-        _transferToken(msg.sender, withdrawAmount);
-    }
+    // function claimFee(
+    //     uint256 accumFeeAmount,
+    //     uint256 index,
+    //     bytes memory proof
+    // ) public {
+    //     //Ignoring other params because rewards' distribution is on chain
+    //     require(
+    //         keccak256(abi.encode(msg.sender, accumFeeAmount)).checkMembership(index, accountStateRoot, proof),
+    //         "Wrong acc proof"
+    //     );
+    //     uint256 withdrawAmount = accumFeeAmount.sub(userFeeExit[msg.sender]);
+    //     _claimFee(msg.sender, withdrawAmount);
+    //     userFeeExit[msg.sender] = accumFeeAmount;
+    //     _transferToken(msg.sender, withdrawAmount);
+    // }
 
+    // 查询某个验证节点地址总的抵押金额
     function totalStakedFor(address user) override external view returns (uint256) {
         if (user == address(0x0) || NFTContract.balanceOf(user) == 0) {
             return 0;
@@ -364,6 +383,7 @@ contract StakeManager is
         return validators[NFTContract.tokenOfOwnerByIndex(user, 0)].amount;
     }
 
+    // 开始竞拍某个验证节点id
     function startAuction(
         uint256 validatorId,
         uint256 amount,
@@ -382,6 +402,7 @@ contract StakeManager is
         );
     }
 
+    // 确认竞拍某个验证节点id
     function confirmAuctionBid(
         uint256 validatorId,
         uint256 themisFee /** for new validator */
@@ -397,6 +418,7 @@ contract StakeManager is
         );
     }
 
+    // 推翻原来的验证节点，并且给新的竞拍这抵押
     function dethroneAndStake(
         address auctionUser,
         uint256 themisFee,
@@ -407,13 +429,14 @@ contract StakeManager is
     ) override external {
         require(msg.sender == address(this), "not allowed");
         // dethrone
-        _transferAndTopUp(auctionUser, auctionUser, themisFee, 0);
+        // _transferAndTopUp(auctionUser, auctionUser, themisFee, 0);
         _unstake(validatorId, currentEpoch);
 
         uint256 newValidatorId = _stakeFor(auctionUser, auctionAmount, acceptDelegation, signerPubkey);
         logger.logConfirmAuction(newValidatorId, validatorId, auctionAmount);
     }
 
+    // 某个验证节点退出
     function unstake(uint256 validatorId) override external onlyStaker(validatorId) {
         require(validatorAuction[validatorId].amount == 0);
 
@@ -459,7 +482,7 @@ contract StakeManager is
         require(currentValidatorSetSize() < validatorThreshold, "no more slots");
         require(amount >= minDeposit, "not enough deposit");
         // _transferAndTopUp(user, msg.sender, themisFee, amount);
-        _transferAndTopUp(user, msg.sender, 0, amount);
+        // _transferAndTopUp(user, msg.sender, 0, amount);
         _stakeFor(user, amount, acceptDelegation, signerPubkey);
     }
 
@@ -818,20 +841,20 @@ contract StakeManager is
         return (amount > 0 && (deactivationEpoch == 0 || deactivationEpoch > _currentEpoch) && status == Status.Active);
     }
 
-    function _fillUnsignedValidators(UnsignedValidatorsContext memory context, address signer)
-        private
-        view
-        returns(UnsignedValidatorsContext memory)
-    {
-        while (context.validatorIndex < context.totalValidators && context.validators[context.validatorIndex] != signer) {
-            context.unsignedValidators[context.unsignedValidatorIndex] = signerToValidator[context.validators[context.validatorIndex]];
-            context.unsignedValidatorIndex++;
-            context.validatorIndex++;
-        }
+    // function _fillUnsignedValidators(UnsignedValidatorsContext memory context, address signer)
+    //     private
+    //     view
+    //     returns(UnsignedValidatorsContext memory)
+    // {
+    //     while (context.validatorIndex < context.totalValidators && context.validators[context.validatorIndex] != signer) {
+    //         context.unsignedValidators[context.unsignedValidatorIndex] = signerToValidator[context.validators[context.validatorIndex]];
+    //         context.unsignedValidatorIndex++;
+    //         context.validatorIndex++;
+    //     }
 
-        context.validatorIndex++;
-        return context;
-    }
+    //     context.validatorIndex++;
+    //     return context;
+    // }
 
     function _calculateCheckpointReward(
         uint256 blockInterval,
@@ -1126,6 +1149,7 @@ contract StakeManager is
         return validatorId;
     }
 
+    // 节点退出操作
     function _unstake(uint256 validatorId, uint256 exitEpoch) internal {
         // TODO: if validators unstake and slashed to 0, he will be forced to unstake again
         // must think how to handle it correctly
@@ -1185,22 +1209,22 @@ contract StakeManager is
         require(token.transferFrom(from, destination, amount), "transfer from failed");
     }
 
-    function _transferAndTopUp(
-        address user,
-        address from,
-        uint256 fee,
-        uint256 additionalAmount
-    ) private {
-        require(fee >= minThemisFee, "fee too small");
-        _transferTokenFrom(from, address(this), fee.add(additionalAmount));
-        totalThemisFee = totalThemisFee.add(fee);
-        logger.logTopUpFee(user, fee);
-    }
+    // function _transferAndTopUp(
+    //     address user,
+    //     address from,
+    //     uint256 fee,
+    //     uint256 additionalAmount
+    // ) private {
+    //     require(fee >= minThemisFee, "fee too small");
+    //     _transferTokenFrom(from, address(this), fee.add(additionalAmount));
+    //     totalThemisFee = totalThemisFee.add(fee);
+    //     logger.logTopUpFee(user, fee);
+    // }
 
-    function _claimFee(address user, uint256 amount) private {
-        totalThemisFee = totalThemisFee.sub(amount);
-        logger.logClaimFee(user, amount);
-    }
+    // function _claimFee(address user, uint256 amount) private {
+    //     totalThemisFee = totalThemisFee.sub(amount);
+    //     logger.logClaimFee(user, amount);
+    // }
 
     function _insertSigner(address newSigner) internal {
         signers.push(newSigner);

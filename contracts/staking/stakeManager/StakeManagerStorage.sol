@@ -67,7 +67,7 @@ abstract contract StakeManagerStorage is GovernanceLockable {
     uint256 public dynasty; // unit: epoch 50 days
     uint256 public CHECKPOINT_REWARD; // update via governance
     uint256 public minDeposit; // in ERC20 token
-    uint256 public minThemisFee; // in ERC20 token
+    // uint256 public minThemisFee; // in ERC20 token themisFee
     uint256 public checkPointBlockInterval;
     uint256 public signerUpdateLimit;
 
@@ -95,5 +95,5 @@ abstract contract StakeManagerStorage is GovernanceLockable {
     // validatorId to last signer update epoch
     mapping(uint256 => uint256) public latestSignerUpdateEpoch;
 
-    uint256 public totalThemisFee;
+    // uint256 public totalThemisFee;
 }

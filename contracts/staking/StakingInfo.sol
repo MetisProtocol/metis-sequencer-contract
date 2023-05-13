@@ -138,8 +138,8 @@ contract StakingInfo is Ownable {
         uint256 indexed oldValidatorId,
         uint256 indexed amount
     );
-    event TopUpFee(address indexed user, uint256 indexed fee);
-    event ClaimFee(address indexed user, uint256 indexed fee);
+    // event TopUpFee(address indexed user, uint256 indexed fee);
+    // event ClaimFee(address indexed user, uint256 indexed fee);
     // Delegator events
     event ShareMinted(
         uint256 indexed validatorId,
@@ -377,13 +377,13 @@ contract StakingInfo is Ownable {
         emit ConfirmAuction(newValidatorId, oldValidatorId, amount);
     }
 
-    function logTopUpFee(address user, uint256 fee) public onlyStakeManager {
-        emit TopUpFee(user, fee);
-    }
+    // function logTopUpFee(address user, uint256 fee) public onlyStakeManager {
+    //     emit TopUpFee(user, fee);
+    // }
 
-    function logClaimFee(address user, uint256 fee) public onlyStakeManager {
-        emit ClaimFee(user, fee);
-    }
+    // function logClaimFee(address user, uint256 fee) public onlyStakeManager {
+    //     emit ClaimFee(user, fee);
+    // }
 
     function getStakerDetails(uint256 validatorId)
         public
