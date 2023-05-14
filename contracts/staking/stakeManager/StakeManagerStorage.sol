@@ -89,7 +89,7 @@ abstract contract StakeManagerStorage is GovernanceLockable {
     State public validatorState;
     mapping(uint256 => StateChange) public validatorStateChanges;
 
-    mapping(address => uint256) public userFeeExit;
+    // mapping(address => uint256) public userFeeExit;
     //Ongoing auctions for validatorId
     mapping(uint256 => Auction) public validatorAuction;
     // validatorId to last signer update epoch

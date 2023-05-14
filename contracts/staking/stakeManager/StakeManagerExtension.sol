@@ -80,7 +80,7 @@ contract StakeManagerExtension is StakeManagerStorage, Initializable, StakeManag
 
     function confirmAuctionBid(
         uint256 validatorId,
-        uint256 themisFee, 
+        // uint256 themisFee, 
         IStakeManager stakeManager 
     ) external {
         Auction storage auction = validatorAuction[validatorId];
@@ -113,7 +113,7 @@ contract StakeManagerExtension is StakeManagerStorage, Initializable, StakeManag
         } else {
             stakeManager.dethroneAndStake(
                 auctionUser, 
-                themisFee,
+                // themisFee,
                 validatorId,
                 auctionAmount,
                 auction.acceptDelegation,

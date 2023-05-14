@@ -41,8 +41,8 @@ contract SlashingManager is ISlashingManager, Ownable {
         require(slashingNonce == _slashingNonce, "Invalid slashing nonce");
         StakeManager stakeManager = StakeManager(registry.getStakeManagerAddress());
 
-        uint256 stakePower;
-        uint256 activeTwoByThree;
+        // uint256 stakePower;
+        // uint256 activeTwoByThree;
         require(verifyConsensus(keccak256(abi.encodePacked(bytes(hex"01"), data)), sigs), "2/3+1 Power required");
         //slashingInfoList[]=[[valiD,am,isJailed]]
         uint256 slashedAmount = stakeManager.slash(_slashingInfoList);

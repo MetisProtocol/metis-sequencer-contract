@@ -404,15 +404,15 @@ contract StakeManager is
 
     // 确认竞拍某个验证节点id
     function confirmAuctionBid(
-        uint256 validatorId,
-        uint256 themisFee /** for new validator */
+        uint256 validatorId
+        // uint256 themisFee /** for new validator */
     ) override external onlyWhenUnlocked {
         delegatedFwd(
             extensionCode,
             abi.encodeWithSelector(
                 StakeManagerExtension(extensionCode).confirmAuctionBid.selector,
                 validatorId,
-                themisFee,
+                // themisFee,
                 address(this)
             )
         );
@@ -421,7 +421,7 @@ contract StakeManager is
     // 推翻原来的验证节点，并且给新的竞拍这抵押
     function dethroneAndStake(
         address auctionUser,
-        uint256 themisFee,
+        // uint256 themisFee,
         uint256 validatorId,
         uint256 auctionAmount,
         bool acceptDelegation,
