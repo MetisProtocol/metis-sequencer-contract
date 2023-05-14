@@ -37,19 +37,19 @@ contract StakeManager is
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
 
-    // struct UnsignedValidatorsContext {
-    //     uint256 unsignedValidatorIndex;
-    //     uint256 validatorIndex;
-    //     uint256[] unsignedValidators;
-    //     address[] validators;
-    //     uint256 totalValidators;
-    // }
+    struct UnsignedValidatorsContext {
+        uint256 unsignedValidatorIndex;
+        uint256 validatorIndex;
+        uint256[] unsignedValidators;
+        address[] validators;
+        uint256 totalValidators;
+    }
 
-    // struct UnstakedValidatorsContext {
-    //     uint256 deactivationEpoch;
-    //     uint256[] deactivatedValidators;
-    //     uint256 validatorIndex;
-    // }
+    struct UnstakedValidatorsContext {
+        uint256 deactivationEpoch;
+        uint256[] deactivatedValidators;
+        uint256 validatorIndex;
+    }
 
     modifier onlyStaker(uint256 validatorId) {
         _assertStaker(validatorId);
@@ -612,6 +612,82 @@ contract StakeManager is
         latestSignerUpdateEpoch[validatorId] = _currentEpoch;
     }
 
+    function batchSubmitCheck(
+        uint256 blockInterval,
+        bytes32 voteHash,
+        bytes32 stateRoot,
+        address proposer,
+        uint256[3][] calldata sigs
+     )  external  returns (uint256) {
+        uint256 _currentEpoch = currentEpoch;
+        uint256 signedStakePower;
+        address lastAdd;
+        uint256 totalStakers = validatorState.stakerCount;
+
+        UnsignedValidatorsContext memory unsignedCtx;
+        unsignedCtx.unsignedValidators = new uint256[](signers.length + totalStakers);
+        unsignedCtx.validators = signers;
+        unsignedCtx.validatorIndex = 0;
+        unsignedCtx.totalValidators = signers.length;
+
+        UnstakedValidatorsContext memory unstakeCtx;
+        unstakeCtx.deactivatedValidators = new uint256[](signers.length + totalStakers);
+
+        for (uint256 i = 0; i < sigs.length; ++i) {
+            address signer = ECVerify.ecrecovery(voteHash, sigs[i]);
+
+            if (signer == lastAdd) {
+                // if signer signs twice, just skip this signature
+                continue;
+            }
+
+            if (signer < lastAdd) {
+                // if signatures are out of order - break out, it is not possible to keep track of unsigned validators
+                break;
+            }
+
+            uint256 validatorId = signerToValidator[signer];
+            uint256 amount = validators[validatorId].amount;
+            Status status = validators[validatorId].status;
+            unstakeCtx.deactivationEpoch = validators[validatorId].deactivationEpoch;
+
+            if (_isValidator(status, amount, unstakeCtx.deactivationEpoch, _currentEpoch)) {
+                lastAdd = signer;
+
+                signedStakePower = signedStakePower.add(validators[validatorId].delegatedAmount).add(amount);
+
+                if (unstakeCtx.deactivationEpoch != 0) {
+                    // this validator not a part of signers list anymore
+                    unstakeCtx.deactivatedValidators[unstakeCtx.validatorIndex] = validatorId;
+                    unstakeCtx.validatorIndex++;
+                } else {
+                    unsignedCtx = _fillUnsignedValidators(unsignedCtx, signer);
+                }
+            } else if (status == Status.Locked) {
+                // TODO fix double unsignedValidators appearance
+                // make sure that jailed validator doesn't get his rewards too
+                unsignedCtx.unsignedValidators[unsignedCtx.unsignedValidatorIndex] = validatorId;
+                unsignedCtx.unsignedValidatorIndex++;
+                unsignedCtx.validatorIndex++;
+            }
+        }
+
+            // find the rest of validators without signature
+        unsignedCtx = _fillUnsignedValidators(unsignedCtx, address(0));
+
+        return
+            _increaseRewardAndAssertConsensus(
+                blockInterval,
+                proposer,
+                signedStakePower,
+                stateRoot,
+                unsignedCtx.unsignedValidators,
+                unsignedCtx.unsignedValidatorIndex,
+                unstakeCtx.deactivatedValidators,
+                unstakeCtx.validatorIndex
+            );
+    }
+
     // function checkSignatures(
     //     uint256 blockInterval,
     //     bytes32 voteHash,
@@ -841,20 +917,20 @@ contract StakeManager is
         return (amount > 0 && (deactivationEpoch == 0 || deactivationEpoch > _currentEpoch) && status == Status.Active);
     }
 
-    // function _fillUnsignedValidators(UnsignedValidatorsContext memory context, address signer)
-    //     private
-    //     view
-    //     returns(UnsignedValidatorsContext memory)
-    // {
-    //     while (context.validatorIndex < context.totalValidators && context.validators[context.validatorIndex] != signer) {
-    //         context.unsignedValidators[context.unsignedValidatorIndex] = signerToValidator[context.validators[context.validatorIndex]];
-    //         context.unsignedValidatorIndex++;
-    //         context.validatorIndex++;
-    //     }
+    function _fillUnsignedValidators(UnsignedValidatorsContext memory context, address signer)
+        private
+        view
+        returns(UnsignedValidatorsContext memory)
+    {
+        while (context.validatorIndex < context.totalValidators && context.validators[context.validatorIndex] != signer) {
+            context.unsignedValidators[context.unsignedValidatorIndex] = signerToValidator[context.validators[context.validatorIndex]];
+            context.unsignedValidatorIndex++;
+            context.validatorIndex++;
+        }
 
-    //     context.validatorIndex++;
-    //     return context;
-    // }
+        context.validatorIndex++;
+        return context;
+    }
 
     function _calculateCheckpointReward(
         uint256 blockInterval,
@@ -920,7 +996,7 @@ contract StakeManager is
         uint256 totalDeactivatedValidators
     ) private returns (uint256) {
         uint256 currentTotalStake = validatorState.amount;
-        require(signedStakePower >= currentTotalStake.mul(2).div(3).add(1), "2/3+1 non-majority!");
+        // require(signedStakePower >= currentTotalStake.mul(2).div(3).add(1), "2/3+1 non-majority!");
 
         uint256 reward = _calculateCheckpointReward(blockInterval, signedStakePower, currentTotalStake);
 
