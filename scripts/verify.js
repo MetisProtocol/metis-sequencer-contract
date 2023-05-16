@@ -1,71 +1,106 @@
 require("@nomiclabs/hardhat-etherscan");
 
-// eth
-const usdcAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-const oneInchAddress = "0x1111111254fb6c44bAC0beD2854e76F90643097d";
-const starkExAddress = "0xA1D5443F2FB80A5A55ac804C948B45ce4C52DCbb";
-const factAddress = "0xBE9a129909EbCb954bC065536D2bfAfBd170d27A";
+let govAddress = "0xBdb7fDbc1211F9eF09Aa9c006ebD389c59ffdBF9";
+let govProxyAddress = "0xa18655b73FDC38665CFB9e09A5a0a10C14e68EC5";
+let registryAddress = "0xA82F8dC4704d3512b120de70480219761F24B6Eb";
+let validatorShareFactoryAddress = "0x49b05721B9615dC1811E20F47D5700dA2d6Ed429";
+let stakingInfoAddress = "0xe38cfa32cCd918d94E2e20230dFaD1A4Fd8aEF16";
+let stakingNftAddress = "0x9Da17239a4170f50A5A2c11813BD0C601b5c9693";
+let testTokenAddress = "0xB4EB98c6d7D4807033Ae6195241ef7A839070748";
+let stakeManagerAddress = "0xd3b2241BfF9654195F814a15CbAc458C72Fa5084";
+let stakeManagerProxyAddress = "0xecD258382bd77A1d4b9a12b07E04c09081062369";
+let stakeManagerExtensionAddress = "0x46E0c0DBf12d99137e23942C965Fc1B551023f7C";
+let slashingManagerAddress = "0x497bd1C86a1088e80f58EaA13de8C81aB70a4e79";
+let stakingNftName = "Metis Sequencer";
+let stakingNftSymbol = "MS";
+let testTokenName = "Test ERC20";
+let testTokenSymbol = "TST20";
 
-let pool = '0x1661181907bBbd0688EBC6B3b630b3669bBB4Bd4';
-var signers = [
-  "0x015155D9f7bb601FbF25084C106531c759c05379",
-  "0x321072F3Ce95EDa4cc87F42FA483a5822a8A7A92",
-  "0xfA85BEA9B0F2D9540040118BeacbaD7258f45d81",
-];
-
-// BSC
-// const usdcAddress = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d";
-// const oneInchAddress = "0x1111111254fb6c44bAC0beD2854e76F90643097d";
-// const starkExAddress = "0x0000000000000000000000000000000000000000";
-// const factAddress = "0x0000000000000000000000000000000000000000";
-
-// let pool = '0x2fd7d4A45f80b1d22d1eBb7B3b2961D131eB0A22';
-// var signers = [
-//   "0xa3037C93F689D70FdE0edD811f98dCb3912d630a",
-//   "0x92845F13f99D116A95f300dad6C396e9FE0D9Cc9",
-//   "0xfA85BEA9B0F2D9540040118BeacbaD7258f45d81",
-// ];
-
-
-// MATIC
-// const usdcAddress = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
-// const oneInchAddress = "0x1111111254fb6c44bAC0beD2854e76F90643097d";
-// const starkExAddress = "0x0000000000000000000000000000000000000000";
-// const factAddress = "0x0000000000000000000000000000000000000000";
-
-
-// let pool = '0x7B55800de02e4799F7b00a2C9963575464053F6A';
-// var signers = [
-//     "0x9C5E4D586B38bfcFF9b64EAC7e78FF05068f9641",
-//     "0x203a5296948d5DD8889b3EC3097911451066B806",
-//     "0xfA85BEA9B0F2D9540040118BeacbaD7258f45d81",
-//   ];
-
-/// below variables only for testnet
 const main = async () => {
   const accounts = await hre.ethers.getSigners();
   let signer = accounts[0].address;
   console.log("signer address:%s", signer);
 
-  await verifyPool();
-};
+  // await hre.run("verify:verify", {
+  //   address: govAddress,
+  //   contract: "contracts/common/governance/Governance.sol:Governance",
+  //   constructorArguments: [
+  //   ],
+  // });
 
+  // // await hre.run("verify:verify", {
+  // //     address: govProxyAddress,
+  // //     contract: "contracts/common/governance/GovernanceProxy.sol:GovernanceProxy",
+  // //     constructorArguments: [
+  // //       govAddress
+  // //     ],
+  // //   });
 
-// constructor(address[] memory allowedSigners, address usdc, address aggregationRouterV4, address starkex, address fact) 
+  // await hre.run("verify:verify", {
+  //    address: registryAddress,
+  //    contract: "contracts/common/Registry.sol:Registry",
+  //    constructorArguments: [
+  //     govProxyAddress
+  //    ],
+  //  });
 
-async function verifyPool() {
+  // await hre.run("verify:verify", {
+  //    address: validatorShareFactoryAddress,
+  //    contract: "contracts/staking/validatorShare/ValidatorShareFactory.sol:ValidatorShareFactory",
+  //    constructorArguments: [],
+  //  });
+
+  // await hre.run("verify:verify", {
+  //    address: stakingInfoAddress,
+  //    contract: "contracts/staking/StakingInfo.sol:StakingInfo",
+  //    constructorArguments: [
+  //     registryAddress,
+  //    ],
+  //  });
+
+  // await hre.run("verify:verify", {
+  //     address: stakingNftAddress,
+  //     contract: "contracts/staking/stakeManager/StakingNFT.sol:StakingNFT",
+  //     constructorArguments: [
+  //       stakingNftName,
+  //       stakingNftSymbol
+  //     ],
+  //   });
+
+  // await hre.run("verify:verify", {
+  //   address: testTokenAddress,
+  //   contract: "contracts/common/tokens/TestToken.sol:TestToken",
+  //   constructorArguments: [
+  //     testTokenName,
+  //     testTokenSymbol
+  //   ],
+  // });
+
   await hre.run("verify:verify", {
-    address: pool,
-    contract: "contracts/core/MultiSigPool.sol:MultiSigPool",
+    address: stakeManagerAddress,
+    contract: "contracts/staking/stakeManager/StakeManager.sol:StakeManager",
     constructorArguments: [
-      signers,
-      usdcAddress,
-      oneInchAddress,
-      starkExAddress,
-      factAddress,
     ],
   });
-}
+
+  // // await hre.run("verify:verify", {
+  // //    address: stakeManagerProxyAddress,
+  // //    contract: "contracts/staking/stakeManager/StakeManagerProxy.sol:StakeManagerProxy",
+  // //    constructorArguments: [
+  // //     stakeManagerAddress
+  // //    ],
+  // //  });
+
+  //  await hre.run("verify:verify", {
+  //    address: slashingManagerAddress,
+  //    contract: "contracts/staking/slashing/SlashingManager.sol:SlashingManager",
+  //    constructorArguments: [
+  //     registryAddress,
+  //     stakingInfoAddress,
+  //     process.env.THEMIS_ID
+  //    ],
+  //  });
+};
 
 main()
   .then(() => process.exit(0))

@@ -31,8 +31,10 @@
     "compile_watch": "npx hardhat watch compilation",
     "test": "npx hardhat test",
     "test_watch": "npx hardhat watch test",
-    "deploy": "hardhat run scripts/deploy.js --network localhost",
-    "verify": "hardhat run scripts/verify_pool.js --network localhost"
+    "deploy": "hardhat run scripts/deploy.js --network goerli",
+    "verify": "hardhat run scripts/verify.js --network goerli",
+    "stake": "hardhat run scripts/stake.js --network goerli",
+    "registry": "hardhat run scripts/registry_update.js --network goerli"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.6",
@@ -55,12 +57,14 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.6.0",
     "@poanet/solidity-flattener": "^3.0.7",
-    "openzeppelin-solidity": "2.2.0",
     "@uniswap/lib": "^4.0.1-alpha",
     "@uniswap/v3-core": "^1.0.1",
     "abi-decoder": "^2.4.0",
     "dotenv": "^16.0.1",
+    "ethereumjs-util": "^7.1.5",
     "hardhat-watcher": "^2.3.0",
-    "solidity-rlp": "^2.0.7"
+    "openzeppelin-solidity": "2.2.0",
+    "solidity-rlp": "^2.0.7",
+    "web3": "^1.10.0"
   }
 }

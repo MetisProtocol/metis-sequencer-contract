@@ -337,18 +337,56 @@ contract StakeManager is
         _transferToken(destination, amount);
     }
 
+    // function reinitialize(
+    //     address _NFTContract,
+    //     address _stakingLogger,
+    //     address _validatorShareFactory,
+    //     address _extensionCode
+    // ) external onlyGovernance {
+    //     require(isContract(_extensionCode));
+    //     eventsHub = address(0x0);
+    //     extensionCode = _extensionCode;
+    //     NFTContract = StakingNFT(_NFTContract);
+    //     logger = StakingInfo(_stakingLogger);
+    //     validatorShareFactory = ValidatorShareFactory(_validatorShareFactory);
+    // }
+
+
     function reinitialize(
+        address _registry,
+        address _token,
         address _NFTContract,
         address _stakingLogger,
         address _validatorShareFactory,
+        address _governance,
+        address _owner,
         address _extensionCode
-    ) external onlyGovernance {
-        require(isContract(_extensionCode));
-        eventsHub = address(0x0);
-        extensionCode = _extensionCode;
-        NFTContract = StakingNFT(_NFTContract);
-        logger = StakingInfo(_stakingLogger);
-        validatorShareFactory = ValidatorShareFactory(_validatorShareFactory);
+    ) external onlyOwner {
+        require(isContract(_extensionCode), "auction impl incorrect"); // 检查auction impl
+        extensionCode = _extensionCode; // ？？
+        governance = IGovernance(_governance);  // gov合约地址
+        registry = _registry;  // registry合约地址
+        // rootChain = _rootchain;
+        token = IERC20(_token);  // stake或者奖励分发使用的那个代币
+        NFTContract = StakingNFT(_NFTContract); // NFT合约，每个validator对应一个nft
+        logger = StakingInfo(_stakingLogger); // staking info合约
+        validatorShareFactory = ValidatorShareFactory(_validatorShareFactory);  // validator delegate奖励份额工厂合约
+        _transferOwnership(_owner);
+
+        WITHDRAWAL_DELAY = (2**13); // unit: epoch 提现延迟时间，默认超大数，会通过updateDynastyValue方法进行更新
+        currentEpoch = 1;  // 默认从第1个epoch开始
+        dynasty = 886; // unit: epoch 50 days  ？？这个参
+        CHECKPOINT_REWARD = 20188 * (10**18); // 每个batchsubmit提交， update via governance
+        minDeposit = (10**18); // in ERC20 token
+        // minThemisFee = (10**18); // in ERC20 token, TODO: remove
+        checkPointBlockInterval = 1024;  // 多少个区块提交一次batch
+        signerUpdateLimit = 100; // signer更新次数限制
+
+        validatorThreshold = 7; //128 允许最大的验证节点数量
+        NFTCounter = 1; // validator id
+        auctionPeriod = (2**13) / 4; // 1 week in epochs 拍卖validator槽位周期
+        proposerBonus = 10; // 10 % of total rewards, 发起slash用户的奖励分成
+        delegationEnabled = true; // 是否开启delegate
     }
 
     /**

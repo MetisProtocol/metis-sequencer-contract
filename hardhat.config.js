@@ -37,10 +37,6 @@ module.exports = {
       url: process.env.MAINNET_RPC !== undefined ? process.env.MAINNET_RPC : "",
       accounts: process.env.DEVNET_PRIVKEY !== undefined ? [process.env.DEVNET_PRIVKEY] : [],
     },
-    rinkeby: {
-      url: process.env.RINKEBY_RPC !== undefined ? process.env.RINKEBY_RPC : "",
-      accounts: process.env.DEVNET_PRIVKEY !== undefined ? [process.env.DEVNET_PRIVKEY] : [],
-    },
     goerli: {
       url: process.env.GOERLI_RPC !== undefined ? process.env.GOERLI_RPC : "",
       accounts: process.env.DEVNET_PRIVKEY !== undefined ? [process.env.DEVNET_PRIVKEY] : [],
@@ -49,7 +45,6 @@ module.exports = {
   etherscan: {
     apiKey: {
       mainnet: process.env.ETHERSCAN_API_KEY,
-      rinkeby: process.env.ETHERSCAN_API_KEY,
       goerli: process.env.ETHERSCAN_API_KEY
     }
   },
