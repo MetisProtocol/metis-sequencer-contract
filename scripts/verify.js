@@ -1,16 +1,16 @@
 require("@nomiclabs/hardhat-etherscan");
 
-let govAddress = "0xBdb7fDbc1211F9eF09Aa9c006ebD389c59ffdBF9";
-let govProxyAddress = "0xa18655b73FDC38665CFB9e09A5a0a10C14e68EC5";
-let registryAddress = "0xA82F8dC4704d3512b120de70480219761F24B6Eb";
-let validatorShareFactoryAddress = "0x49b05721B9615dC1811E20F47D5700dA2d6Ed429";
-let stakingInfoAddress = "0xe38cfa32cCd918d94E2e20230dFaD1A4Fd8aEF16";
-let stakingNftAddress = "0x9Da17239a4170f50A5A2c11813BD0C601b5c9693";
-let testTokenAddress = "0xB4EB98c6d7D4807033Ae6195241ef7A839070748";
-let stakeManagerAddress = "0xd3b2241BfF9654195F814a15CbAc458C72Fa5084";
-let stakeManagerProxyAddress = "0xecD258382bd77A1d4b9a12b07E04c09081062369";
-let stakeManagerExtensionAddress = "0x46E0c0DBf12d99137e23942C965Fc1B551023f7C";
-let slashingManagerAddress = "0x497bd1C86a1088e80f58EaA13de8C81aB70a4e79";
+let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
+let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
+let validatorShareFactoryAddress = "0x40B09Cc3242076412837208A41503Fd4c51554C6";
+let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
+let stakingNftAddress = "0x5DB6a3111ea98AE461A4097C71CED4c9ef415526";
+let metisTokenAddress = "0xD331E3CA3e51d3dd6712541CB01d7100E24DAdD1";
+let testTokenAddress = "0x384d2a29acBf54F375939D0Ea6FD85969a628D74";
+let stakeManagerProxyAddress = "0xC3f4dD007F97197151711556110f48d4c772D734";
+let stakeManagerExtensionAddress = "0x81955bcCA0f852C072c877D1CCA1eD1b14c0E5eB";
+let slashingManagerAddress = "0x2B3a174C812f550B58CAD89A23345d3867e99367";
+let eventHubProxyAddress = "0xF7Ee63689b05B062Ebd15327CD80Cf81cC133fd0";
 let stakingNftName = "Metis Sequencer";
 let stakingNftSymbol = "MS";
 let testTokenName = "Test ERC20";
@@ -21,12 +21,27 @@ const main = async () => {
   let signer = accounts[0].address;
   console.log("signer address:%s", signer);
 
+  //  await hre.run("verify:verify", {
+  //    address: v1Address,
+  //    contract: "contracts/V1.sol:V1",
+  //    constructorArguments: [
+  //    ],
+  //  });
+
+  //   await hre.run("verify:verify", {
+  //     address: v2Address,
+  //     contract: "contracts/V2.sol:V2",
+  //     constructorArguments: [],
+  //   });
+  //  return
+
   // await hre.run("verify:verify", {
   //   address: govAddress,
   //   contract: "contracts/common/governance/Governance.sol:Governance",
   //   constructorArguments: [
   //   ],
   // });
+  // return
 
   // // await hre.run("verify:verify", {
   // //     address: govProxyAddress,
@@ -40,7 +55,7 @@ const main = async () => {
   //    address: registryAddress,
   //    contract: "contracts/common/Registry.sol:Registry",
   //    constructorArguments: [
-  //     govProxyAddress
+      
   //    ],
   //  });
 
@@ -50,6 +65,7 @@ const main = async () => {
   //    constructorArguments: [],
   //  });
 
+
   // await hre.run("verify:verify", {
   //    address: stakingInfoAddress,
   //    contract: "contracts/staking/StakingInfo.sol:StakingInfo",
@@ -57,6 +73,7 @@ const main = async () => {
   //     registryAddress,
   //    ],
   //  });
+
 
   // await hre.run("verify:verify", {
   //     address: stakingNftAddress,
@@ -67,6 +84,7 @@ const main = async () => {
   //     ],
   //   });
 
+
   // await hre.run("verify:verify", {
   //   address: testTokenAddress,
   //   contract: "contracts/common/tokens/TestToken.sol:TestToken",
@@ -76,12 +94,12 @@ const main = async () => {
   //   ],
   // });
 
-  await hre.run("verify:verify", {
-    address: stakeManagerAddress,
-    contract: "contracts/staking/stakeManager/StakeManager.sol:StakeManager",
-    constructorArguments: [
-    ],
-  });
+  // await hre.run("verify:verify", {
+  //   address: stakeManagerProxyAddress,
+  //   contract: "contracts/staking/stakeManager/StakeManager.sol:StakeManager",
+  //   constructorArguments: [
+  //   ],
+  // });
 
   // // await hre.run("verify:verify", {
   // //    address: stakeManagerProxyAddress,
@@ -100,6 +118,21 @@ const main = async () => {
   //     process.env.THEMIS_ID
   //    ],
   //  });
+
+    // await hre.run("verify:verify", {
+    //   address: stakeManagerExtensionAddress,
+    //   contract: "contracts/staking/stakeManager/StakeManagerExtension.sol:StakeManagerExtension",
+    //   constructorArguments: [
+    //   ],
+    // });
+
+      // await hre.run("verify:verify", {
+      //   address: eventHubProxyAddress,
+      //   contract: "contracts/staking/EventsHub.sol:EventsHub",
+      //   constructorArguments: [
+      //   ],
+      // });
+
 };
 
 main()

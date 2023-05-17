@@ -10,7 +10,8 @@ import {EventsHub} from "./../EventsHub.sol";
 import {OwnableLockable} from "../../common/mixin/OwnableLockable.sol";
 import {IStakeManager} from "../stakeManager/IStakeManager.sol";
 import {IValidatorShare} from "./IValidatorShare.sol";
-import {Initializable} from "../../common/mixin/Initializable.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+
 
 abstract contract ValidatorShare is
     IValidatorShare,
@@ -206,12 +207,15 @@ abstract contract ValidatorShare is
         logger.logStakeUpdate(validatorId);
     }
 
-    function withdrawRewards() override public {
+    function withdrawRewards() public override {
         uint256 rewards = _withdrawAndTransferReward(msg.sender);
         require(rewards >= minAmount, "Too small rewards amount");
     }
 
-    function migrateOut(address user, uint256 amount) override external onlyOwner {
+    function migrateOut(
+        address user,
+        uint256 amount
+    ) external override onlyOwner {
         _withdrawAndTransferReward(user);
         (uint256 totalStaked, uint256 rate) = getTotalStake(user);
         require(totalStaked >= amount, "Migrating too much");
@@ -228,12 +232,15 @@ abstract contract ValidatorShare is
         stakingLogger.logDelegatorUnstaked(validatorId, user, amount);
     }
 
-    function migrateIn(address user, uint256 amount) override external onlyOwner {
+    function migrateIn(
+        address user,
+        uint256 amount
+    ) external override onlyOwner {
         _withdrawAndTransferReward(user);
         _buyShares(amount, 0, user);
     }
 
-    function unstakeClaimTokens() override public {
+    function unstakeClaimTokens() public override {
         DelegatorUnbond memory unbond = unbonds[msg.sender];
         uint256 amount = _unstakeClaimTokens(unbond);
         delete unbonds[msg.sender];
@@ -244,7 +251,7 @@ abstract contract ValidatorShare is
         uint256 validatorStake,
         uint256 delegatedAmount,
         uint256 totalAmountToSlash
-    ) override external onlyOwner returns (uint256) {
+    ) external override onlyOwner returns (uint256) {
         uint256 _withdrawPool = withdrawPool;
         uint256 delegationAmount = delegatedAmount.add(_withdrawPool);
         if (delegationAmount == 0) {
@@ -270,7 +277,7 @@ abstract contract ValidatorShare is
         return _amountToSlash;
     }
 
-    function updateDelegation(bool _delegation) override external onlyOwner {
+    function updateDelegation(bool _delegation) external override onlyOwner {
         delegation = _delegation;
     }
 
@@ -278,7 +285,7 @@ abstract contract ValidatorShare is
         address token,
         address payable destination,
         uint256 amount
-    ) override external onlyOwner {
+    ) external override onlyOwner {
         if (token == address(0x0)) {
             destination.transfer(amount);
         } else {
@@ -507,7 +514,11 @@ abstract contract ValidatorShare is
         return _amount;
     }
 
-    function _transfer(address from, address to, uint256 value) override internal {
+    function _transfer(
+        address from,
+        address to,
+        uint256 value
+    ) internal override {
         // get rewards for recipient
         _withdrawAndTransferReward(to);
         // convert rewards to shares
@@ -519,18 +530,22 @@ abstract contract ValidatorShare is
 
     function owner()
         public
-        override(IValidatorShare, Ownable)
         view
+        override(IValidatorShare, Ownable)
         returns (address)
     {
         return super.owner();
     }
 
-    function unlock() public override(IValidatorShare, OwnableLockable) onlyOwner {
+    function unlock()
+        public
+        override(IValidatorShare, OwnableLockable)
+        onlyOwner
+    {
         super.unlock();
     }
 
-    function lock() public virtual override(IValidatorShare, OwnableLockable) {
+    function lock() public override(IValidatorShare, OwnableLockable){
         super.lock();
     }
 }

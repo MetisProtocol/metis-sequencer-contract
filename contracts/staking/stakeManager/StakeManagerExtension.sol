@@ -8,14 +8,14 @@ import {IStakeManager} from "./IStakeManager.sol";
 import {StakeManagerStorage} from "./StakeManagerStorage.sol";
 import {StakeManagerStorageExtension} from "./StakeManagerStorageExtension.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {Initializable} from "../../common/mixin/Initializable.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {EventsHub} from "../EventsHub.sol";
 import {ValidatorShare} from "../validatorShare/ValidatorShare.sol";
 
-contract StakeManagerExtension is StakeManagerStorage, Initializable, StakeManagerStorageExtension {
+contract StakeManagerExtension is StakeManagerStorage, StakeManagerStorageExtension {
     using SafeMath for uint256;
 
-    constructor() public GovernanceLockable(address(0x0)) {}
+    // constructor() public GovernanceLockable(address(0x0)) {}
 
     function startAuction(
         uint256 validatorId,

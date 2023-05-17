@@ -5,15 +5,29 @@ const {
 
 const web3 = require("web3");
 
-let metisTokenAddress = "0x837614e99F5F8275C1773F004e6a48fFC1AC33D0";
+let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
+let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
+let validatorShareFactoryAddress = "0x40B09Cc3242076412837208A41503Fd4c51554C6";
+let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
+let stakingNftAddress = "0x5DB6a3111ea98AE461A4097C71CED4c9ef415526";
+let metisTokenAddress = "0xD331E3CA3e51d3dd6712541CB01d7100E24DAdD1";
 let testTokenAddress = "0x384d2a29acBf54F375939D0Ea6FD85969a628D74";
-let stakeManagerAddress = "0xeCdDe811546A0B6027D710bfCD07C5e89E719ABf";
-let stakeManagerProxyAddress = "0x7a91d5924Bfb185fd17cCd06bb1496876190a8DF";
+let stakeManagerProxyAddress = "0xC3f4dD007F97197151711556110f48d4c772D734";
+let stakeManagerExtensionAddress = "0x81955bcCA0f852C072c877D1CCA1eD1b14c0E5eB";
+let slashingManagerAddress = "0x2B3a174C812f550B58CAD89A23345d3867e99367";
+let eventHubProxyAddress = "0xF7Ee63689b05B062Ebd15327CD80Cf81cC133fd0";
 
 const main = async () => {
   const accounts = await ethers.getSigners();
   signer = accounts[0].address;
   console.log("signer address:%s", signer);
+
+  // const metisToken = await ethers.getContractFactory("TestToken");
+  // const metisTokenObj = await metisToken.attach(metisTokenAddress);
+  // console.log('Sender accounts has a balanceOf', (await metisTokenObj.balanceOf(signer)).toString())
+  // let approveTx = await metisTokenObj.approve(stakeManagerProxyAddress, web3.utils.toWei('1000000000000'))
+  // console.log("approve tx:", approveTx.hash);
+  // return 
 
   const validatorAccount = signer;
   // const validatorAccount = "0x53cC871454560f150839bc195A3727335e5fAfA4";
@@ -24,18 +38,12 @@ const main = async () => {
   const stakeAmount = web3.utils.toWei(process.argv[8] || '1000');
   console.log(`Staking ${stakeAmount} for ${validatorAccount}...`);
 
-  // const metisToken = await ethers.getContractFactory("TestToken");
-  // const metisTokenObj = await metisToken.attach(metisTokenAddress);
-  // console.log('Sender accounts has a balanceOf', (await metisTokenObj.balanceOf(signer)).toString())
-  // let approveTx = await metisTokenObj.approve(stakeManagerAddress, web3.utils.toWei('1000000000000'))
-  // console.log("approve tx:", approveTx.hash);
-  // return 
 
   console.log('sent approve tx, staking now...')
   const stakeManager = await ethers.getContractFactory("StakeManager");
-  const stakeManagerObj = await stakeManager.at(stakeManagerProxyAddress);
-  // Remember to change the 4th parameter to false if delegation is not required
-  await stakeManagerObj.stakeFor(validatorAccount, stakeAmount, true, pubkey)
+  const stakeManagerObj = await stakeManager.attach(stakeManagerProxyAddress);
+  let stakeTx  = await stakeManagerObj.stakeFor(validatorAccount, stakeAmount, false, pubkey);
+  console.log("stake tx ", stakeTx.hash);
 }
 
 // async function topUpForFee() {

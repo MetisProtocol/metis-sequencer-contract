@@ -4,18 +4,17 @@ const fs = require('fs')
 
 const verifyStr = "npx hardhat verify --network";
 
-let govAddress = "0xa21BDa94809C25c99037BdB29F3BA6387eD96a75";
-let govProxyAddress = "0xA3e0D0A99C9738a10f72BE5CBdBBEa447E23DF00";
-let registryAddress = "0x53901288c5c61c9B53cedcB7d5bDF04240BE0eaF";
-let validatorShareFactoryAddress = "0xa915D351873105b9535481a7d760dbF537E659B6";
-let stakingInfoAddress = "0xA2d73dE85C529fE33972DC844d2ADA7849597228";
-let stakingNftAddress = "0x837614e99F5F8275C1773F004e6a48fFC1AC33D0";
-let metisTokenAddress = "0x837614e99F5F8275C1773F004e6a48fFC1AC33D0";
+let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
+let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
+let validatorShareFactoryAddress = "0x40B09Cc3242076412837208A41503Fd4c51554C6";
+let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
+let stakingNftAddress = "0x5DB6a3111ea98AE461A4097C71CED4c9ef415526";
+let metisTokenAddress = "0xD331E3CA3e51d3dd6712541CB01d7100E24DAdD1";
 let testTokenAddress = "0x384d2a29acBf54F375939D0Ea6FD85969a628D74";
-let stakeManagerAddress = "0xeCdDe811546A0B6027D710bfCD07C5e89E719ABf";
-let stakeManagerProxyAddress = "0x7a91d5924Bfb185fd17cCd06bb1496876190a8DF";
-let stakeManagerExtensionAddress = "0x1a0F9Ca280B3c0a78515397EDDE47c05D0A76956";
-let slashingManagerAddress = "0x4595cB3099F709C8F470Ac9Ad04Bd4e00eb74054";
+let stakeManagerProxyAddress = "0xC3f4dD007F97197151711556110f48d4c772D734";
+let stakeManagerExtensionAddress = "0x81955bcCA0f852C072c877D1CCA1eD1b14c0E5eB";
+let slashingManagerAddress = "0x2B3a174C812f550B58CAD89A23345d3867e99367";
+let eventHubProxyAddress = "0xF7Ee63689b05B062Ebd15327CD80Cf81cC133fd0";
 let stakingNftName = "Metis Sequencer";
 let stakingNftSymbol = "MS";
 let metisTokenName = "Metis ERC20";
@@ -29,52 +28,94 @@ const main = async () => {
   signer = accounts[0].address;
   console.log("signer address:%s", signer, new Date().toTimeString());
 
-  // const Governance = await ethers.getContractFactory("Governance");
-  // const proxy = await upgrades.deployProxy(Governance, []);
-  // await proxy.deployed();
-  // console.log(proxy.address);
+  // deploy v1 contract
+  // const V1contract = await ethers.getContractFactory("V1");
+  // console.log("Deploying V1contract...");
+  // const v1contract = await upgrades.deployProxy(V1contract, [10]);
+  // await v1contract.deployed();
+  // console.log("V1 Contract deployed to:", v1contract.address);
+
+
+  // upgrade to v2
+  //  const V2Contract = await ethers.getContractFactory("V2");
+  //  console.log("Upgrading V1Contract...");
+  //  let upgrade = await upgrades.upgradeProxy(v1ProxyAddress, V2Contract);
+  //  console.log("V1 Upgraded to V2");
+  //  console.log("V2 Contract Deployed To:", upgrade.address)
   // return;
 
   console.log('deploying contracts...');
-  // await deployGovernance();
-  // await deployGovernanceProxy(govAddress);
-  // await deployRegistry(govProxyAddress);
-  // await deployValidatorShareFactory();
-  // await deployValidatorShare();
-  // await deployStakingInfo(registryAddress);
-  // await deployStakingNFT(stakingNftName, stakingNftSymbol);
 
-  // console.log('deploying tokens...');
+  // deploy gov and gov proxy
+  // const gov = await hre.ethers.getContractFactory("Governance");
+  // const govProxy = await upgrades.deployProxy(gov, [signer]);
+  // await govProxy.deployed();
+  // console.log("gov proxy deployed to:", govProxy.address);
+
+  // govProxyAddress = govProxy.address;
+  // console.log(verifyStr, process.env.HARDHAT_NETWORK, govProxy.address);
+  // await delay(3000);
+  // return 
+
+  // deploy registry
+  // const registry = await hre.ethers.getContractFactory("Registry");
+  // let registryDeployed = await registry.deploy();
+  // console.log("registry deployed to:", registryDeployed.address);
+  // registryAddress = registryDeployed.address;
+  // await delay(3000);
+
+  // // registry init
+  // let registryInitTx = await registryDeployed.initialize(govProxyAddress);
+  // console.log("registry initialize tx:", registryInitTx.hash);
+
+  // deploy validator share
+  // const ValidatorShareFactory = await hre.ethers.getContractFactory("ValidatorShareFactory");
+  // validatorShareFactoryDeployed = await ValidatorShareFactory.deploy();
+  // console.log("ValidatorShareFactory deployed to:", validatorShareFactoryDeployed.address);
+  // validatorShareFactoryAddress = validatorShareFactoryDeployed.address;
+  // await delay(3000);
+
+
+  // deploy staking info
+  // const StakingInfo = await hre.ethers.getContractFactory("StakingInfo");
+  // stakingInfoDeployed = await StakingInfo.deploy(registryAddress);
+  // console.log("StakingInfo deployed to:", stakingInfoDeployed.address);
+  // stakingInfoAddress = stakingInfoDeployed.address;
+  // await delay(3000);
+
+
+  // deploy staking nft
+  // const StakingNFT = await hre.ethers.getContractFactory("StakingNFT");
+  // stakingNFTDeployed = await StakingNFT.deploy(stakingNftName, stakingNftSymbol);
+  // console.log("StakingNFT deployed to:", stakingNFTDeployed.address);
+  // stakingNftAddress = stakingNFTDeployed.address;
+  // await delay(3000);
+
+
+  console.log('deploying tokens...');
   // await deployMetisToken(metisTokenName, metisTokenSymbol);
   // await deployTestToken(testTokenName, testTokenSymbol);
-
-  // await deployStakeManager();
-  // await deployStakeManagerProxy(ZeroAddress);
   // await deployStakeManagerExtension();
-  
-  // let ABI = [
-  //   "function initialize(address _registry,address _token,address _NFTContract,address _stakingLogger,address _validatorShareFactory,address _governance,address _owner,address _extensionCode)"
-  // ];
-  // let iface = new ethers.utils.Interface(ABI);
-  // let initializeEncodeData = iface.encodeFunctionData("initialize", [
-  //       registryAddress,
-  //       metisTokenAddress,
-  //       stakingNftAddress,
-  //       stakingInfoAddress,
-  //       validatorShareFactoryAddress,
-  //       govProxyAddress,
-  //       signer,
-  //       stakeManagerExtensionAddress
-  //     ])
-  // console.log("initializeEncodeData: ", initializeEncodeData)
 
-  // const StakeManagerProxy = await hre.ethers.getContractFactory("StakeManagerProxy");
-  // const stakeManagerProxyObj = await StakeManagerProxy.attach(stakeManagerProxyAddress);
-  // let updateResult = await stakeManagerProxyObj.updateAndCall(
-  //   stakeManagerAddress,
-  //   initializeEncodeData)
-  // console.log('stakeManagerProxy initialize result:', updateResult.hash)
-  // await delay(3000);
+  // deploy stake manager and proxy
+  // const stakeManager = await hre.ethers.getContractFactory("StakeManager");
+  // const stakeManagerProxy = await upgrades.deployProxy(stakeManager, 
+  //           [
+  //             registryAddress,
+  //             metisTokenAddress,
+  //             stakingNftAddress,
+  //             stakingInfoAddress,
+  //             validatorShareFactoryAddress,
+  //             govProxyAddress,
+  //             signer,
+  //             stakeManagerExtensionAddress
+  //           ],
+  //           {
+  //             initializer: 'initialize(address,address,address,address,address,address,address,address)'
+  //           });
+  // await stakeManagerProxy.deployed();
+  // console.log("StakeManager deployed to:", stakeManagerProxy.address);
+  // stakeManagerProxyAddress = stakeManagerProxy.address;
 
   // const StakingNFT = await hre.ethers.getContractFactory("StakingNFT");
   // const StakingNFTObj = await StakingNFT.attach(stakingNftAddress);
@@ -85,33 +126,24 @@ const main = async () => {
   // await deploySlashingManager(registryAddress, stakingInfoAddress, process.env.THEMIS_ID);
   // await delay(3000);
 
-   const StakeManager = await hre.ethers.getContractFactory("StakeManager");
-   const stakeManagerObj = await StakeManager.attach(stakeManagerAddress);
-  let reinitResult = await stakeManagerObj.functions.reinitialize(
-      registryAddress,
-      metisTokenAddress,
-      stakingNftAddress,
-      stakingInfoAddress,
-      validatorShareFactoryAddress,
-      govProxyAddress,
-      signer,
-      stakeManagerExtensionAddress
-  );
-  console.log('stakeManager reinitialize result:', reinitResult)
-  // await delay(3000);
-
+  // deploy event hub
+  const EventsHub = await hre.ethers.getContractFactory("EventsHub");
+  const EventsHubProxy = await upgrades.deployProxy(EventsHub, [registryAddress])
+  await EventsHubProxy.deployed();
+  console.log("EventsHub deployed to :", EventsHubProxy.address);
+  eventHubProxyAddress = EventsHubProxy.address;
+  await delay(3000);
   
   console.log('writing contract addresses to file...')
   const contractAddresses = {
     root: {
       Registry: registryAddress,
-      Governance: govAddress,
       GovernanceProxy: govProxyAddress,
-      StakingManager: stakeManagerAddress,
       StakingManagerProxy: stakeManagerProxyAddress,
       SlashingManager: slashingManagerAddress,
       StakingInfo: stakingInfoAddress,
       ValidatorShareFactory: validatorShareFactoryAddress,
+      StakeManagerExtensionAddress: stakeManagerExtensionAddress,
       StakingNft: stakingNftAddress,
       tokens: {
         MetisToken: metisTokenAddress,
@@ -124,10 +156,12 @@ const main = async () => {
 
 async function deployGovernance() {
   const Governance = await hre.ethers.getContractFactory("Governance");
-  governanceDeployed = await Governance.deploy();
-  console.log("governance deployed to:", governanceDeployed.address);
-  govAddress = governanceDeployed.address;
-  console.log(verifyStr, process.env.HARDHAT_NETWORK, governanceDeployed.address);
+  const govProxy = await upgrades.deployProxy(Governance, []);
+  await govProxy.deployed();
+  console.log("gov deployed to:", govProxy.address);
+  
+  govProxyAddress = govProxy.address;
+  console.log(verifyStr, process.env.HARDHAT_NETWORK, govProxy.address);
   await delay(3000);
 }
 

@@ -20,17 +20,16 @@ import {ValidatorShareFactory} from "../validatorShare/ValidatorShareFactory.sol
 import {StakeManagerStorage} from "./StakeManagerStorage.sol";
 import {StakeManagerStorageExtension} from "./StakeManagerStorageExtension.sol";
 import {IGovernance} from "../../common/governance/IGovernance.sol";
-import {Initializable} from "../../common/mixin/Initializable.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+
 import {StakeManagerExtension} from "./StakeManagerExtension.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract StakeManager is
     StakeManagerStorage,
-    Initializable,
     IStakeManager,
     DelegateProxyForwarder,
-    StakeManagerStorageExtension,
-    Ownable
+    StakeManagerStorageExtension
 {
     using SafeMath for uint256;
     using Merkle for bytes32;
@@ -69,16 +68,20 @@ contract StakeManager is
         require(validators[validatorId].contractAddress == msg.sender, "Invalid contract address");
     }
 
-    constructor() GovernanceLockable(address(0x0)) initializer {}
+    address public owner;
+
+    modifier onlyOwner() {
+    require(msg.sender == owner, "ONLY_OWNER");
+    _;
+    }
 
     function initialize(
+        address _governance,
         address _registry,
-        // address _rootchain,
         address _token,
         address _NFTContract,
         address _stakingLogger,
         address _validatorShareFactory,
-        address _governance,
         address _owner,
         address _extensionCode
     ) external initializer {
@@ -86,12 +89,11 @@ contract StakeManager is
         extensionCode = _extensionCode; // ？？
         governance = IGovernance(_governance);  // gov合约地址
         registry = _registry;  // registry合约地址
-        // rootChain = _rootchain;
         token = IERC20(_token);  // stake或者奖励分发使用的那个代币
         NFTContract = StakingNFT(_NFTContract); // NFT合约，每个validator对应一个nft
         logger = StakingInfo(_stakingLogger); // staking info合约
         validatorShareFactory = ValidatorShareFactory(_validatorShareFactory);  // validator delegate奖励份额工厂合约
-        _transferOwnership(_owner);
+        owner = _owner;
 
         WITHDRAWAL_DELAY = (2**13); // unit: epoch 提现延迟时间，默认超大数，会通过updateDynastyValue方法进行更新
         currentEpoch = 1;  // 默认从第1个epoch开始
@@ -371,7 +373,7 @@ contract StakeManager is
         NFTContract = StakingNFT(_NFTContract); // NFT合约，每个validator对应一个nft
         logger = StakingInfo(_stakingLogger); // staking info合约
         validatorShareFactory = ValidatorShareFactory(_validatorShareFactory);  // validator delegate奖励份额工厂合约
-        _transferOwnership(_owner);
+        owner = _owner;
 
         WITHDRAWAL_DELAY = (2**13); // unit: epoch 提现延迟时间，默认超大数，会通过updateDynastyValue方法进行更新
         currentEpoch = 1;  // 默认从第1个epoch开始
@@ -1323,23 +1325,6 @@ contract StakeManager is
         require(token.transferFrom(from, destination, amount), "transfer from failed");
     }
 
-    // function _transferAndTopUp(
-    //     address user,
-    //     address from,
-    //     uint256 fee,
-    //     uint256 additionalAmount
-    // ) private {
-    //     require(fee >= minThemisFee, "fee too small");
-    //     _transferTokenFrom(from, address(this), fee.add(additionalAmount));
-    //     totalThemisFee = totalThemisFee.add(fee);
-    //     logger.logTopUpFee(user, fee);
-    // }
-
-    // function _claimFee(address user, uint256 amount) private {
-    //     totalThemisFee = totalThemisFee.sub(amount);
-    //     logger.logClaimFee(user, amount);
-    // }
-
     function _insertSigner(address newSigner) internal {
         signers.push(newSigner);
 
@@ -1371,7 +1356,5 @@ contract StakeManager is
 
             (swapSigner, signers[i - 1]) = (signers[i - 1], swapSigner);
         }
-
-        // signers.length = totalSigners - 1;
     }
 }

@@ -1,7 +1,8 @@
 pragma solidity ^0.8.0;
 
 import {Registry} from "../common/Registry.sol";
-import {Initializable} from "../common/mixin/Initializable.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+
 
 contract IStakeManagerEventsHub {
     struct Validator {

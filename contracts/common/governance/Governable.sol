@@ -1,11 +1,13 @@
 pragma solidity ^0.8.0;
 
 import {IGovernance} from "./IGovernance.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-contract Governable {
+
+contract Governable is Initializable {
     IGovernance public governance;
 
-    constructor(address _governance) public {
+    function initialize(address _governance) public virtual initializer {
         governance = IGovernance(_governance);
     }
 
