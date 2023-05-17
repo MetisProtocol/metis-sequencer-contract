@@ -13,7 +13,6 @@ import {DelegateProxyForwarder} from "../../common/misc/DelegateProxyForwarder.s
 import {Registry} from "../../common/Registry.sol";
 import {IStakeManager} from "./IStakeManager.sol";
 import {IValidatorShare} from "../validatorShare/IValidatorShare.sol";
-import {ValidatorShare} from "../validatorShare/ValidatorShare.sol";
 import {StakingInfo} from "../StakingInfo.sol";
 import {StakingNFT} from "./StakingNFT.sol";
 import {ValidatorShareFactory} from "../validatorShare/ValidatorShareFactory.sol";
@@ -100,7 +99,6 @@ contract StakeManager is
         dynasty = 886; // unit: epoch 50 days  ？？这个参
         CHECKPOINT_REWARD = 20188 * (10**18); // 每个batchsubmit提交， update via governance
         minDeposit = (10**18); // in ERC20 token
-        // minThemisFee = (10**18); // in ERC20 token, TODO: remove
         checkPointBlockInterval = 1024;  // 多少个区块提交一次batch
         signerUpdateLimit = 100; // signer更新次数限制
 
@@ -111,14 +109,6 @@ contract StakeManager is
         delegationEnabled = true; // 是否开启delegate
     }
 
-    // function isOwner() public view returns (bool) {
-    //     address _owner;
-    //     bytes32 position = keccak256("metis.io.proxy.owner");
-    //     assembly {
-    //         _owner := sload(position)
-    //     }
-    //     return msg.sender == _owner;
-    // }
 
     /**
         Public View Methods
@@ -312,11 +302,6 @@ contract StakeManager is
         signerUpdateLimit = _limit;
     }
 
-    // function updateMinAmounts(uint256 _minDeposit, uint256 _minThemisFee) public onlyGovernance {
-    //     minDeposit = _minDeposit;
-    //     minThemisFee = _minThemisFee;
-    // }
-
     // 更新最小stake数量
     function updateMinAmounts(uint256 _minDeposit) public onlyGovernance {
         minDeposit = _minDeposit;
@@ -339,82 +324,23 @@ contract StakeManager is
         _transferToken(destination, amount);
     }
 
-    // function reinitialize(
-    //     address _NFTContract,
-    //     address _stakingLogger,
-    //     address _validatorShareFactory,
-    //     address _extensionCode
-    // ) external onlyGovernance {
-    //     require(isContract(_extensionCode));
-    //     eventsHub = address(0x0);
-    //     extensionCode = _extensionCode;
-    //     NFTContract = StakingNFT(_NFTContract);
-    //     logger = StakingInfo(_stakingLogger);
-    //     validatorShareFactory = ValidatorShareFactory(_validatorShareFactory);
-    // }
-
-
     function reinitialize(
-        address _registry,
-        address _token,
         address _NFTContract,
         address _stakingLogger,
         address _validatorShareFactory,
-        address _governance,
-        address _owner,
         address _extensionCode
-    ) external onlyOwner {
-        require(isContract(_extensionCode), "auction impl incorrect"); // 检查auction impl
-        extensionCode = _extensionCode; // ？？
-        governance = IGovernance(_governance);  // gov合约地址
-        registry = _registry;  // registry合约地址
-        // rootChain = _rootchain;
-        token = IERC20(_token);  // stake或者奖励分发使用的那个代币
-        NFTContract = StakingNFT(_NFTContract); // NFT合约，每个validator对应一个nft
-        logger = StakingInfo(_stakingLogger); // staking info合约
-        validatorShareFactory = ValidatorShareFactory(_validatorShareFactory);  // validator delegate奖励份额工厂合约
-        owner = _owner;
-
-        WITHDRAWAL_DELAY = (2**13); // unit: epoch 提现延迟时间，默认超大数，会通过updateDynastyValue方法进行更新
-        currentEpoch = 1;  // 默认从第1个epoch开始
-        dynasty = 886; // unit: epoch 50 days  ？？这个参
-        CHECKPOINT_REWARD = 20188 * (10**18); // 每个batchsubmit提交， update via governance
-        minDeposit = (10**18); // in ERC20 token
-        // minThemisFee = (10**18); // in ERC20 token, TODO: remove
-        checkPointBlockInterval = 1024;  // 多少个区块提交一次batch
-        signerUpdateLimit = 100; // signer更新次数限制
-
-        validatorThreshold = 7; //128 允许最大的验证节点数量
-        NFTCounter = 1; // validator id
-        auctionPeriod = (2**13) / 4; // 1 week in epochs 拍卖validator槽位周期
-        proposerBonus = 10; // 10 % of total rewards, 发起slash用户的奖励分成
-        delegationEnabled = true; // 是否开启delegate
+    ) external onlyGovernance {
+        require(isContract(_extensionCode));
+        eventsHub = address(0x0);
+        extensionCode = _extensionCode;
+        NFTContract = StakingNFT(_NFTContract);
+        logger = StakingInfo(_stakingLogger);
+        validatorShareFactory = ValidatorShareFactory(_validatorShareFactory);
     }
 
     /**
         Public Methods
      */
-
-    // function topUpForFee(address user, uint256 themisFee) public onlyWhenUnlocked {
-    //     _transferAndTopUp(user, msg.sender, themisFee, 0);
-    // }
-
-    // function claimFee(
-    //     uint256 accumFeeAmount,
-    //     uint256 index,
-    //     bytes memory proof
-    // ) public {
-    //     //Ignoring other params because rewards' distribution is on chain
-    //     require(
-    //         keccak256(abi.encode(msg.sender, accumFeeAmount)).checkMembership(index, accountStateRoot, proof),
-    //         "Wrong acc proof"
-    //     );
-    //     uint256 withdrawAmount = accumFeeAmount.sub(userFeeExit[msg.sender]);
-    //     _claimFee(msg.sender, withdrawAmount);
-    //     userFeeExit[msg.sender] = accumFeeAmount;
-    //     _transferToken(msg.sender, withdrawAmount);
-    // }
-
     // 查询某个验证节点地址总的抵押金额
     function totalStakedFor(address user) override external view returns (uint256) {
         if (user == address(0x0) || NFTContract.balanceOf(user) == 0) {
@@ -461,7 +387,6 @@ contract StakeManager is
     // 推翻原来的验证节点，并且给新的竞拍这抵押
     function dethroneAndStake(
         address auctionUser,
-        // uint256 themisFee,
         uint256 validatorId,
         uint256 auctionAmount,
         bool acceptDelegation,
@@ -469,7 +394,6 @@ contract StakeManager is
     ) override external {
         require(msg.sender == address(this), "not allowed");
         // dethrone
-        // _transferAndTopUp(auctionUser, auctionUser, themisFee, 0);
         _unstake(validatorId, currentEpoch);
 
         uint256 newValidatorId = _stakeFor(auctionUser, auctionAmount, acceptDelegation, signerPubkey);
@@ -521,8 +445,7 @@ contract StakeManager is
     ) override public  onlyWhenUnlocked {
         require(currentValidatorSetSize() < validatorThreshold, "no more slots");
         require(amount >= minDeposit, "not enough deposit");
-        // _transferAndTopUp(user, msg.sender, themisFee, amount);
-        // _transferAndTopUp(user, msg.sender, 0, amount);
+        _transferTokenFrom(msg.sender, address(this), amount);
         _stakeFor(user, amount, acceptDelegation, signerPubkey);
     }
 

@@ -9,19 +9,24 @@ let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
 let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
 let validatorShareFactoryAddress = "0x40B09Cc3242076412837208A41503Fd4c51554C6";
 let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
-let stakingNftAddress = "0x5DB6a3111ea98AE461A4097C71CED4c9ef415526";
+let stakingNftAddress = "0x8Cc705ccAe9a16566573BBc3405b347751e30992";
 let metisTokenAddress = "0xD331E3CA3e51d3dd6712541CB01d7100E24DAdD1";
 let testTokenAddress = "0x384d2a29acBf54F375939D0Ea6FD85969a628D74";
-let stakeManagerProxyAddress = "0xC3f4dD007F97197151711556110f48d4c772D734";
+let stakeManagerProxyAddress = "0x95f54194847bEECC0b6af1C7D6C6cD4cddeE62A6";
 let stakeManagerExtensionAddress = "0x81955bcCA0f852C072c877D1CCA1eD1b14c0E5eB";
 let slashingManagerAddress = "0x2B3a174C812f550B58CAD89A23345d3867e99367";
 let eventHubProxyAddress = "0xF7Ee63689b05B062Ebd15327CD80Cf81cC133fd0";
+let stakingNftName = "Metis Sequencer";
+let stakingNftSymbol = "MS";
+let testTokenName = "Test ERC20";
+let testTokenSymbol = "TST20";
 
 const main = async () => {
   const accounts = await ethers.getSigners();
   signer = accounts[0].address;
   console.log("signer address:%s", signer);
 
+  // // 授权
   // const metisToken = await ethers.getContractFactory("TestToken");
   // const metisTokenObj = await metisToken.attach(metisTokenAddress);
   // console.log('Sender accounts has a balanceOf', (await metisTokenObj.balanceOf(signer)).toString())
@@ -29,20 +34,20 @@ const main = async () => {
   // console.log("approve tx:", approveTx.hash);
   // return 
 
-  const validatorAccount = signer;
-  // const validatorAccount = "0x53cC871454560f150839bc195A3727335e5fAfA4";
+  // const validatorAccount = signer;
+  const validatorAccount = "0x53cC871454560f150839bc195A3727335e5fAfA4";
   // pubkey should not have the leading 04 prefix
   // const pubkey = "0x04f747f4dc85add58949a08feaff631a4d81f7fec402a1a9b1e0627584c76598c2e52027285cbd67d2a86866932115aaed4c787966712b84c4459e94fdd200f190";
-  // const pubkey = "0xf747f4dc85add58949a08feaff631a4d81f7fec402a1a9b1e0627584c76598c2e52027285cbd67d2a86866932115aaed4c787966712b84c4459e94fdd200f190";
-  const pubkey = "0x2d905ff3831bb3e3bec873544cd8da2796b5a3a699f0e8dbe86e811322e77cfbaa8ea790e0af28a640f9efb5ba72afab13bbae9b5767d99e3d28a62ec02491bd";
-  const stakeAmount = web3.utils.toWei(process.argv[8] || '1000');
+  const pubkey = "0xf747f4dc85add58949a08feaff631a4d81f7fec402a1a9b1e0627584c76598c2e52027285cbd67d2a86866932115aaed4c787966712b84c4459e94fdd200f190";
+  // const pubkey = "0x2d905ff3831bb3e3bec873544cd8da2796b5a3a699f0e8dbe86e811322e77cfbaa8ea790e0af28a640f9efb5ba72afab13bbae9b5767d99e3d28a62ec02491bd";
+  const stakeAmount = web3.utils.toWei('1000');
   console.log(`Staking ${stakeAmount} for ${validatorAccount}...`);
 
 
   console.log('sent approve tx, staking now...')
   const stakeManager = await ethers.getContractFactory("StakeManager");
   const stakeManagerObj = await stakeManager.attach(stakeManagerProxyAddress);
-  let stakeTx  = await stakeManagerObj.stakeFor(validatorAccount, stakeAmount, false, pubkey);
+  let stakeTx  = await stakeManagerObj.stakeFor(validatorAccount, stakeAmount, true, pubkey);
   console.log("stake tx ", stakeTx.hash);
 }
 

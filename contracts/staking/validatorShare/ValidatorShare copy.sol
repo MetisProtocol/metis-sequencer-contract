@@ -6,17 +6,17 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import {StakingInfo} from "./../StakingInfo.sol";
 import {EventsHub} from "./../EventsHub.sol";
-import {Lockable} from "../../common/mixin/Lockable.sol";
+import {OwnableLockable} from "../../common/mixin/OwnableLockable.sol";
 import {IStakeManager} from "../stakeManager/IStakeManager.sol";
 import {IValidatorShare} from "./IValidatorShare.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 
-contract ValidatorShare is
+abstract contract ValidatorShare is
     IValidatorShare,
-    // Lockable,
-    Initializable
-    // ERC20
+    OwnableLockable,
+    Initializable,
+    ERC20
 {
     using SafeMath for uint256;
 
@@ -57,32 +57,6 @@ contract ValidatorShare is
 
     EventsHub public eventsHub;
 
-    address public _owner;
-
-    modifier onlyOwner() {
-        require(msg.sender == _owner, "ONLY_OWNER");
-        _;
-    }
-
-    bool public locked;
-
-    modifier onlyWhenUnlocked() {
-        _assertUnlocked();
-        _;
-    }
-
-    function _assertUnlocked() private view {
-        require(!locked, "locked");
-    }
-
-    function lock() override  public {
-        locked = true;
-    }
-
-    function unlock() override public {
-        locked = false;
-    }
-
     // onlyOwner will prevent this contract from initializing, since it's owner is going to be 0x0 address
     function initialize(
         uint256 _validatorId,
@@ -92,8 +66,7 @@ contract ValidatorShare is
         validatorId = _validatorId;
         stakingLogger = StakingInfo(_stakingLogger);
         stakeManager = IStakeManager(_stakeManager);
-        _owner = _stakeManager;
-        // _transferOwnership(_stakeManager);
+        _transferOwnership(_stakeManager);
         _getOrCacheEventsHub();
 
         minAmount = 10 ** 18;
@@ -101,21 +74,20 @@ contract ValidatorShare is
     }
 
     // disable transfer
-    // function _approve(
-    //     address owner,
-    //     address spender,
-    //     uint256 value
-    // ) override internal {
-    //     revert("disabled");
-    // }
+    function _approve(
+        address owner,
+        address spender,
+        uint256 value
+    ) override internal {
+        revert("disabled");
+    }
 
     /**
         Public View Methods
     */
 
     function exchangeRate() public view returns (uint256) {
-        // uint256 totalShares = totalSupply();
-        uint256 totalShares = 0;
+        uint256 totalShares = totalSupply();
         uint256 precision = _getRatePrecision();
         return
             totalShares == 0
@@ -128,8 +100,7 @@ contract ValidatorShare is
     function getTotalStake(
         address user
     ) public view returns (uint256, uint256) {
-        // uint256 shares = balanceOf(user);
-        uint256 shares  = 0;
+        uint256 shares = balanceOf(user);
         uint256 rate = exchangeRate();
         if (shares == 0) {
             return (0, rate);
@@ -259,7 +230,7 @@ contract ValidatorShare is
 
         uint256 precision = _getRatePrecision();
         uint256 shares = amount.mul(precision).div(rate);
-        // _burn(user, shares);
+        _burn(user, shares);
 
         stakeManager.updateValidatorState(validatorId, -int256(amount));
         activeAmount = activeAmount.sub(amount);
@@ -409,7 +380,7 @@ contract ValidatorShare is
 
         _withdrawAndTransferReward(msg.sender);
 
-        // _burn(msg.sender, shares);
+        _burn(msg.sender, shares);
         stakeManager.updateValidatorState(validatorId, -int256(claimAmount));
         activeAmount = activeAmount.sub(claimAmount);
 
@@ -461,9 +432,7 @@ contract ValidatorShare is
     ) private view returns (uint256) {
         uint256 _rewardPerShare = rewardPerShare;
         if (accumulatedReward != 0) {
-            // uint256 totalShares = totalSupply();
-            uint256 totalShares = 0;
-
+            uint256 totalShares = totalSupply();
 
             if (totalShares != 0) {
                 _rewardPerShare = _rewardPerShare.add(
@@ -479,9 +448,7 @@ contract ValidatorShare is
         address user,
         uint256 _rewardPerShare
     ) private view returns (uint256) {
-        // uint256 shares = balanceOf(user);
-        uint256 shares =0;
-
+        uint256 shares = balanceOf(user);
         if (shares == 0) {
             return 0;
         }
@@ -540,7 +507,7 @@ contract ValidatorShare is
         require(shares >= _minSharesToMint, "Too much slippage");
         require(unbonds[user].shares == 0, "Ongoing exit");
 
-        // _mint(user, shares);
+        _mint(user, shares);
 
         // clamp amount of tokens in case resulted shares requires less tokens than anticipated
         _amount = rate.mul(shares).div(precision);
@@ -559,34 +526,34 @@ contract ValidatorShare is
         address from,
         address to,
         uint256 value
-    ) internal  {
+    ) internal override {
         // get rewards for recipient
         _withdrawAndTransferReward(to);
         // convert rewards to shares
         _withdrawAndTransferReward(from);
         // move shares to recipient
-        // super._transfer(from, to, value);
+        super._transfer(from, to, value);
         _getOrCacheEventsHub().logSharesTransfer(validatorId, from, to, value);
     }
 
     function owner()
         public
         view
-        override
+        override(IValidatorShare, Ownable)
         returns (address)
     {
-        return _owner;
+        return super.owner();
     }
 
-    // function unlock()
-    //     public
-    //     override(IValidatorShare,Lockable)
-    //     onlyOwner
-    // {
-    //     super.unlock();
-    // }
+    function unlock()
+        public
+        override(IValidatorShare, OwnableLockable)
+        onlyOwner
+    {
+        super.unlock();
+    }
 
-    // function lock() public override(IValidatorShare,Lockable){
-    //     super.lock();
-    // }
+    function lock() public override(IValidatorShare, OwnableLockable){
+        super.lock();
+    }
 }

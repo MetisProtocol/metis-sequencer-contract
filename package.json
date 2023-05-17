@@ -31,10 +31,10 @@
     "compile_watch": "npx hardhat watch compilation",
     "test": "npx hardhat test",
     "test_watch": "npx hardhat watch test",
-    "deploy": "hardhat run scripts/deploy.js --network goerli",
-    "verify": "hardhat run scripts/verify.js --network goerli",
-    "stake": "hardhat run scripts/stake.js --network goerli",
-    "registry": "hardhat run scripts/registry_update.js --network goerli"
+    "deploy": "hardhat run scripts/1_deploy.js --network goerli",
+    "verify": "hardhat run scripts/2_verify.js --network goerli",
+    "stake": "hardhat run scripts/4_stake.js --network goerli",
+    "registry": "hardhat run scripts/3_registry_update.js --network goerli"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.6",

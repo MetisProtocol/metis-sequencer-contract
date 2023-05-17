@@ -10,8 +10,8 @@ contract Governance is IGovernance,Initializable {
     address public owner;
 
     modifier onlyOwner() {
-    require(msg.sender == owner, "ONLY_OWNER");
-    _;
+        require(msg.sender == owner, "ONLY_OWNER");
+        _;
     }
 
     function initialize(address newOwner) public initializer {

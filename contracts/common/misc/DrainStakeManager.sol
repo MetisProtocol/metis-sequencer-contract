@@ -4,7 +4,9 @@ import { StakeManagerStorage } from "../../staking/stakeManager/StakeManagerStor
 import { GovernanceLockable } from "../mixin/GovernanceLockable.sol";
 import {IGovernance} from "../governance/IGovernance.sol";
 
+// import {IValidatorShare} from "../../staking/validatorShare/IValidatorShare.sol";
 import {IValidatorShare} from "../../staking/validatorShare/IValidatorShare.sol";
+
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 // Inheriting from Initializable as well to keep the storage layout same
@@ -35,15 +37,5 @@ contract DrainStakeManager is StakeManagerStorage {
         require(contractAddr != address(0x0), "unknown validator or no delegation enabled");
         IValidatorShare validatorShare = IValidatorShare(contractAddr);
         validatorShare.drain(_token, destination, amount);
-    }
-
-    // Overriding isOwner from Ownable.sol because owner() and transferOwnership() have been overridden by UpgradableProxy
-    function isOwner() public view returns (bool) {
-        address _owner;
-        bytes32 position = keccak256("metis.io.proxy.owner");
-        assembly {
-            _owner := sload(position)
-        }
-        return msg.sender == _owner;
     }
 }
