@@ -6,6 +6,7 @@ const verifyStr = "npx hardhat verify --network";
 
 let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
 let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
+let validatorShareAddress = "0xDCe59b3B2f90D71614435D0E979A04260b51C24B";
 let validatorShareFactoryAddress = "0x40B09Cc3242076412837208A41503Fd4c51554C6";
 let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
 let stakingNftAddress = "0x8Cc705ccAe9a16566573BBc3405b347751e30992";
@@ -21,6 +22,9 @@ let metisTokenName = "Metis ERC20";
 let metisTokenSymbol = "METIS";
 let testTokenName = "Test ERC20";
 let testTokenSymbol = "TEST20";
+let validatorShareTokenName = "Validator Share Token";
+let validatorShareTokenSymbol = "VST";
+
 const ZeroAddress = '0x0000000000000000000000000000000000000000';
 
 const main = async () => {
@@ -70,7 +74,7 @@ const main = async () => {
 
 
   const ValidatorShare = await hre.ethers.getContractFactory("ValidatorShare");
-  validatorShareDeployed = await ValidatorShare.deploy();
+  validatorShareDeployed = await ValidatorShare.deploy(validatorShareTokenName, validatorShareTokenSymbol);
   console.log("ValidatorShare deployed to:", validatorShareDeployed.address);
   validatorShareAddress = validatorShareDeployed.address;
   await delay(3000);
