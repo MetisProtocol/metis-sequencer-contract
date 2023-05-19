@@ -7,7 +7,7 @@ const verifyStr = "npx hardhat verify --network";
 let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
 let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
 let validatorShareAddress = "0xDCe59b3B2f90D71614435D0E979A04260b51C24B";
-let validatorShareFactoryAddress = "0x40B09Cc3242076412837208A41503Fd4c51554C6";
+let validatorShareFactoryAddress = "0xEB9A0FC56c1a372AB198c18eD29B3D662975209A";
 let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
 let stakingNftAddress = "0x8Cc705ccAe9a16566573BBc3405b347751e30992";
 let metisTokenAddress = "0xD331E3CA3e51d3dd6712541CB01d7100E24DAdD1";
@@ -73,19 +73,20 @@ const main = async () => {
   // console.log("registry initialize tx:", registryInitTx.hash);
 
 
-  const ValidatorShare = await hre.ethers.getContractFactory("ValidatorShare");
-  validatorShareDeployed = await ValidatorShare.deploy(validatorShareTokenName, validatorShareTokenSymbol);
-  console.log("ValidatorShare deployed to:", validatorShareDeployed.address);
-  validatorShareAddress = validatorShareDeployed.address;
-  await delay(3000);
-  return;
-
-  // deploy validator share
-  // const ValidatorShareFactory = await hre.ethers.getContractFactory("ValidatorShareFactory");
-  // validatorShareFactoryDeployed = await ValidatorShareFactory.deploy();
-  // console.log("ValidatorShareFactory deployed to:", validatorShareFactoryDeployed.address);
-  // validatorShareFactoryAddress = validatorShareFactoryDeployed.address;
+  // const ValidatorShare = await hre.ethers.getContractFactory("ValidatorShare");
+  // validatorShareDeployed = await ValidatorShare.deploy(validatorShareTokenName, validatorShareTokenSymbol);
+  // console.log("ValidatorShare deployed to:", validatorShareDeployed.address);
+  // validatorShareAddress = validatorShareDeployed.address;
   // await delay(3000);
+  // return;
+
+  // deploy validator share factory
+  const ValidatorShareFactory = await hre.ethers.getContractFactory("ValidatorShareFactory");
+  validatorShareFactoryDeployed = await ValidatorShareFactory.deploy();
+  console.log("ValidatorShareFactory deployed to:", validatorShareFactoryDeployed.address);
+  validatorShareFactoryAddress = validatorShareFactoryDeployed.address;
+  await delay(3000);
+  return
 
 
   // deploy staking info
@@ -132,6 +133,7 @@ const main = async () => {
   const stakeManagerUpgrade = await hre.ethers.getContractFactory("StakeManager");
   let upgrade = await upgrades.upgradeProxy(stakeManagerProxyAddress, stakeManagerUpgrade);
   console.log("StakeManager deployed to:", upgrade.address);
+  return
 
   // const StakingNFT = await hre.ethers.getContractFactory("StakingNFT");
   // const StakingNFTObj = await StakingNFT.attach(stakingNftAddress);

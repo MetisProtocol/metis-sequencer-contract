@@ -7,7 +7,7 @@ const web3 = require("web3");
 
 let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
 let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
-let validatorShareFactoryAddress = "0x40B09Cc3242076412837208A41503Fd4c51554C6";
+let validatorShareFactoryAddress = "0xEB9A0FC56c1a372AB198c18eD29B3D662975209A";
 let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
 let stakingNftAddress = "0x8Cc705ccAe9a16566573BBc3405b347751e30992";
 let metisTokenAddress = "0xD331E3CA3e51d3dd6712541CB01d7100E24DAdD1";
@@ -20,6 +20,20 @@ let stakingNftName = "Metis Sequencer";
 let stakingNftSymbol = "MS";
 let testTokenName = "Test ERC20";
 let testTokenSymbol = "TST20";
+
+
+// pubkey should not have the leading 04 prefix
+let testPri1 = "0x1f9a552c0aad1f104401316375f0737bba5fba0b34a83b0069f2a02c57514a0c"
+let testPub1 = "0xeeef8d4d35c9dc2d64df24af6bb4be3b08557a995b2907d97039c536f96477fecbd56bb78fdcde962ccaa579dcc75376e7839f6211cf62cea8b2871b84106674"
+let addr1 = "0x70fb083ab9bc2ed3c4cebe08054e82827368ed1e"
+
+let testPri2 = "0x87f4f773ff72685f05494c4d2f4b484d9ac958f9d010b9abda174e9ce1266e05"
+let testPub2 = "0xde61a8a5e89510a7dcbcf9ec79aa4ae502341f001b53c0fdb08f4d16adff9c1848b7301f8f616a45a3aad950a68235e41a122fd8f213b1b7f98f661c91acefc2"
+let addr2 = "0x57114948f79fa1c2be29b814ff19957c1fe8f64a"
+
+let testPri3 = "0xa94c90ff67050eb2881287a24df98e3e20612e46531a783e66bf7410d68410fc"
+let testPub3 = "0x46e8a59b9483fe4697bc2c966ec3365e17d7ab3c5073e0aadf10814f281fbe577ee9dcd53067196cce6503939651edd2458137dcd0e537806fae8827153df9f6"
+let addr3 = "0xc1ada63f72fa305111455b5dbede8a42a7d2dc70"
 
 const main = async () => {
   const accounts = await ethers.getSigners();
@@ -34,17 +48,16 @@ const main = async () => {
   // console.log("approve tx:", approveTx.hash);
   // return 
 
-  // const validatorAccount = signer;
-  const validatorAccount = "0x53cC871454560f150839bc195A3727335e5fAfA4";
-  // pubkey should not have the leading 04 prefix
-  // const pubkey = "0x04f747f4dc85add58949a08feaff631a4d81f7fec402a1a9b1e0627584c76598c2e52027285cbd67d2a86866932115aaed4c787966712b84c4459e94fdd200f190";
-  const pubkey = "0xf747f4dc85add58949a08feaff631a4d81f7fec402a1a9b1e0627584c76598c2e52027285cbd67d2a86866932115aaed4c787966712b84c4459e94fdd200f190";
-  // const pubkey = "0x2d905ff3831bb3e3bec873544cd8da2796b5a3a699f0e8dbe86e811322e77cfbaa8ea790e0af28a640f9efb5ba72afab13bbae9b5767d99e3d28a62ec02491bd";
+  const validatorAccount = addr1;
+  const pubkey = testPub1;
+
+  // const validatorAccount = "0x53cC871454560f150839bc195A3727335e5fAfA4";
+  // const pubkey = "0xf747f4dc85add58949a08feaff631a4d81f7fec402a1a9b1e0627584c76598c2e52027285cbd67d2a86866932115aaed4c787966712b84c4459e94fdd200f190";
+  
   const stakeAmount = web3.utils.toWei('1000');
   console.log(`Staking ${stakeAmount} for ${validatorAccount}...`);
 
-
-  console.log('sent approve tx, staking now...')
+  console.log('staking now...')
   const stakeManager = await ethers.getContractFactory("StakeManager");
   const stakeManagerObj = await stakeManager.attach(stakeManagerProxyAddress);
   let stakeTx  = await stakeManagerObj.stakeFor(validatorAccount, stakeAmount, true, pubkey);

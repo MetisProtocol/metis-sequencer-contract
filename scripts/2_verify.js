@@ -3,7 +3,8 @@ require("@nomiclabs/hardhat-etherscan");
 let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
 let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
 let validatorShareAddress = "0xDCe59b3B2f90D71614435D0E979A04260b51C24B";
-let validatorShareFactoryAddress = "0x40B09Cc3242076412837208A41503Fd4c51554C6";
+let validatorShareProxyAddress = "0xeBA5018b7271aFf358543524A942393465A5f0c2";
+let validatorShareFactoryAddress = "0xEB9A0FC56c1a372AB198c18eD29B3D662975209A";
 let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
 let stakingNftAddress = "0x8Cc705ccAe9a16566573BBc3405b347751e30992";
 let metisTokenAddress = "0xD331E3CA3e51d3dd6712541CB01d7100E24DAdD1";
@@ -64,20 +65,23 @@ const main = async () => {
   //    ],
   //  });
 
-  // await hre.run("verify:verify", {
-  //     address: validatorShareAddress,
-  //     contract: "contracts/staking/validatorShare/ValidatorShare.sol:ValidatorShare",
-  //     constructorArguments: [
-  //       validatorShareTokenName,
-  //       validatorShareTokenSymbol
-  //     ],
-  //   });
+  await hre.run("verify:verify", {
+      address: validatorShareProxyAddress,
+      contract: "contracts/staking/validatorShare/ValidatorShare.sol:ValidatorShare",
+      constructorArguments: [
+        // validatorShareTokenName,
+        // validatorShareTokenSymbol
+      ],
+    });
+    return
+
 
   // await hre.run("verify:verify", {
   //    address: validatorShareFactoryAddress,
   //    contract: "contracts/staking/validatorShare/ValidatorShareFactory.sol:ValidatorShareFactory",
   //    constructorArguments: [],
   //  });
+  //  return
 
 
   // await hre.run("verify:verify", {
@@ -146,6 +150,15 @@ const main = async () => {
       //   constructorArguments: [
       //   ],
       // });
+
+
+  // await hre.run("verify:verify", {
+  //     address: validatorShareProxyAddress,
+  //     contract: "contracts/staking/validatorShare/ValidatorShareProxy.sol:ValidatorShareProxy",
+  //     constructorArguments: [
+  //       registryAddress
+  //     ],
+  //   });
 
 };
 

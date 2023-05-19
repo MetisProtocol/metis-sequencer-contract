@@ -7,7 +7,7 @@ const web3 = require("web3");
 let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
 let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
 let validatorShareAddress = "0xDCe59b3B2f90D71614435D0E979A04260b51C24B";
-let validatorShareFactoryAddress = "0x40B09Cc3242076412837208A41503Fd4c51554C6";
+let validatorShareFactoryAddress = "0xEB9A0FC56c1a372AB198c18eD29B3D662975209A";
 let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
 let stakingNftAddress = "0x8Cc705ccAe9a16566573BBc3405b347751e30992";
 let metisTokenAddress = "0xD331E3CA3e51d3dd6712541CB01d7100E24DAdD1";
@@ -33,6 +33,8 @@ const main = async () => {
 
     const govProxy = await hre.ethers.getContractFactory("Governance");
     const govProxyObj = await govProxy.attach(govProxyAddress);
+
+
     // let tx =  await updateContractMap(
     //         govProxyObj,
     //         registryAddress,
@@ -57,13 +59,16 @@ const main = async () => {
     //  )
     //  console.log("updateContractMap tx:", tx.hash)
 
-     let tx = await updateContractMap(
-         govProxyObj,
-         registryAddress,
-         web3.utils.keccak256('validatorShare'),
-         validatorShareAddress
-     )
-     console.log("updateContractMap tx:", tx.hash)
+    //  let tx = await updateContractMap(
+    //      govProxyObj,
+    //      registryAddress,
+    //      web3.utils.keccak256('validatorShare'),
+    //      validatorShareAddress
+    //  )
+    //  console.log("updateContractMap tx:", tx.hash)
+
+    let tx = await updateStakeManagerContractAddress(govProxyObj)
+     console.log("updateStakeManagerContractAddress tx:", tx.hash)
 }
 
 async function updateContractMap(govObj, registryAddress, key, value) {
@@ -83,12 +88,31 @@ async function updateContractMap(govObj, registryAddress, key, value) {
     )
 }
 
-
 async function updateNftOwner() {
      const nft = await hre.ethers.getContractFactory("StakingNFT");
      const nftObj = await nft.attach(stakingNftAddress);
      let updateOwnerTx = await nftObj.transferOwnership(stakeManagerProxyAddress);
      console.log("nft update owner to stakeManagerProxy ",updateOwnerTx.hash)
+}
+
+
+async function updateStakeManagerContractAddress(govObj) {
+    let ABI = [
+        "function reinitialize(address _NFTContract, address _stakingLogger, address _validatorShareFactory, address _extensionCode)"
+     ];
+    let iface = new ethers.utils.Interface(ABI);
+    let reinitializeEncodeData = iface.encodeFunctionData("reinitialize", [
+          stakingNftAddress,
+          stakingInfoAddress,
+          validatorShareFactoryAddress,
+          stakeManagerExtensionAddress
+        ])
+    console.log("reinitializeEncodeData: ", reinitializeEncodeData)
+
+    return govObj.update(
+        stakeManagerProxyAddress,
+        reinitializeEncodeData
+    )
 }
 
 main()
