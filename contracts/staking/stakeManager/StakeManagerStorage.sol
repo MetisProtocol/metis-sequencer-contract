@@ -11,14 +11,6 @@ import {ValidatorShareFactory} from "../validatorShare/ValidatorShareFactory.sol
 abstract contract StakeManagerStorage is GovernanceLockable {
     enum Status {Inactive, Active, Locked, Unstaked}
 
-    struct Auction {
-        uint256 amount;
-        uint256 startEpoch;
-        address user;
-        bool acceptDelegation;
-        bytes signerPubkey;
-    }
-
     struct State {
         uint256 amount;
         uint256 stakerCount;
@@ -39,7 +31,6 @@ abstract contract StakeManagerStorage is GovernanceLockable {
         uint256 reward;
         uint256 activationEpoch;
         uint256 deactivationEpoch;
-        uint256 jailTime;
         address signer;
         address contractAddress;
         Status status;
@@ -62,36 +53,30 @@ abstract contract StakeManagerStorage is GovernanceLockable {
     ValidatorShareFactory public validatorShareFactory;
     uint256 public WITHDRAWAL_DELAY; // unit: epoch
     uint256 public currentEpoch;
-    // uint256 lastSubmitRewardEpoch;
+    uint256 lastSubmitRewardEpoch;
 
     // genesis/governance variables
-    uint256 public dynasty; // unit: epoch 50 days
-    uint256 public CHECKPOINT_REWARD; // update via governance
+    uint256 public dynasty; // unit: epoch 50 days  每个epoch多长
+    uint256 public BLOCK_REWARD; // update via governance
     uint256 public minDeposit; // in ERC20 token
-    uint256 public checkPointBlockInterval;
     uint256 public signerUpdateLimit;
-    // address public mpcAddress;
+    address public mpcAddress;
 
     uint256 public validatorThreshold; //128
     uint256 public totalStaked;
     uint256 public NFTCounter;
     uint256 public totalRewards;
     uint256 public totalRewardsLiquidated;
-    uint256 public auctionPeriod; // 1 week in epochs
     uint256 public proposerBonus; // 10 % of total rewards
-    bytes32 public accountStateRoot;
-    // Stop validator auction for some time when updating dynasty value
-    uint256 public replacementCoolDown;
     bool public delegationEnabled;
 
     mapping(uint256 => Validator) public validators;
     mapping(address => uint256) public signerToValidator;
+
     // current epoch stake power and stakers count
     State public validatorState;
     mapping(uint256 => StateChange) public validatorStateChanges;
 
-    //Ongoing auctions for validatorId
-    mapping(uint256 => Auction) public validatorAuction;
     // validatorId to last signer update epoch
     mapping(uint256 => uint256) public latestSignerUpdateEpoch;
 }

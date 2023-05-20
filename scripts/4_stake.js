@@ -96,10 +96,10 @@ async function updateValidatorCommissionRate() {
 
 // async function updateCheckpointReward(reward) {
 //   const stakeManager = await getStakeManager()
-//   console.log((await stakeManager.CHECKPOINT_REWARD()).toString())
+//   console.log((await stakeManager.BLOCK_REWARD()).toString())
 //   const r = await stakeManager.updateCheckpointReward(reward)
 //   console.log(r.tx)
-//   console.log((await stakeManager.CHECKPOINT_REWARD()).toString())
+//   console.log((await stakeManager.BLOCK_REWARD()).toString())
 // }
 
 // async function deposit() {

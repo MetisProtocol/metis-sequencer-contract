@@ -1,16 +1,6 @@
 pragma solidity ^0.8.0;
 
 abstract contract IStakeManager {
-    // validator replacement
-    function startAuction(
-        uint256 validatorId,
-        uint256 amount,
-        bool acceptDelegation,
-        bytes calldata signerPubkey
-    ) virtual external;
-
-    function confirmAuctionBid(uint256 validatorId) virtual external;
-
     function transferFunds(
         uint256 validatorId,
         uint256 amount,

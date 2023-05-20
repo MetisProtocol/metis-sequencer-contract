@@ -1,7 +1,5 @@
 pragma solidity ^0.8.0;
 
-// import "openzeppelin-solidity/contracts/token/ERC721/ERC721Full.sol";
-// import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 

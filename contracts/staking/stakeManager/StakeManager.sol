@@ -20,7 +20,6 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-
 contract StakeManager is
     StakeManagerStorage,
     IStakeManager,
@@ -63,31 +62,29 @@ contract StakeManager is
         address _stakingLogger,
         address _validatorShareFactory,
         address _owner,
-        // address _mpc,
+        address _mpc,
         address _extensionCode
     ) external initializer {
-        require(isContract(_extensionCode), "auction impl incorrect"); // 检查auction impl
-        extensionCode = _extensionCode; // ？？
-        governance = IGovernance(_governance);  // gov合约地址
-        registry = _registry;  // registry合约地址
-        token = IERC20(_token);  // stake或者奖励分发使用的那个代币
-        NFTContract = StakingNFT(_NFTContract); // NFT合约，每个validator对应一个nft
-        logger = StakingInfo(_stakingLogger); // staking info合约
-        validatorShareFactory = ValidatorShareFactory(_validatorShareFactory);  // validator delegate奖励份额工厂合约
+        require(isContract(_extensionCode), "impl incorrect"); 
+        extensionCode = _extensionCode; 
+        governance = IGovernance(_governance);  
+        registry = _registry;  
+        token = IERC20(_token);  
+        NFTContract = StakingNFT(_NFTContract); 
+        logger = StakingInfo(_stakingLogger); 
+        validatorShareFactory = ValidatorShareFactory(_validatorShareFactory); 
         owner = _owner;
-        // mpcAddress = _mpc;
+        mpcAddress = _mpc;
 
         WITHDRAWAL_DELAY = (2**13); // unit: epoch 提现延迟时间，默认超大数，会通过updateDynastyValue方法进行更新
         currentEpoch = 1;  // 默认从第1个epoch开始
         dynasty = 886; // unit: epoch 50 days  ？？这个参
-        CHECKPOINT_REWARD = 20188 * (10**18); // 每个batchsubmit提交， update via governance
+        BLOCK_REWARD = 2 * (10**18); // update via governance
         minDeposit = (10**18); // in ERC20 token
-        checkPointBlockInterval = 1024;  // 多少个区块提交一次batch
-        signerUpdateLimit = 100; // signer更新次数限制
+        signerUpdateLimit = 100; 
 
-        validatorThreshold = 7; //128 允许最大的验证节点数量
+        validatorThreshold = 100; //允许最大的验证节点数量
         NFTCounter = 1; // validator id
-        auctionPeriod = (2**13) / 4; // 1 week in epochs 拍卖validator槽位周期
         proposerBonus = 10; // 10 % of total rewards, 发起slash用户的奖励分成
         delegationEnabled = true; // 是否开启delegate
     }
@@ -206,45 +203,11 @@ contract StakeManager is
         validatorThreshold = newThreshold;
     }
 
-    function updateCheckPointBlockInterval(uint256 _blocks) public onlyGovernance {
-        require(_blocks != 0);
-        checkPointBlockInterval = _blocks;
-    }
-
-    // 设置batch提交奖励
-    function updateCheckpointReward(uint256 newReward) public onlyGovernance {
+    // 设置batch提交区块奖励
+    function updateBlockReward(uint256 newReward) public onlyGovernance {
         require(newReward != 0);
-        logger.logRewardUpdate(newReward, CHECKPOINT_REWARD);
-        CHECKPOINT_REWARD = newReward;
-    }
-
-    function updateCheckpointRewardParams(
-        uint256 _rewardDecreasePerCheckpoint,
-        uint256 _maxRewardedCheckpoints,
-        uint256 _checkpointRewardDelta
-    ) public onlyGovernance {
-        delegatedFwd(
-            extensionCode,
-            abi.encodeWithSelector(
-                StakeManagerExtension(extensionCode).updateCheckpointRewardParams.selector,
-                _rewardDecreasePerCheckpoint,
-                _maxRewardedCheckpoints,
-                _checkpointRewardDelta
-            )
-        );
-    }
-
-    
-    // 修改验证节点id
-    function migrateValidatorsData(uint256 validatorIdFrom, uint256 validatorIdTo) public onlyOwner {
-        delegatedFwd(
-            extensionCode,
-            abi.encodeWithSelector(
-                StakeManagerExtension(extensionCode).migrateValidatorsData.selector,
-                validatorIdFrom,
-                validatorIdTo
-            )
-        );
+        logger.logRewardUpdate(newReward, BLOCK_REWARD);
+        BLOCK_REWARD = newReward;
     }
 
     function insertSigners(address[] memory _signers) public onlyOwner {
@@ -259,22 +222,13 @@ contract StakeManager is
         validators[validatorId].contractAddress = newContractAddress;
     }
 
-    // 更新退出时间
     function updateDynastyValue(uint256 newDynasty) public onlyGovernance {
         require(newDynasty > 0);
         logger.logDynastyValueChange(newDynasty, dynasty);
         dynasty = newDynasty;
         WITHDRAWAL_DELAY = newDynasty;
-        auctionPeriod = newDynasty.div(4);
-        replacementCoolDown = currentEpoch.add(auctionPeriod);
     }
 
-    // Housekeeping function. @todo remove later
-    function stopAuctions(uint256 forNCheckpoints) public onlyGovernance {
-        replacementCoolDown = currentEpoch.add(forNCheckpoints);
-    }
-
-    // 更新proposer的奖励比例
     function updateProposerBonus(uint256 newProposerBonus) public onlyGovernance {
         logger.logProposerBonusChange(newProposerBonus, proposerBonus);
         require(newProposerBonus <= MAX_PROPOSER_BONUS, "too big");
@@ -285,12 +239,10 @@ contract StakeManager is
         signerUpdateLimit = _limit;
     }
 
-    // 更新最小stake数量
     function updateMinAmounts(uint256 _minDeposit) public onlyGovernance {
         minDeposit = _minDeposit;
     }
 
-    // 提出share池子中的指定数量代币
     function drainValidatorShares(
         uint256 validatorId,
         address tokenAddr,
@@ -307,6 +259,12 @@ contract StakeManager is
         _transferToken(destination, amount);
     }
 
+    function setMpc(address _newMpc) external onlyGovernance {
+        require(!isContract(_newMpc),"_newMpc is a contract");
+        require(_newMpc != address(0x0),"_newMpc is zero address");
+        mpcAddress = _newMpc;
+    }
+
     function reinitialize(
         address _NFTContract,
         address _stakingLogger,
@@ -320,7 +278,6 @@ contract StakeManager is
         NFTContract = StakingNFT(_NFTContract);
         logger = StakingInfo(_stakingLogger);
         validatorShareFactory = ValidatorShareFactory(_validatorShareFactory);
-        // mpcAddress = _mpc;
     }
 
     /**
@@ -332,39 +289,6 @@ contract StakeManager is
             return 0;
         }
         return validators[NFTContract.tokenOfOwnerByIndex(user, 0)].amount;
-    }
-
-    // 开始竞拍某个验证节点id
-    function startAuction(
-        uint256 validatorId,
-        uint256 amount,
-        bool _acceptDelegation,
-        bytes calldata _signerPubkey
-    ) override external onlyWhenUnlocked {
-        delegatedFwd(
-            extensionCode,
-            abi.encodeWithSelector(
-                StakeManagerExtension(extensionCode).startAuction.selector,
-                validatorId,
-                amount,
-                _acceptDelegation,
-                _signerPubkey
-            )
-        );
-    }
-
-    // 确认竞拍某个验证节点id
-    function confirmAuctionBid(
-        uint256 validatorId
-    ) override external onlyWhenUnlocked {
-        delegatedFwd(
-            extensionCode,
-            abi.encodeWithSelector(
-                StakeManagerExtension(extensionCode).confirmAuctionBid.selector,
-                validatorId,
-                address(this)
-            )
-        );
     }
 
     // 推翻原来的验证节点，并且给新的竞拍这抵押
@@ -385,8 +309,6 @@ contract StakeManager is
 
     // 某个验证节点退出
     function unstake(uint256 validatorId) override external onlyStaker(validatorId) {
-        require(validatorAuction[validatorId].amount == 0);
-
         Status status = validators[validatorId].status;
         require(
             validators[validatorId].activationEpoch > 0 &&
@@ -451,7 +373,6 @@ contract StakeManager is
         NFTContract.burn(validatorId);
 
         validators[validatorId].amount = 0;
-        validators[validatorId].jailTime = 0;
         validators[validatorId].signer = address(0);
 
         signerToValidator[validators[validatorId].signer] = INCORRECT_VALIDATOR_ID;
@@ -567,7 +488,6 @@ contract StakeManager is
         // bytes memory signature
     // )  external onlyGovernance  returns (uint256) {
     )  public returns (uint256) {
-
         // check epoch
         require(endEpoch > fromEpoch,"invalid end epoch");
         // require(fromEpoch > lastSubmitRewardEpoch,"invalid from epoch");
@@ -675,55 +595,11 @@ contract StakeManager is
         return (amount > 0 && (deactivationEpoch == 0 || deactivationEpoch > _currentEpoch) && status == Status.Active);
     }
 
-    function _calculateCheckpointReward(
-        uint256 blockInterval,
-        uint256 currentTotalStake
+     function _calculateReward(
+        uint256 blockInterval
     ) internal returns (uint256) {
-        // checkpoint rewards are based on BlockInterval multiplied on `CHECKPOINT_REWARD`
-        // for bigger checkpoints reward is reduced by rewardDecreasePerCheckpoint for each subsequent interval
-
-        // for smaller checkpoints
-        // if interval is 50% of checkPointBlockInterval then reward R is half of `CHECKPOINT_REWARD`
-        // and then stakePower is 90% of currentValidatorSetTotalStake then final reward is 90% of R
-
-        uint256 targetBlockInterval = checkPointBlockInterval;
-        uint256 ckpReward = CHECKPOINT_REWARD;
-        uint256 fullIntervals = Math.min(blockInterval / targetBlockInterval, maxRewardedCheckpoints);
-
-        // only apply to full checkpoints
-        if (fullIntervals > 0 && fullIntervals != prevBlockInterval) {
-            if (prevBlockInterval != 0) {
-                // give more reward for faster and less for slower checkpoint
-                uint256 delta = (ckpReward * checkpointRewardDelta / CHK_REWARD_PRECISION);
-                
-                if (prevBlockInterval > fullIntervals) {
-                    // checkpoint is faster
-                    ckpReward += delta;
-                } else {
-                    ckpReward -= delta;
-                }
-            }
-            
-            prevBlockInterval = fullIntervals;
-        }
-
-        uint256 reward;
-
-        if (blockInterval > targetBlockInterval) {
-            // count how many full intervals
-            uint256 _rewardDecreasePerCheckpoint = rewardDecreasePerCheckpoint;
-
-            // calculate reward for full intervals
-            reward = ckpReward.mul(fullIntervals).sub(ckpReward.mul(((fullIntervals - 1) * fullIntervals / 2).mul(_rewardDecreasePerCheckpoint)).div(CHK_REWARD_PRECISION));
-            // adjust block interval, in case last interval is not full
-            blockInterval = blockInterval.sub(fullIntervals.mul(targetBlockInterval));
-            // adjust checkpoint reward by the amount it suppose to decrease
-            ckpReward = ckpReward.sub(ckpReward.mul(fullIntervals).mul(_rewardDecreasePerCheckpoint).div(CHK_REWARD_PRECISION));
-        }
-
-        // give proportionally less for the rest
-        reward = reward.add(blockInterval.mul(ckpReward).div(targetBlockInterval));
-        return reward;
+        // rewards are based on BlockInterval multiplied on `BLOCK_REWARD`
+        return blockInterval.mul(BLOCK_REWARD);
     }
 
     function _increaseReward(
@@ -731,71 +607,20 @@ contract StakeManager is
         uint256 blockInterval
     ) private returns (uint256) {
         uint256 currentTotalStake = validatorState.amount;
-        uint256 reward = _calculateCheckpointReward(blockInterval, currentTotalStake);
+        uint256 reward = _calculateReward(blockInterval);
 
-
+        // validator reward update
         uint256 proposerId = signerToValidator[proposer];
         Validator storage _proposer = validators[proposerId];
         _proposer.reward = _proposer.reward.add(reward);
 
+        // rewardPerStake update
         uint256 newRewardPerStake = rewardPerStake.add(reward.mul(REWARD_PRECISION).div(currentTotalStake));
         _updateRewardsAndCommit(proposerId, rewardPerStake, newRewardPerStake);
         rewardPerStake = newRewardPerStake;
         _finalizeCommit();
         return reward;
     }
-
-
-    // function _increaseRewardAndAssertConsensus(
-    //     uint256 blockInterval,
-    //     address proposer,
-    //     uint256 signedStakePower,
-    //     bytes32 stateRoot,
-    //     uint256[] memory unsignedValidators,
-    //     uint256 totalUnsignedValidators,
-    //     uint256[] memory deactivatedValidators,
-    //     uint256 totalDeactivatedValidators
-    // ) private returns (uint256) {
-    //     uint256 currentTotalStake = validatorState.amount;
-    //     // require(signedStakePower >= currentTotalStake.mul(2).div(3).add(1), "2/3+1 non-majority!");
-
-    //     uint256 reward = _calculateCheckpointReward(blockInterval, signedStakePower, currentTotalStake);
-
-    //     uint256 _proposerBonus = reward.mul(proposerBonus).div(MAX_PROPOSER_BONUS);
-    //     uint256 proposerId = signerToValidator[proposer];
-
-    //     Validator storage _proposer = validators[proposerId];
-    //     _proposer.reward = _proposer.reward.add(_proposerBonus);
-
-    //     // update stateMerkleTree root for accounts balance on themis chain
-    //     accountStateRoot = stateRoot;
-
-    //     uint256 newRewardPerStake =
-    //         rewardPerStake.add(reward.sub(_proposerBonus).mul(REWARD_PRECISION).div(signedStakePower));
-
-    //     // evaluate rewards for validator who did't sign and set latest reward per stake to new value to avoid them from getting new rewards.
-    //     _updateValidatorsRewards(unsignedValidators, totalUnsignedValidators, newRewardPerStake);
-
-    //     // distribute rewards between signed validators
-    //     rewardPerStake = newRewardPerStake;
-
-    //     // evaluate rewards for unstaked validators to ensure they get the reward for signing during their deactivationEpoch
-    //     _updateValidatorsRewards(deactivatedValidators, totalDeactivatedValidators, newRewardPerStake);
-
-    //     _finalizeCommit();
-    //     return reward;
-    // }
-
-    // function _updateValidatorsRewards(
-    //     uint256[] memory unsignedValidators,
-    //     uint256 totalUnsignedValidators,
-    //     uint256 newRewardPerStake
-    // ) private {
-    //     uint256 currentRewardPerStake = rewardPerStake;
-    //     for (uint256 i = 0; i < totalUnsignedValidators; ++i) {
-    //         _updateRewardsAndCommit(unsignedValidators[i], currentRewardPerStake, newRewardPerStake);
-    //     }
-    // }
 
     function _updateRewardsAndCommit(
         uint256 validatorId,
@@ -924,19 +749,6 @@ contract StakeManager is
             );
     }
 
-    function _jail(uint256 validatorId, uint256 jailCheckpoints) internal returns (uint256) {
-        address delegationContract = validators[validatorId].contractAddress;
-        if (delegationContract != address(0x0)) {
-            IValidatorShare(delegationContract).lock();
-        }
-
-        uint256 _currentEpoch = currentEpoch;
-        validators[validatorId].jailTime = _currentEpoch.add(jailCheckpoints);
-        validators[validatorId].status = Status.Locked;
-        logger.logJailed(validatorId, _currentEpoch, validators[validatorId].signer);
-        return validators[validatorId].amount.add(validators[validatorId].delegatedAmount);
-    }
-
     function _stakeFor(
         address user,
         uint256 amount,
@@ -956,7 +768,6 @@ contract StakeManager is
             amount: amount,
             activationEpoch: _currentEpoch,
             deactivationEpoch: 0,
-            jailTime: 0,
             signer: signer,
             contractAddress: acceptDelegation
                 ? validatorShareFactory.create(validatorId, address(_logger), registry)
@@ -976,8 +787,7 @@ contract StakeManager is
 
         signerToValidator[signer] = validatorId;
         updateTimeline(int256(amount), 1, 0);
-        // no Auctions for 1 dynasty
-        validatorAuction[validatorId].startEpoch = _currentEpoch;
+
         _logger.logStaked(signer, signerPubkey, validatorId, _currentEpoch, amount, newTotalStaked);
         NFTCounter = validatorId.add(1);
 
