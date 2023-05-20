@@ -257,36 +257,6 @@ contract ValidatorShare is
         stakingLogger.logDelegatorUnstaked(validatorId, msg.sender, amount);
     }
 
-    function slash(
-        uint256 validatorStake,
-        uint256 delegatedAmount,
-        uint256 totalAmountToSlash
-    ) external override onlyOwner returns (uint256) {
-        uint256 _withdrawPool = withdrawPool;
-        uint256 delegationAmount = delegatedAmount.add(_withdrawPool);
-        if (delegationAmount == 0) {
-            return 0;
-        }
-        // total amount to be slashed from delegation pool (active + inactive)
-        uint256 _amountToSlash = delegationAmount.mul(totalAmountToSlash).div(
-            validatorStake.add(delegationAmount)
-        );
-        uint256 _amountToSlashWithdrawalPool = _withdrawPool
-            .mul(_amountToSlash)
-            .div(delegationAmount);
-
-        // slash inactive pool
-        uint256 stakeSlashed = _amountToSlash.sub(_amountToSlashWithdrawalPool);
-        stakeManager.decreaseValidatorDelegatedAmount(
-            validatorId,
-            stakeSlashed
-        );
-        activeAmount = activeAmount.sub(stakeSlashed);
-
-        withdrawPool = withdrawPool.sub(_amountToSlashWithdrawalPool);
-        return _amountToSlash;
-    }
-
     function updateDelegation(bool _delegation) external override onlyOwner {
         delegation = _delegation;
     }

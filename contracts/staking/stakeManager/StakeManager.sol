@@ -3,12 +3,7 @@ pragma solidity ^0.8.0;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {RLPReader} from "solidity-rlp/contracts/RLPReader.sol";
-
-import {ECVerify} from "../../common/lib/ECVerify.sol";
-import {Merkle} from "../../common/lib/Merkle.sol";
 import {GovernanceLockable} from "../../common/mixin/GovernanceLockable.sol";
-
 import {DelegateProxyForwarder} from "../../common/misc/DelegateProxyForwarder.sol";
 import {Registry} from "../../common/Registry.sol";
 import {IStakeManager} from "./IStakeManager.sol";
@@ -20,7 +15,6 @@ import {StakeManagerStorage} from "./StakeManagerStorage.sol";
 import {StakeManagerStorageExtension} from "./StakeManagerStorageExtension.sol";
 import {IGovernance} from "../../common/governance/IGovernance.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-
 import {StakeManagerExtension} from "./StakeManagerExtension.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -35,23 +29,6 @@ contract StakeManager is
 {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-    using Merkle for bytes32;
-    using RLPReader for bytes;
-    using RLPReader for RLPReader.RLPItem;
-
-    struct UnsignedValidatorsContext {
-        uint256 unsignedValidatorIndex;
-        uint256 validatorIndex;
-        uint256[] unsignedValidators;
-        address[] validators;
-        uint256 totalValidators;
-    }
-
-    struct UnstakedValidatorsContext {
-        uint256 deactivationEpoch;
-        uint256[] deactivatedValidators;
-        uint256 validatorIndex;
-    }
 
     modifier onlyStaker(uint256 validatorId) {
         _assertStaker(validatorId);
@@ -615,82 +592,6 @@ contract StakeManager is
         return totalReward;
     }
 
-    // function checkSignatures(
-    //     uint256 blockInterval,
-    //     bytes32 voteHash,
-    //     bytes32 stateRoot,
-    //     address proposer,
-    //     uint256[3][] calldata sigs
-    // ) override external onlyRootChain returns (uint256) {
-    //     uint256 _currentEpoch = currentEpoch;
-    //     uint256 signedStakePower;
-    //     address lastAdd;
-    //     uint256 totalStakers = validatorState.stakerCount;
-
-    //     UnsignedValidatorsContext memory unsignedCtx;
-    //     unsignedCtx.unsignedValidators = new uint256[](signers.length + totalStakers);
-    //     unsignedCtx.validators = signers;
-    //     unsignedCtx.validatorIndex = 0;
-    //     unsignedCtx.totalValidators = signers.length;
-
-    //     UnstakedValidatorsContext memory unstakeCtx;
-    //     unstakeCtx.deactivatedValidators = new uint256[](signers.length + totalStakers);
-
-    //     for (uint256 i = 0; i < sigs.length; ++i) {
-    //         address signer = ECVerify.ecrecovery(voteHash, sigs[i]);
-
-    //         if (signer == lastAdd) {
-    //             // if signer signs twice, just skip this signature
-    //             continue;
-    //         }
-
-    //         if (signer < lastAdd) {
-    //             // if signatures are out of order - break out, it is not possible to keep track of unsigned validators
-    //             break;
-    //         }
-
-    //         uint256 validatorId = signerToValidator[signer];
-    //         uint256 amount = validators[validatorId].amount;
-    //         Status status = validators[validatorId].status;
-    //         unstakeCtx.deactivationEpoch = validators[validatorId].deactivationEpoch;
-
-    //         if (_isValidator(status, amount, unstakeCtx.deactivationEpoch, _currentEpoch)) {
-    //             lastAdd = signer;
-
-    //             signedStakePower = signedStakePower.add(validators[validatorId].delegatedAmount).add(amount);
-
-    //             if (unstakeCtx.deactivationEpoch != 0) {
-    //                 // this validator not a part of signers list anymore
-    //                 unstakeCtx.deactivatedValidators[unstakeCtx.validatorIndex] = validatorId;
-    //                 unstakeCtx.validatorIndex++;
-    //             } else {
-    //                 unsignedCtx = _fillUnsignedValidators(unsignedCtx, signer);
-    //             }
-    //         } else if (status == Status.Locked) {
-    //             // TODO fix double unsignedValidators appearance
-    //             // make sure that jailed validator doesn't get his rewards too
-    //             unsignedCtx.unsignedValidators[unsignedCtx.unsignedValidatorIndex] = validatorId;
-    //             unsignedCtx.unsignedValidatorIndex++;
-    //             unsignedCtx.validatorIndex++;
-    //         }
-    //     }
-
-    //     // find the rest of validators without signature
-    //     unsignedCtx = _fillUnsignedValidators(unsignedCtx, address(0));
-
-    //     return
-    //         _increaseRewardAndAssertConsensus(
-    //             blockInterval,
-    //             proposer,
-    //             signedStakePower,
-    //             stateRoot,
-    //             unsignedCtx.unsignedValidators,
-    //             unsignedCtx.unsignedValidatorIndex,
-    //             unstakeCtx.deactivatedValidators,
-    //             unstakeCtx.validatorIndex
-    //         );
-    // }
-
     function updateCommissionRate(uint256 validatorId, uint256 newCommissionRate) external onlyStaker(validatorId) {
         _updateRewards(validatorId);
 
@@ -710,76 +611,6 @@ contract StakeManager is
         uint256 totalReward = validators[validatorId].delegatorsReward.sub(INITIALIZED_AMOUNT);
         validators[validatorId].delegatorsReward = INITIALIZED_AMOUNT;
         return totalReward;
-    }
-
-    function slash(bytes calldata _slashingInfoList) override external returns (uint256) {
-        require(Registry(registry).getSlashingManagerAddress() == msg.sender, "Not slash manager");
-
-        RLPReader.RLPItem[] memory slashingInfoList = _slashingInfoList.toRlpItem().toList();
-        int256 valJailed;
-        uint256 jailedAmount;
-        uint256 totalAmount;
-        uint256 i;
-
-        for (; i < slashingInfoList.length; i++) {
-            RLPReader.RLPItem[] memory slashData = slashingInfoList[i].toList();
-
-            uint256 validatorId = slashData[0].toUint();
-            _updateRewards(validatorId);
-
-            uint256 _amount = slashData[1].toUint();
-            totalAmount = totalAmount.add(_amount);
-
-            address delegationContract = validators[validatorId].contractAddress;
-            if (delegationContract != address(0x0)) {
-                uint256 delSlashedAmount =
-                    IValidatorShare(delegationContract).slash(
-                        validators[validatorId].amount,
-                        validators[validatorId].delegatedAmount,
-                        _amount
-                    );
-                _amount = _amount.sub(delSlashedAmount);
-            }
-
-            uint256 validatorStakeSlashed = validators[validatorId].amount.sub(_amount);
-            validators[validatorId].amount = validatorStakeSlashed;
-
-            if (validatorStakeSlashed == 0) {
-                _unstake(validatorId, currentEpoch);
-            } else if (slashData[2].toBoolean()) {
-                jailedAmount = jailedAmount.add(_jail(validatorId, 1));
-                valJailed++;
-            }
-        }
-
-        //update timeline
-        updateTimeline(-int256(totalAmount.add(jailedAmount)), -valJailed, 0);
-
-        return totalAmount;
-    }
-
-    function unjail(uint256 validatorId) public onlyStaker(validatorId) {
-        require(validators[validatorId].status == Status.Locked, "Not jailed");
-        require(validators[validatorId].deactivationEpoch == 0, "Already unstaking");
-
-        uint256 _currentEpoch = currentEpoch;
-        require(validators[validatorId].jailTime <= _currentEpoch, "Incomplete jail period");
-
-        uint256 amount = validators[validatorId].amount;
-        require(amount >= minDeposit);
-
-        address delegationContract = validators[validatorId].contractAddress;
-        if (delegationContract != address(0x0)) {
-            IValidatorShare(delegationContract).unlock();
-        }
-
-        // undo timeline so that validator is normal validator
-        updateTimeline(int256(amount.add(validators[validatorId].delegatedAmount)), 1, 0);
-
-        validators[validatorId].status = Status.Active;
-
-        address signer = validators[validatorId].signer;
-        logger.logUnjailed(validatorId, signer);
     }
 
     function updateTimeline(
@@ -842,21 +673,6 @@ contract StakeManager is
         uint256 _currentEpoch
     ) private pure returns (bool) {
         return (amount > 0 && (deactivationEpoch == 0 || deactivationEpoch > _currentEpoch) && status == Status.Active);
-    }
-
-    function _fillUnsignedValidators(UnsignedValidatorsContext memory context, address signer)
-        private
-        view
-        returns(UnsignedValidatorsContext memory)
-    {
-        while (context.validatorIndex < context.totalValidators && context.validators[context.validatorIndex] != signer) {
-            context.unsignedValidators[context.unsignedValidatorIndex] = signerToValidator[context.validators[context.validatorIndex]];
-            context.unsignedValidatorIndex++;
-            context.validatorIndex++;
-        }
-
-        context.validatorIndex++;
-        return context;
     }
 
     function _calculateCheckpointReward(

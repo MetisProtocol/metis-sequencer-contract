@@ -9,9 +9,7 @@ abstract contract IStakeManager {
         bytes calldata signerPubkey
     ) virtual external;
 
-    // function confirmAuctionBid(uint256 validatorId, uint256 themisFee) virtual external;
     function confirmAuctionBid(uint256 validatorId) virtual external;
-
 
     function transferFunds(
         uint256 validatorId,
@@ -25,10 +23,6 @@ abstract contract IStakeManager {
         address delegator
     ) virtual external returns (bool);
 
-    function unstake(uint256 validatorId) virtual external;
-
-    function totalStakedFor(address addr) virtual external view returns (uint256);
-
     function stakeFor(
         address user,
         uint256 amount,
@@ -37,19 +31,13 @@ abstract contract IStakeManager {
         bytes memory signerPubkey
     ) virtual public;
 
-    // function checkSignatures(
-    //     uint256 blockInterval,
-    //     bytes32 voteHash,
-    //     bytes32 stateRoot,
-    //     address proposer,
-    //     uint[3][] calldata sigs
-    // ) virtual external returns (uint256);
+    function unstake(uint256 validatorId) virtual external;
+
+    function totalStakedFor(address addr) virtual external view returns (uint256);
 
     function updateValidatorState(uint256 validatorId, int256 amount) virtual public;
 
     function ownerOf(uint256 tokenId) virtual public view returns (address);
-
-    function slash(bytes calldata slashingInfoList) virtual external returns (uint256);
 
     function validatorStake(uint256 validatorId) virtual public view returns (uint256);
 
@@ -69,7 +57,6 @@ abstract contract IStakeManager {
 
     function dethroneAndStake(
         address auctionUser,
-        // uint256 themisFee,
         uint256 validatorId,
         uint256 auctionAmount,
         bool acceptDelegation,

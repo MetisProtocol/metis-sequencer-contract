@@ -15,8 +15,6 @@ import {ValidatorShare} from "../validatorShare/ValidatorShare.sol";
 contract StakeManagerExtension is StakeManagerStorage, StakeManagerStorageExtension {
     using SafeMath for uint256;
 
-    // constructor() public GovernanceLockable(address(0x0)) {}
-
     function startAuction(
         uint256 validatorId,
         uint256 amount,
@@ -80,7 +78,6 @@ contract StakeManagerExtension is StakeManagerStorage, StakeManagerStorageExtens
 
     function confirmAuctionBid(
         uint256 validatorId,
-        // uint256 themisFee, 
         IStakeManager stakeManager 
     ) external {
         Auction storage auction = validatorAuction[validatorId];

@@ -22,8 +22,6 @@ abstract contract IValidatorShare {
         uint256 amount
     )  virtual external;
 
-    function slash(uint256 valPow, uint256 delegatedAmount, uint256 totalAmountToSlash) virtual  external returns (uint256);
-
     function updateDelegation(bool delegation) virtual  external;
 
     function migrateOut(address user, uint256 amount) virtual external;
