@@ -7,7 +7,7 @@ const web3 = require("web3");
 
 let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
 let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
-let validatorShareFactoryAddress = "0xEB9A0FC56c1a372AB198c18eD29B3D662975209A";
+let validatorShareFactoryAddress = "0xa7cdd83CE970FfF8Eb4452824663049d7c447813";
 let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
 let stakingNftAddress = "0x8Cc705ccAe9a16566573BBc3405b347751e30992";
 let metisTokenAddress = "0xD331E3CA3e51d3dd6712541CB01d7100E24DAdD1";
@@ -40,6 +40,10 @@ const main = async () => {
   signer = accounts[0].address;
   console.log("signer address:%s", signer);
 
+  // 更新佣金比例
+  await updateValidatorCommissionRate();
+  return
+
   // // 授权
   // const metisToken = await ethers.getContractFactory("TestToken");
   // const metisTokenObj = await metisToken.attach(metisTokenAddress);
@@ -48,8 +52,8 @@ const main = async () => {
   // console.log("approve tx:", approveTx.hash);
   // return 
 
-  const validatorAccount = addr1;
-  const pubkey = testPub1;
+  const validatorAccount = addr3;
+  const pubkey = testPub3;
 
   // const validatorAccount = "0x53cC871454560f150839bc195A3727335e5fAfA4";
   // const pubkey = "0xf747f4dc85add58949a08feaff631a4d81f7fec402a1a9b1e0627584c76598c2e52027285cbd67d2a86866932115aaed4c787966712b84c4459e94fdd200f190";
@@ -64,20 +68,12 @@ const main = async () => {
   console.log("stake tx ", stakeTx.hash);
 }
 
-// async function topUpForFee() {
-//   const stakeFor = process.argv[6]
-//   const amount = web3.utils.toWei(process.argv[7])
-//   const stakeManager = await getStakeManager()
-
-//   const rootToken = await RootToken.at(contracts.root.tokens.TestToken)
-//   await rootToken.approve(stakeManager.address, amount)
-//   console.log('approved, staking now...')
-
-//   const validatorId = await stakeManager.signerToValidator(stakeFor)
-//   console.log(validatorId.toString())
-//   let r = await stakeManager.topUpForFee(validatorId.toString(), amount)
-//   console.log(r.tx)
-// }
+async function updateValidatorCommissionRate() {
+  const stakeManager = await ethers.getContractFactory("StakeManager");
+  const stakeManagerObj = await stakeManager.attach(stakeManagerProxyAddress);
+  let updateCommissionRateTx = await stakeManagerObj.updateCommissionRate(1, 10);
+  console.log("updateCommissionRateTx tx ", updateCommissionRateTx.hash);
+}
 
 // async function mapToken(root, child, isErc721) {
 //   const registry = await Registry.at(contracts.root.Registry)

@@ -62,14 +62,15 @@ abstract contract StakeManagerStorage is GovernanceLockable {
     ValidatorShareFactory public validatorShareFactory;
     uint256 public WITHDRAWAL_DELAY; // unit: epoch
     uint256 public currentEpoch;
+    // uint256 lastSubmitRewardEpoch;
 
     // genesis/governance variables
     uint256 public dynasty; // unit: epoch 50 days
     uint256 public CHECKPOINT_REWARD; // update via governance
     uint256 public minDeposit; // in ERC20 token
-    // uint256 public minThemisFee; // in ERC20 token themisFee
     uint256 public checkPointBlockInterval;
     uint256 public signerUpdateLimit;
+    // address public mpcAddress;
 
     uint256 public validatorThreshold; //128
     uint256 public totalStaked;
@@ -89,11 +90,8 @@ abstract contract StakeManagerStorage is GovernanceLockable {
     State public validatorState;
     mapping(uint256 => StateChange) public validatorStateChanges;
 
-    // mapping(address => uint256) public userFeeExit;
     //Ongoing auctions for validatorId
     mapping(uint256 => Auction) public validatorAuction;
     // validatorId to last signer update epoch
     mapping(uint256 => uint256) public latestSignerUpdateEpoch;
-
-    // uint256 public totalThemisFee;
 }

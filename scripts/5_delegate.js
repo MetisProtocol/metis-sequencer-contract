@@ -7,7 +7,7 @@ const web3 = require("web3");
 
 let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
 let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
-let validatorShareFactoryAddress = "0xEB9A0FC56c1a372AB198c18eD29B3D662975209A";
+let validatorShareFactoryAddress = "0xa7cdd83CE970FfF8Eb4452824663049d7c447813";
 let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
 let stakingNftAddress = "0x8Cc705ccAe9a16566573BBc3405b347751e30992";
 let metisTokenAddress = "0xD331E3CA3e51d3dd6712541CB01d7100E24DAdD1";
@@ -30,7 +30,7 @@ const main = async () => {
     //  console.log("approve tx:", approveTx.hash);
     //  return 
 
-    await delegate(3);
+    await delegate(4);
 }
 
 async function delegate(validatorId) {
@@ -58,8 +58,8 @@ async function delegate(validatorId) {
     let result1 = await validator.withdrawExchangeRate();
     console.log("withdrawExchangeRate :", result1);
 
-    // let result = await validator.sellVoucher(web3.utils.toWei('10'), web3.utils.toWei('100'))
-    // console.log(`UnBond from ${validatorId}: ${result.hash}`)
+    let result = await validator.sellVoucher(web3.utils.toWei('1'), web3.utils.toWei('10'))
+    console.log(`UnBond from ${validatorId}: ${result.hash}`)
 }
 
 main()

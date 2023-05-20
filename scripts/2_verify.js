@@ -3,8 +3,8 @@ require("@nomiclabs/hardhat-etherscan");
 let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
 let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
 let validatorShareAddress = "0xDCe59b3B2f90D71614435D0E979A04260b51C24B";
-let validatorShareProxyAddress = "0xeBA5018b7271aFf358543524A942393465A5f0c2";
-let validatorShareFactoryAddress = "0xEB9A0FC56c1a372AB198c18eD29B3D662975209A";
+let validatorShareProxyAddress = "0x124147c677C34c7931eA30D59DE93353bf84cAD3";
+let validatorShareFactoryAddress = "0xa7cdd83CE970FfF8Eb4452824663049d7c447813";
 let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
 let stakingNftAddress = "0x8Cc705ccAe9a16566573BBc3405b347751e30992";
 let metisTokenAddress = "0xD331E3CA3e51d3dd6712541CB01d7100E24DAdD1";
@@ -65,15 +65,16 @@ const main = async () => {
   //    ],
   //  });
 
-  await hre.run("verify:verify", {
-      address: validatorShareProxyAddress,
-      contract: "contracts/staking/validatorShare/ValidatorShare.sol:ValidatorShare",
-      constructorArguments: [
-        // validatorShareTokenName,
-        // validatorShareTokenSymbol
-      ],
-    });
-    return
+  // await hre.run("verify:verify", {
+  //     address: validatorShareProxyAddress,
+  //     // contract: "contracts/staking/validatorShare/ValidatorShare.sol:ValidatorShare",
+  //     contract: "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol",
+  //     constructorArguments: [
+  //       // validatorShareTokenName,
+  //       // validatorShareTokenSymbol
+  //     ],
+  //   });
+  //   return
 
 
   // await hre.run("verify:verify", {
@@ -112,20 +113,14 @@ const main = async () => {
   //   ],
   // });
 
-  // await hre.run("verify:verify", {
-  //   address: stakeManagerProxyAddress,
-  //   contract: "contracts/staking/stakeManager/StakeManager.sol:StakeManager",
-  //   constructorArguments: [
-  //   ],
-  // });
+  await hre.run("verify:verify", {
+    address: stakeManagerProxyAddress,
+    contract: "contracts/staking/stakeManager/StakeManager.sol:StakeManager",
+    constructorArguments: [
+    ],
+  });
+  return
 
-  // // await hre.run("verify:verify", {
-  // //    address: stakeManagerProxyAddress,
-  // //    contract: "contracts/staking/stakeManager/StakeManagerProxy.sol:StakeManagerProxy",
-  // //    constructorArguments: [
-  // //     stakeManagerAddress
-  // //    ],
-  // //  });
 
   //  await hre.run("verify:verify", {
   //    address: slashingManagerAddress,

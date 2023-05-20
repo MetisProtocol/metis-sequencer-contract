@@ -35,13 +35,14 @@
     "verify": "hardhat run scripts/2_verify.js --network goerli",
     "stake": "hardhat run scripts/4_stake.js --network goerli",
     "registry": "hardhat run scripts/3_registry_update.js --network goerli",
-    "delegate": "hardhat run scripts/5_delegate.js --network goerli"
+    "delegate": "hardhat run scripts/5_delegate.js --network goerli",
+    "rewards": "hardhat run scripts/6_update_rewards.js --network goerli"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.6",
     "@nomiclabs/hardhat-etherscan": "^3.0.3",
     "@nomiclabs/hardhat-waffle": "^2.0.3",
-    "@openzeppelin/hardhat-upgrades": "^1.17.0",
+    "@openzeppelin/hardhat-upgrades": "^1.26.0",
     "@openzeppelin/test-helpers": "^0.5.15",
     "@uniswap/v2-core": "1.0.1",
     "arb-ts": "^1.0.0-beta.4",
@@ -56,7 +57,9 @@
     "solidity-coverage": "^0.7.21"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.6.0",
+    "@openzeppelin/contracts": "^4.8.3",
+    "@openzeppelin/contracts-upgradeable": "^4.8.3",
+    "@openzeppelin/upgrades": "^2.8.0",
     "@poanet/solidity-flattener": "^3.0.7",
     "@uniswap/lib": "^4.0.1-alpha",
     "@uniswap/v3-core": "^1.0.1",

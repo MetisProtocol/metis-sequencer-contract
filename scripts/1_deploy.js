@@ -7,7 +7,7 @@ const verifyStr = "npx hardhat verify --network";
 let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
 let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
 let validatorShareAddress = "0xDCe59b3B2f90D71614435D0E979A04260b51C24B";
-let validatorShareFactoryAddress = "0xEB9A0FC56c1a372AB198c18eD29B3D662975209A";
+let validatorShareFactoryAddress = "0xa7cdd83CE970FfF8Eb4452824663049d7c447813";
 let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
 let stakingNftAddress = "0x8Cc705ccAe9a16566573BBc3405b347751e30992";
 let metisTokenAddress = "0xD331E3CA3e51d3dd6712541CB01d7100E24DAdD1";
@@ -81,12 +81,12 @@ const main = async () => {
   // return;
 
   // deploy validator share factory
-  const ValidatorShareFactory = await hre.ethers.getContractFactory("ValidatorShareFactory");
-  validatorShareFactoryDeployed = await ValidatorShareFactory.deploy();
-  console.log("ValidatorShareFactory deployed to:", validatorShareFactoryDeployed.address);
-  validatorShareFactoryAddress = validatorShareFactoryDeployed.address;
-  await delay(3000);
-  return
+  // const ValidatorShareFactory = await hre.ethers.getContractFactory("ValidatorShareFactory");
+  // validatorShareFactoryDeployed = await ValidatorShareFactory.deploy();
+  // console.log("ValidatorShareFactory deployed to:", validatorShareFactoryDeployed.address);
+  // validatorShareFactoryAddress = validatorShareFactoryDeployed.address;
+  // await delay(3000);
+  // return
 
 
   // deploy staking info

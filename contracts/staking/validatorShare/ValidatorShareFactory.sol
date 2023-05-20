@@ -4,7 +4,6 @@ import {ValidatorShare} from "./ValidatorShare.sol";
 import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 
-
 contract ValidatorShareFactory {
     address immutable tokenValidatorShare;
 

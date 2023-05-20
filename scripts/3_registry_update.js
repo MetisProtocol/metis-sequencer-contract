@@ -7,7 +7,7 @@ const web3 = require("web3");
 let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
 let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
 let validatorShareAddress = "0xDCe59b3B2f90D71614435D0E979A04260b51C24B";
-let validatorShareFactoryAddress = "0xEB9A0FC56c1a372AB198c18eD29B3D662975209A";
+let validatorShareFactoryAddress = "0x2c6bFF689528687505332b2bda37B9FE118E11a4";
 let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
 let stakingNftAddress = "0x8Cc705ccAe9a16566573BBc3405b347751e30992";
 let metisTokenAddress = "0xD331E3CA3e51d3dd6712541CB01d7100E24DAdD1";
@@ -67,8 +67,11 @@ const main = async () => {
     //  )
     //  console.log("updateContractMap tx:", tx.hash)
 
-    let tx = await updateStakeManagerContractAddress(govProxyObj)
-     console.log("updateStakeManagerContractAddress tx:", tx.hash)
+    // let tx = await updateStakeManagerContractAddress(govProxyObj)
+    //  console.log("updateStakeManagerContractAddress tx:", tx.hash)
+
+    let tx = await updateStakeManagerReward(govProxyObj)
+    console.log("updateStakeManagerReward tx:", tx.hash)
 }
 
 async function updateContractMap(govObj, registryAddress, key, value) {
@@ -107,6 +110,26 @@ async function updateStakeManagerContractAddress(govObj) {
           validatorShareFactoryAddress,
           stakeManagerExtensionAddress
         ])
+    console.log("reinitializeEncodeData: ", reinitializeEncodeData)
+
+    return govObj.update(
+        stakeManagerProxyAddress,
+        reinitializeEncodeData
+    )
+}
+
+async function updateStakeManagerReward(govObj) {
+    let ABI = [
+        "function batchSubmitRewards(uint256 fromEpoch,uint256 endEpoch,address[] memory validators, uint256[] memory finishedBlocks,bytes memory signature)"
+    ];
+    let iface = new ethers.utils.Interface(ABI);
+    let reinitializeEncodeData = iface.encodeFunctionData("batchSubmitRewards", [
+        1,
+        100,
+        ["0x70fb083ab9bc2ed3c4cebe08054e82827368ed1e"],
+        [100],
+        "0x00"
+    ])
     console.log("reinitializeEncodeData: ", reinitializeEncodeData)
 
     return govObj.update(
