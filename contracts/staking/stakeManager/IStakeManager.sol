@@ -44,12 +44,4 @@ abstract contract IStakeManager {
     function withdrawDelegatorsReward(uint256 validatorId) virtual public returns(uint256);
 
     function delegatorsReward(uint256 validatorId) virtual public view returns(uint256);
-
-    function dethroneAndStake(
-        address auctionUser,
-        uint256 validatorId,
-        uint256 auctionAmount,
-        bool acceptDelegation,
-        bytes calldata signerPubkey
-    ) virtual external;
 }

@@ -291,22 +291,6 @@ contract StakeManager is
         return validators[NFTContract.tokenOfOwnerByIndex(user, 0)].amount;
     }
 
-    // 推翻原来的验证节点，并且给新的竞拍这抵押
-    function dethroneAndStake(
-        address auctionUser,
-        uint256 validatorId,
-        uint256 auctionAmount,
-        bool acceptDelegation,
-        bytes calldata signerPubkey
-    ) override external {
-        require(msg.sender == address(this), "not allowed");
-        // dethrone
-        _unstake(validatorId, currentEpoch);
-
-        uint256 newValidatorId = _stakeFor(auctionUser, auctionAmount, acceptDelegation, signerPubkey);
-        logger.logConfirmAuction(newValidatorId, validatorId, auctionAmount);
-    }
-
     // 某个验证节点退出
     function unstake(uint256 validatorId) override external onlyStaker(validatorId) {
         Status status = validators[validatorId].status;
@@ -490,8 +474,8 @@ contract StakeManager is
     )  public returns (uint256) {
         // check epoch
         require(endEpoch > fromEpoch,"invalid end epoch");
-        // require(fromEpoch > lastSubmitRewardEpoch,"invalid from epoch");
-        // lastSubmitRewardEpoch = endEpoch;
+        require(fromEpoch > lastSubmitRewardEpoch,"invalid from epoch");
+        lastSubmitRewardEpoch = endEpoch;
 
         // check mpc signature
         // bytes32 operationHash = keccak256(abi.encodePacked(fromEpoch,endEpoch,validators,finishedBlocks, address(this)));
@@ -597,7 +581,7 @@ contract StakeManager is
 
      function _calculateReward(
         uint256 blockInterval
-    ) internal returns (uint256) {
+    ) internal view returns (uint256) {
         // rewards are based on BlockInterval multiplied on `BLOCK_REWARD`
         return blockInterval.mul(BLOCK_REWARD);
     }
@@ -796,7 +780,6 @@ contract StakeManager is
         return validatorId;
     }
 
-    // 节点退出操作
     function _unstake(uint256 validatorId, uint256 exitEpoch) internal {
         // TODO: if validators unstake and slashed to 0, he will be forced to unstake again
         // must think how to handle it correctly
