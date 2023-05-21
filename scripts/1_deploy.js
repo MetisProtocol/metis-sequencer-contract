@@ -39,7 +39,6 @@ const main = async () => {
   // await v1contract.deployed();
   // console.log("V1 Contract deployed to:", v1contract.address);
 
-
   // upgrade to v2
   //  const V2Contract = await ethers.getContractFactory("V2");
   //  console.log("Upgrading V1Contract...");
@@ -51,22 +50,20 @@ const main = async () => {
   console.log('deploying contracts...');
 
   // deploy gov and gov proxy
-  // const gov = await hre.ethers.getContractFactory("Governance");
-  // const govProxy = await upgrades.deployProxy(gov, [signer]);
-  // await govProxy.deployed();
-  // console.log("gov proxy deployed to:", govProxy.address);
-
-  // govProxyAddress = govProxy.address;
+  const gov = await hre.ethers.getContractFactory("Governance");
+  const govProxy = await upgrades.deployProxy(gov, [signer]);
+  await govProxy.deployed();
+  console.log("gov proxy deployed to:", govProxy.address);
+  govProxyAddress = govProxy.address;
   // console.log(verifyStr, process.env.HARDHAT_NETWORK, govProxy.address);
   // await delay(3000);
-  // return 
 
   // deploy registry
-  // const registry = await hre.ethers.getContractFactory("Registry");
-  // let registryDeployed = await registry.deploy();
-  // console.log("registry deployed to:", registryDeployed.address);
-  // registryAddress = registryDeployed.address;
-  // await delay(3000);
+  const registry = await hre.ethers.getContractFactory("Registry");
+  let registryDeployed = await registry.deploy();
+  console.log("registry deployed to:", registryDeployed.address);
+  registryAddress = registryDeployed.address;
+  await delay(3000);
 
   // // registry init
   // let registryInitTx = await registryDeployed.initialize(govProxyAddress);

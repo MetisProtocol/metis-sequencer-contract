@@ -495,7 +495,6 @@ contract StakingInfo is Ownable {
         emit DelegatorUnstaked(validatorId, user, amount);
     }
 
-    // deprecated
     function logUpdateCommissionRate(
         uint256 validatorId,
         uint256 newCommissionRate,

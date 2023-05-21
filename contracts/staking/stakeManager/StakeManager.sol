@@ -130,7 +130,7 @@ contract StakeManager is
         return validators[validatorId].delegatedAmount;
     }
 
-    // 查询被代理抵押数量
+    // 查询被代理抵押奖励数量
     function delegatorsReward(uint256 validatorId) override public view returns (uint256) {
         uint256 _delegatorsReward;
         if (validators[validatorId].deactivationEpoch == 0) {
@@ -269,8 +269,7 @@ contract StakeManager is
         address _NFTContract,
         address _stakingLogger,
         address _validatorShareFactory,
-        address _extensionCode,
-        address _mpc
+        address _extensionCode
     ) external onlyGovernance {
         require(isContract(_extensionCode));
         eventsHub = address(0x0);
@@ -310,8 +309,9 @@ contract StakeManager is
         address delegator
     ) override external returns (bool) {
         require(
-            validators[validatorId].contractAddress == msg.sender ||
-                Registry(registry).getSlashingManagerAddress() == msg.sender,
+            // validators[validatorId].contractAddress == msg.sender ||
+            validators[validatorId].contractAddress == msg.sender,
+                // Registry(registry).getSlashingManagerAddress() == msg.sender,
             "not allowed"
         );
         return token.transfer(delegator, amount);
@@ -463,20 +463,15 @@ contract StakeManager is
         latestSignerUpdateEpoch[validatorId] = _currentEpoch;
     }
 
+// submit every epoch
     function batchSubmitRewards(
         address payeer,
-        uint256 fromEpoch,
-        uint256 endEpoch,
         address[] memory validators,
-        uint256[] memory finishedBlocks
+        uint256[] memory rewards
+        // uint256[] memory finishedBlocks
         // bytes memory signature
     // )  external onlyGovernance  returns (uint256) {
     )  public returns (uint256) {
-        // check epoch
-        require(endEpoch > fromEpoch,"invalid end epoch");
-        require(fromEpoch > lastSubmitRewardEpoch,"invalid from epoch");
-        lastSubmitRewardEpoch = endEpoch;
-
         // check mpc signature
         // bytes32 operationHash = keccak256(abi.encodePacked(fromEpoch,endEpoch,validators,finishedBlocks, address(this)));
         // operationHash = ECDSA.toEthSignedMessageHash(operationHash);
@@ -487,8 +482,8 @@ contract StakeManager is
         // calc reward
         uint256 totalReward;
         for (uint256 i = 0; i < validators.length; ++i) {
-            uint256 reward = _increaseReward(validators[i],finishedBlocks[i]);
-            totalReward += reward;
+            _increaseReward(validators[i],rewards[i]);
+            totalReward += rewards[i];
         }
 
         // reward income
@@ -587,21 +582,21 @@ contract StakeManager is
     }
 
     function _increaseReward(
-        address proposer,
-        uint256 blockInterval
+        address validator,
+        // uint256 blockInterval
+        uint256 reward
     ) private returns (uint256) {
         uint256 currentTotalStake = validatorState.amount;
-        uint256 reward = _calculateReward(blockInterval);
+        // uint256 reward = _calculateReward(blockInterval);
 
         // validator reward update
-        uint256 proposerId = signerToValidator[proposer];
-        Validator storage _proposer = validators[proposerId];
-        _proposer.reward = _proposer.reward.add(reward);
+        uint256 validatorId = signerToValidator[validator];
 
         // rewardPerStake update
         uint256 newRewardPerStake = rewardPerStake.add(reward.mul(REWARD_PRECISION).div(currentTotalStake));
-        _updateRewardsAndCommit(proposerId, rewardPerStake, newRewardPerStake);
+        _updateRewardsAndCommit(validatorId, rewardPerStake, newRewardPerStake);
         rewardPerStake = newRewardPerStake;
+        
         _finalizeCommit();
         return reward;
     }

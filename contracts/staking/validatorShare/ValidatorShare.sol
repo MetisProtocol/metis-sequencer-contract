@@ -26,7 +26,6 @@ contract ValidatorShare is
     }
 
     uint256 constant EXCHANGE_RATE_PRECISION = 100;
-    // maximum metis possible, even if rate will be 1 and all metis will be staken in one go, it will result in 10 ^ 58 shares
     uint256 constant EXCHANGE_RATE_HIGH_PRECISION = 10 ** 29;
     uint256 constant MAX_COMMISION_RATE = 100;
     uint256 constant REWARD_PRECISION = 10 ** 25;
@@ -34,26 +33,18 @@ contract ValidatorShare is
     StakingInfo public stakingLogger;
     IStakeManager public stakeManager;
     uint256 public validatorId;
-    uint256 public validatorRewards_deprecated;
-    uint256 public commissionRate_deprecated;
-    uint256 public lastCommissionUpdate_deprecated;
     uint256 public minAmount;
-
-    uint256 public totalStake_deprecated;
     uint256 public rewardPerShare;
     uint256 public activeAmount;
-
     bool public delegation;
-
     uint256 public withdrawPool;
     uint256 public withdrawShares;
 
-    mapping(address => uint256) amountStaked_deprecated; // deprecated, keep for foundation delegators
     mapping(address => DelegatorUnbond) public unbonds;
     mapping(address => uint256) public initalRewardPerShare;
 
     mapping(address => uint256) public unbondNonces;
-    mapping(address => mapping(uint256 => DelegatorUnbond)) public unbonds_new;
+    // mapping(address => mapping(uint256 => DelegatorUnbond)) public unbonds_new;
 
     EventsHub public eventsHub;
 
@@ -271,50 +262,6 @@ contract ValidatorShare is
         } else {
             require(ERC20(token).transfer(destination, amount), "Drain failed");
         }
-    }
-
-    /**
-        New shares exit API
-     */
-
-    function sellVoucher_new(
-        uint256 claimAmount,
-        uint256 maximumSharesToBurn
-    ) public {
-        (uint256 shares, uint256 _withdrawPoolShare) = _sellVoucher(
-            claimAmount,
-            maximumSharesToBurn
-        );
-
-        uint256 unbondNonce = unbondNonces[msg.sender].add(1);
-
-        DelegatorUnbond memory unbond = DelegatorUnbond({
-            shares: _withdrawPoolShare,
-            withdrawEpoch: stakeManager.epoch()
-        });
-        unbonds_new[msg.sender][unbondNonce] = unbond;
-        unbondNonces[msg.sender] = unbondNonce;
-
-        _getOrCacheEventsHub().logShareBurnedWithId(
-            validatorId,
-            msg.sender,
-            claimAmount,
-            shares,
-            unbondNonce
-        );
-        stakingLogger.logStakeUpdate(validatorId);
-    }
-
-    function unstakeClaimTokens_new(uint256 unbondNonce) public {
-        DelegatorUnbond memory unbond = unbonds_new[msg.sender][unbondNonce];
-        uint256 amount = _unstakeClaimTokens(unbond);
-        delete unbonds_new[msg.sender][unbondNonce];
-        _getOrCacheEventsHub().logDelegatorUnstakedWithId(
-            validatorId,
-            msg.sender,
-            amount,
-            unbondNonce
-        );
     }
 
     /**

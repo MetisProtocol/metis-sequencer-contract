@@ -53,10 +53,9 @@ abstract contract StakeManagerStorage is GovernanceLockable {
     ValidatorShareFactory public validatorShareFactory;
     uint256 public WITHDRAWAL_DELAY; // unit: epoch
     uint256 public currentEpoch;
-    uint256 lastSubmitRewardEpoch;
 
     // genesis/governance variables
-    uint256 public dynasty; // unit: epoch 50 days  每个epoch多长
+    uint256 public dynasty; // unit: epoch
     uint256 public BLOCK_REWARD; // update via governance
     uint256 public minDeposit; // in ERC20 token
     uint256 public signerUpdateLimit;

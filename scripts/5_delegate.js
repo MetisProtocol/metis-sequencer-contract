@@ -30,6 +30,9 @@ const main = async () => {
     //  console.log("approve tx:", approveTx.hash);
     //  return 
 
+   
+
+
     await delegate(4);
 }
 
@@ -49,16 +52,23 @@ async function delegate(validatorId) {
     const _validator = await smObj.validators(validatorId)
 
     const validatorShare = await ethers.getContractFactory("ValidatorShare");
-    const validator = await validatorShare.attach(_validator.contractAddress);
+    const vsObj = await validatorShare.attach(_validator.contractAddress);
 
-    // console.log('approved, delegating now...')
-    // let result = await validator.buyVoucher(web3.utils.toWei('100'), 0)
-    // console.log(`Bond ${web3.utils.toWei('100')} to ${validatorId}:  ${result.tx}`)
+    // view methods
+    let exchangeRate = await vsObj.exchangeRate();
+    console.log("exchangeRate :", exchangeRate);
 
-    let result1 = await validator.withdrawExchangeRate();
-    console.log("withdrawExchangeRate :", result1);
+    let getTotalStake = await vsObj.getTotalStake();
+    console.log("getTotalStake :", getTotalStake);
 
-    let result = await validator.sellVoucher(web3.utils.toWei('1'), web3.utils.toWei('10'))
+    let withdrawExchangeRate = await vsObj.withdrawExchangeRate();
+    console.log("withdrawExchangeRate :", withdrawExchangeRate);
+
+    let getRewardPerShare = await vsObj.getRewardPerShare();
+    console.log("getRewardPerShare :", getRewardPerShare);
+
+
+    let result = await vsObj.sellVoucher(web3.utils.toWei('1'), web3.utils.toWei('10'))
     console.log(`UnBond from ${validatorId}: ${result.hash}`)
 }
 
