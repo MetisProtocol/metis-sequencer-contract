@@ -14,25 +14,25 @@ const main = async () => {
     const govProxy = await hre.ethers.getContractFactory("Governance");
     const govProxyObj = await govProxy.attach(contractAddresses.contracts.GovernanceProxy);
 
-    // let tx =  await updateContractMap(
-    //         govProxyObj,
-    //         contractAddresses.contracts.Registry,
-    //         web3.utils.keccak256('stakeManager'),
-    //         contractAddresses.contracts.StakingManagerProxy
-    //     )
-    // console.log("updateContractMap tx:", tx.hash)
+    let tx =  await updateContractMap(
+            govProxyObj,
+            contractAddresses.contracts.Registry,
+            web3.utils.keccak256('stakeManager'),
+            contractAddresses.contracts.StakingManagerProxy
+        )
+    console.log("updateContractMap tx:", tx.hash)
         
-    // tx = await updateContractMap(
-    //      govProxyObj,
-    //      contractAddresses.contracts.Registry, 
-    //      web3.utils.keccak256('eventsHub'),
-    //      contractAddresses.contracts.EventHubProxy
-    //  )
-    //  console.log("updateContractMap tx:", tx.hash)
+    tx = await updateContractMap(
+         govProxyObj,
+         contractAddresses.contracts.Registry, 
+         web3.utils.keccak256('eventsHub'),
+         contractAddresses.contracts.EventHubProxy
+     )
+     console.log("updateContractMap tx:", tx.hash)
 
 
-    let tx = await updateStakeManagerContractAddress(govProxyObj)
-     console.log("updateStakeManagerContractAddress tx:", tx.hash)
+    // let tx = await updateStakeManagerContractAddress(govProxyObj)
+    //  console.log("updateStakeManagerContractAddress tx:", tx.hash)
 
     // let tx = await updateStakeManagerReward(govProxyObj)
     // console.log("updateStakeManagerReward tx:", tx.hash)

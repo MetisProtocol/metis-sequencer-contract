@@ -75,10 +75,7 @@ async function delegate(validatorId) {
 
     let claimAmount = web3.utils.toWei('100');
     let shares = claimAmount * 100 / (rate);
-
     console.log("shares :", web3.utils.fromWei(shares.toString(), 'ether'));
-    // return
-    //    require(shares <= maximumSharesToBurn, "too much slippage");
 
     let result = await vsObj.sellVoucher(claimAmount, web3.utils.toWei('100'))
     console.log(`UnBond from ${validatorId}: ${result.hash}`)

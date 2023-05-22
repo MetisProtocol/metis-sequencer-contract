@@ -54,16 +54,16 @@ const main = async () => {
   const stakeManager = await ethers.getContractFactory("StakeManager");
   const stakeManagerObj = await stakeManager.attach(contractAddresses.contracts.StakingManagerProxy);
   // 更新佣金比例
-  let updateCommissionRateTx = await stakeManagerObj.updateCommissionRate(3, 10);
-  console.log("updateCommissionRateTx tx ", updateCommissionRateTx.hash);
-  return
+  // let updateCommissionRateTx = await stakeManagerObj.updateCommissionRate(3, 10);
+  // console.log("updateCommissionRateTx tx ", updateCommissionRateTx.hash);
+  // return
 
   // 授权
-  // const metisToken = await ethers.getContractFactory("TestToken");
-  // const metisTokenObj = await metisToken.attach(contractAddresses.contracts.tokens.MetisToken);
-  // console.log('Sender accounts has a balanceOf', (await metisTokenObj.balanceOf(signer)).toString())
-  // let approveTx = await metisTokenObj.approve(contractAddresses.contracts.StakingManagerProxy, web3.utils.toWei('1000000000000'))
-  // console.log("approve tx:", approveTx.hash);
+  const metisToken = await ethers.getContractFactory("TestToken");
+  const metisTokenObj = await metisToken.attach(contractAddresses.contracts.tokens.MetisToken);
+  console.log('Sender accounts has a balanceOf', (await metisTokenObj.balanceOf(signer)).toString())
+  let approveTx = await metisTokenObj.approve(contractAddresses.contracts.StakingManagerProxy, web3.utils.toWei('1000000000000'))
+  console.log("approve tx:", approveTx.hash);
 
   // stake
   const validatorAccount = addr2;
@@ -146,9 +146,6 @@ const main = async () => {
 function delay(s) {
   return new Promise(resolve => setTimeout(resolve, s * 1000));
 }
-
-
-
 
 main()
   .then(() => process.exit(0))

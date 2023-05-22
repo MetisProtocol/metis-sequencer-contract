@@ -28,54 +28,54 @@ const main = async () => {
     // });
     // return
 
-  // await hre.run("verify:verify", {
-  //     address: contractAddresses.contracts.GovernanceProxy,
-  //     contract: "contracts/common/governance/GovernanceProxy.sol:GovernanceProxy",
-  //     constructorArguments: [
-  //     ],
-  //   });
+  await hre.run("verify:verify", {
+      address: contractAddresses.contracts.GovernanceProxy,
+      contract: "contracts/common/governance/GovernanceProxy.sol:GovernanceProxy",
+      constructorArguments: [
+      ],
+    });
 
-  // await hre.run("verify:verify", {
-  //    address: contractAddresses.contracts.Registry,
-  //    contract: "contracts/common/Registry.sol:Registry",
-  //    constructorArguments: [
-  //    ],
-  //  });
+  await hre.run("verify:verify", {
+     address: contractAddresses.contracts.Registry,
+     contract: "contracts/common/Registry.sol:Registry",
+     constructorArguments: [
+     ],
+   });
 
-  // await hre.run("verify:verify", {
-  //    address: contractAddresses.contracts.ValidatorShareFactory,
-  //    contract: "contracts/staking/validatorShare/ValidatorShareFactory.sol:ValidatorShareFactory",
-  //    constructorArguments: [],
-  //  });
-
-
-  // await hre.run("verify:verify", {
-  //    address: contractAddresses.contracts.StakingInfo,
-  //    contract: "contracts/staking/StakingInfo.sol:StakingInfo",
-  //    constructorArguments: [
-  //       contractAddresses.contracts.Registry,
-  //    ],
-  //  });
+  await hre.run("verify:verify", {
+     address: contractAddresses.contracts.ValidatorShareFactory,
+     contract: "contracts/staking/validatorShare/ValidatorShareFactory.sol:ValidatorShareFactory",
+     constructorArguments: [],
+   });
 
 
-  // await hre.run("verify:verify", {
-  //   address: contractAddresses.contracts.StakingNft,
-  //   contract: "contracts/staking/stakeManager/StakingNFT.sol:StakingNFT",
-  //   constructorArguments: [
-  //     stakingNftName,
-  //     stakingNftSymbol
-  //     ],
-  //   });
+  await hre.run("verify:verify", {
+     address: contractAddresses.contracts.StakingInfo,
+     contract: "contracts/staking/StakingInfo.sol:StakingInfo",
+     constructorArguments: [
+        contractAddresses.contracts.Registry,
+     ],
+   });
 
 
-  // await hre.run("verify:verify", {
-  //   address: contractAddresses.contracts.tokens.MetisToken,
-  //   contract: "contracts/common/tokens/TestToken.sol:TestToken",
-  //   constructorArguments: [
-  //     metisTokenName,
-  //     metisTokenSymbol
-  //   ],
-  // });
+  await hre.run("verify:verify", {
+    address: contractAddresses.contracts.StakingNft,
+    contract: "contracts/staking/stakeManager/StakingNFT.sol:StakingNFT",
+    constructorArguments: [
+      stakingNftName,
+      stakingNftSymbol
+      ],
+    });
+
+
+  await hre.run("verify:verify", {
+    address: contractAddresses.contracts.tokens.MetisToken,
+    contract: "contracts/common/tokens/TestToken.sol:TestToken",
+    constructorArguments: [
+      metisTokenName,
+      metisTokenSymbol
+    ],
+  });
 
   await hre.run("verify:verify", {
     address: contractAddresses.contracts.StakingManagerProxy,
@@ -84,19 +84,19 @@ const main = async () => {
     ],
   });
 
-  //   await hre.run("verify:verify", {
-  //     address: contractAddresses.contracts.StakeManagerExtensionAddress,
-  //     contract: "contracts/staking/stakeManager/StakeManagerExtension.sol:StakeManagerExtension",
-  //     constructorArguments: [
-  //     ],
-  //   });
+    await hre.run("verify:verify", {
+      address: contractAddresses.contracts.StakeManagerExtensionAddress,
+      contract: "contracts/staking/stakeManager/StakeManagerExtension.sol:StakeManagerExtension",
+      constructorArguments: [
+      ],
+    });
 
-  //   await hre.run("verify:verify", {
-  //     address: contractAddresses.contracts.EventHubProxy,
-  //     contract: "contracts/staking/EventsHub.sol:EventsHub",
-  //     constructorArguments: [
-  //     ],
-  //   });
+    await hre.run("verify:verify", {
+      address: contractAddresses.contracts.EventHubProxy,
+      contract: "contracts/staking/EventsHub.sol:EventsHub",
+      constructorArguments: [
+      ],
+    });
 };
 
 main()

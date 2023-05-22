@@ -31,95 +31,96 @@ const main = async () => {
   console.log("signer address:%s", signer, new Date().toTimeString());
 
   console.log('deploying contracts...');
-  // // deploy gov and gov proxy
-  // const gov = await hre.ethers.getContractFactory("Governance");
-  // const govProxy = await upgrades.deployProxy(gov, [signer]);
-  // await govProxy.deployed();
-  // console.log("gov proxy deployed to:", govProxy.address);
-  // govProxyAddress = govProxy.address;
-  // await delay(3000);
+  // deploy gov and gov proxy
+  const gov = await hre.ethers.getContractFactory("Governance");
+  const govProxy = await upgrades.deployProxy(gov, [signer]);
+  await govProxy.deployed();
+  console.log("gov proxy deployed to:", govProxy.address);
+  govProxyAddress = govProxy.address;
+  await delay(3000);
 
-  // // deploy registry
-  // const registry = await hre.ethers.getContractFactory("Registry");
-  // let registryDeployed = await registry.deploy();
-  // console.log("registry deployed to:", registryDeployed.address);
-  // registryAddress = registryDeployed.address;
-  // await delay(3000);
+  // deploy registry
+  const registry = await hre.ethers.getContractFactory("Registry");
+  let registryDeployed = await registry.deploy();
+  console.log("registry deployed to:", registryDeployed.address);
+  registryAddress = registryDeployed.address;
+  await delay(3000);
 
-  // // registry init
-  // let registryInitTx = await registryDeployed.initialize(govProxyAddress);
-  // console.log("registry initialize tx:", registryInitTx.hash);
-  // await delay(3000);
+  // registry init
+  let registryInitTx = await registryDeployed.initialize(govProxyAddress);
+  console.log("registry initialize tx:", registryInitTx.hash);
+  await delay(3000);
 
-  // // deploy validator share factory
-  // const ValidatorShareFactory = await hre.ethers.getContractFactory("ValidatorShareFactory");
-  // validatorShareFactoryDeployed = await ValidatorShareFactory.deploy();
-  // console.log("ValidatorShareFactory deployed to:", validatorShareFactoryDeployed.address);
-  // validatorShareFactoryAddress = validatorShareFactoryDeployed.address;
-  // await delay(3000);
+  // deploy validator share factory
+  const ValidatorShareFactory = await hre.ethers.getContractFactory("ValidatorShareFactory");
+  validatorShareFactoryDeployed = await ValidatorShareFactory.deploy();
+  console.log("ValidatorShareFactory deployed to:", validatorShareFactoryDeployed.address);
+  validatorShareFactoryAddress = validatorShareFactoryDeployed.address;
+  await delay(3000);
 
   // deploy staking info
-  // const StakingInfo = await hre.ethers.getContractFactory("StakingInfo");
-  // stakingInfoDeployed = await StakingInfo.deploy(registryAddress);
-  // console.log("StakingInfo deployed to:", stakingInfoDeployed.address);
-  // stakingInfoAddress = stakingInfoDeployed.address;
-  // await delay(3000);
+  const StakingInfo = await hre.ethers.getContractFactory("StakingInfo");
+  stakingInfoDeployed = await StakingInfo.deploy(registryAddress);
+  console.log("StakingInfo deployed to:", stakingInfoDeployed.address);
+  stakingInfoAddress = stakingInfoDeployed.address;
+  await delay(3000);
 
   // deploy staking nft
-  // const StakingNFT = await hre.ethers.getContractFactory("StakingNFT");
-  // stakingNFTDeployed = await StakingNFT.deploy(stakingNftName, stakingNftSymbol);
-  // console.log("StakingNFT deployed to:", stakingNFTDeployed.address);
-  // stakingNftAddress = stakingNFTDeployed.address;
-  // await delay(3000);
+  const StakingNFT = await hre.ethers.getContractFactory("StakingNFT");
+  stakingNFTDeployed = await StakingNFT.deploy(stakingNftName, stakingNftSymbol);
+  console.log("StakingNFT deployed to:", stakingNFTDeployed.address);
+  stakingNftAddress = stakingNFTDeployed.address;
+  await delay(3000);
 
-  // console.log('deploying tokens...');
-  // metisTokenAddress = await deployTestToken(metisTokenName, metisTokenSymbol);
+  console.log('deploying tokens...');
+  metisTokenAddress = await deployTestToken(metisTokenName, metisTokenSymbol);
 
   // deploy stake manager extension
-  // const StakeManagerExtension = await hre.ethers.getContractFactory("StakeManagerExtension");
-  // stakeManagerExtensionDeployed = await StakeManagerExtension.deploy();
-  // console.log("StakeManagerExtension deployed to:", stakeManagerExtensionDeployed.address);
-  // stakeManagerExtensionAddress = stakeManagerExtensionDeployed.address;
+  const StakeManagerExtension = await hre.ethers.getContractFactory("StakeManagerExtension");
+  stakeManagerExtensionDeployed = await StakeManagerExtension.deploy();
+  console.log("StakeManagerExtension deployed to:", stakeManagerExtensionDeployed.address);
+  stakeManagerExtensionAddress = stakeManagerExtensionDeployed.address;
+  await delay(3000);
 
   // deploy stake manager and proxy
-  // const stakeManager = await hre.ethers.getContractFactory("StakeManager");
-  // const stakeManagerProxy = await upgrades.deployProxy(stakeManager, 
-  //           [
-  //             govProxyAddress,
-  //             registryAddress,
-  //             metisTokenAddress,
-  //             stakingNftAddress,
-  //             stakingInfoAddress,
-  //             validatorShareFactoryAddress,
-  //             signer,
-  //             signer,
-  //             stakeManagerExtensionAddress
-  //           ],
-  //           {
-  //             initializer: 'initialize(address,address,address,address,address,address,address,address,address)'
-  //           });
-  // await stakeManagerProxy.deployed();
-  // console.log("StakeManager deployed to:", stakeManagerProxy.address);
-  // stakeManagerProxyAddress = stakeManagerProxy.address;
+  const stakeManager = await hre.ethers.getContractFactory("StakeManager");
+  const stakeManagerProxy = await upgrades.deployProxy(stakeManager, 
+            [
+              govProxyAddress,
+              registryAddress,
+              metisTokenAddress,
+              stakingNftAddress,
+              stakingInfoAddress,
+              validatorShareFactoryAddress,
+              signer,
+              signer,
+              stakeManagerExtensionAddress
+            ],
+            {
+              initializer: 'initialize(address,address,address,address,address,address,address,address,address)'
+            });
+  await stakeManagerProxy.deployed();
+  console.log("StakeManager deployed to:", stakeManagerProxy.address);
+  stakeManagerProxyAddress = stakeManagerProxy.address;
 
-  const stakeManagerUpgrade = await hre.ethers.getContractFactory("StakeManager");
-  let upgrade = await upgrades.upgradeProxy(stakeManagerProxyAddress, stakeManagerUpgrade);
-  console.log("StakeManager deployed to:", upgrade.address);
+  // const stakeManagerUpgrade = await hre.ethers.getContractFactory("StakeManager");
+  // let upgrade = await upgrades.upgradeProxy(stakeManagerProxyAddress, stakeManagerUpgrade);
+  // console.log("StakeManager deployed to:", upgrade.address);
 
-  // // NFT transferOwnership
-  // const StakingNFT1 = await hre.ethers.getContractFactory("StakingNFT");
-  // const StakingNFTObj = await StakingNFT1.attach(stakingNftAddress);
-  // let tx = await StakingNFTObj.transferOwnership(stakeManagerProxyAddress);
-  // console.log("StakingNFT transferOwnership tx:", tx.hash);
-  // await delay(3000);
+  // NFT transferOwnership
+  const StakingNFT1 = await hre.ethers.getContractFactory("StakingNFT");
+  const StakingNFTObj = await StakingNFT1.attach(stakingNftAddress);
+  let tx = await StakingNFTObj.transferOwnership(stakeManagerProxyAddress);
+  console.log("StakingNFT transferOwnership tx:", tx.hash);
+  await delay(3000);
 
-  // // deploy event hub
-  // const EventsHub = await hre.ethers.getContractFactory("EventsHub");
-  // const EventsHubProxy = await upgrades.deployProxy(EventsHub, [registryAddress])
-  // await EventsHubProxy.deployed();
-  // console.log("EventsHub deployed to :", EventsHubProxy.address);
-  // eventHubProxyAddress = EventsHubProxy.address;
-  // await delay(3000);
+  // deploy event hub
+  const EventsHub = await hre.ethers.getContractFactory("EventsHub");
+  const EventsHubProxy = await upgrades.deployProxy(EventsHub, [registryAddress])
+  await EventsHubProxy.deployed();
+  console.log("EventsHub deployed to :", EventsHubProxy.address);
+  eventHubProxyAddress = EventsHubProxy.address;
+  await delay(3000);
   
   console.log('writing contract addresses to file...')
   const contractAddresses = {
@@ -145,7 +146,6 @@ async function deployTestToken(name, symbol) {
   testTokenDeployed = await TestToken.deploy(name, symbol);
   console.log("TestToken deployed to:", testTokenDeployed.address);
   testTokenAddress = testTokenDeployed.address;
-  // console.log(verifyStr, process.env.HARDHAT_NETWORK, testTokenDeployed.address, name, symbol);
   await delay(3000);
   return testTokenDeployed.address;
 }
