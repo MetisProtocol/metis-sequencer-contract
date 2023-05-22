@@ -7,6 +7,8 @@ import {IGovernance} from "./governance/IGovernance.sol";
 contract Registry is Governable {
     // @todo hardcode constants
     bytes32 private constant STAKE_MANAGER = keccak256("stakeManager");
+    bytes32 private constant EVENT_HUB = keccak256("eventsHub");
+
     // bytes32 private constant VALIDATOR_SHARE = keccak256("validatorShare");
     // bytes32 private constant SLASHING_MANAGER = keccak256("slashingManager");
 
@@ -29,6 +31,10 @@ contract Registry is Governable {
     // }
 
     function getStakeManagerAddress() public view returns (address) {
+        return contractMap[STAKE_MANAGER];
+    }
+
+    function getEventHubAddress() public view returns (address) {
         return contractMap[STAKE_MANAGER];
     }
 

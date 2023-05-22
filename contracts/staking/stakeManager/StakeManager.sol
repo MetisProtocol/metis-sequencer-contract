@@ -328,7 +328,6 @@ contract StakeManager is
     function stakeFor(
         address user,
         uint256 amount,
-        // uint256 themisFee,
         bool acceptDelegation,
         bytes memory signerPubkey
     ) override public  onlyWhenUnlocked {
@@ -594,11 +593,40 @@ contract StakeManager is
 
         // rewardPerStake update
         uint256 newRewardPerStake = rewardPerStake.add(reward.mul(REWARD_PRECISION).div(currentTotalStake));
-        _updateRewardsAndCommit(validatorId, rewardPerStake, newRewardPerStake);
+        _updateRewardsAndCommitWithFixedReward(validatorId, reward,newRewardPerStake);
         rewardPerStake = newRewardPerStake;
         
         _finalizeCommit();
         return reward;
+    }
+
+    function _updateRewardsAndCommitWithFixedReward(uint256 validatorId,uint256 reward, uint256 newRewardPerStake) private{
+        uint256 deactivationEpoch = validators[validatorId].deactivationEpoch;
+        if (deactivationEpoch != 0 && currentEpoch >= deactivationEpoch) {
+            return;
+        }
+
+        uint256 initialRewardPerStake = validators[validatorId].initialRewardPerStake;
+
+        uint256 validatorsStake = validators[validatorId].amount;
+        uint256 _delegatedAmount = validators[validatorId].delegatedAmount;
+        if (_delegatedAmount > 0) {
+            _increaseValidatorRewardWithDelegation(
+                validatorId,
+                validatorsStake,
+                _delegatedAmount,
+                reward
+            );
+        } else {
+            _increaseValidatorReward(
+                validatorId,
+                reward
+            );
+        }
+
+        if (newRewardPerStake > initialRewardPerStake) {
+            validators[validatorId].initialRewardPerStake = newRewardPerStake;
+        }
     }
 
     function _updateRewardsAndCommit(

@@ -10,7 +10,6 @@ contract IStakeManagerEventsHub {
         uint256 reward;
         uint256 activationEpoch;
         uint256 deactivationEpoch;
-        uint256 jailTime;
         address signer;
         address contractAddress;
     }
@@ -23,7 +22,7 @@ contract EventsHub is Initializable {
 
     modifier onlyValidatorContract(uint256 validatorId) {
         address _contract;
-        (, , , , , , _contract) = IStakeManagerEventsHub(registry.getStakeManagerAddress()).validators(validatorId);
+        (, , ,  , , _contract) = IStakeManagerEventsHub(registry.getStakeManagerAddress()).validators(validatorId);
         require(_contract == msg.sender, "not validator");
         _;
     }

@@ -13,7 +13,6 @@ abstract contract IStakeManagerLocal {
         uint256 reward;
         uint256 activationEpoch;
         uint256 deactivationEpoch;
-        uint256 jailTime;
         address signer;
         address contractAddress;
         Status status;
@@ -98,13 +97,6 @@ contract StakingInfo is Ownable {
         bytes signerPubkey
     );
     event Restaked(uint256 indexed validatorId, uint256 amount, uint256 total);
-    event Jailed(
-        uint256 indexed validatorId,
-        uint256 indexed exitEpoch,
-        address indexed signer
-    );
-    event UnJailed(uint256 indexed validatorId, address indexed signer);
-    event Slashed(uint256 indexed nonce, uint256 indexed amount);
     event ThresholdChange(uint256 newThreshold, uint256 oldThreshold);
     event DynastyValueChange(uint256 newDynasty, uint256 oldDynasty);
     event ProposerBonusChange(
@@ -128,16 +120,7 @@ contract StakingInfo is Ownable {
         uint256 indexed amount,
         uint256 indexed totalAmount
     );
-    event StartAuction(
-        uint256 indexed validatorId,
-        uint256 indexed amount,
-        uint256 indexed auctionAmount
-    );
-    event ConfirmAuction(
-        uint256 indexed newValidatorId,
-        uint256 indexed oldValidatorId,
-        uint256 indexed amount
-    );
+   
     // event TopUpFee(address indexed user, uint256 indexed fee);
     // event ClaimFee(address indexed user, uint256 indexed fee);
     // Delegator events
@@ -178,7 +161,7 @@ contract StakingInfo is Ownable {
 
     modifier onlyValidatorContract(uint256 validatorId) {
         address _contract;
-        (, , , , , , _contract, ) = IStakeManagerLocal(
+        (, , , , , _contract, ) = IStakeManagerLocal(
             registry.getStakeManagerAddress()
         )
             .validators(validatorId);
@@ -190,7 +173,7 @@ contract StakingInfo is Ownable {
     modifier StakeManagerOrValidatorContract(uint256 validatorId) {
         address _contract;
         address _stakeManager = registry.getStakeManagerAddress();
-        (, , , , , , _contract, ) = IStakeManagerLocal(_stakeManager).validators(
+        (, , , , , _contract, ) = IStakeManagerLocal(_stakeManager).validators(
             validatorId
         );
         require(_contract == msg.sender || _stakeManager == msg.sender,
@@ -201,11 +184,6 @@ contract StakingInfo is Ownable {
     modifier onlyStakeManager() {
         require(registry.getStakeManagerAddress() == msg.sender,
         "Invalid sender, not stake manager");
-        _;
-    }
-    modifier onlySlashingManager() {
-        require(registry.getSlashingManagerAddress() == msg.sender,
-        "Invalid sender, not slashing manager");
         _;
     }
 
@@ -292,27 +270,6 @@ contract StakingInfo is Ownable {
         emit Restaked(validatorId, amount, total);
     }
 
-    function logJailed(uint256 validatorId, uint256 exitEpoch, address signer)
-        public
-        onlyStakeManager
-    {
-        emit Jailed(validatorId, exitEpoch, signer);
-    }
-
-    function logUnjailed(uint256 validatorId, address signer)
-        public
-        onlyStakeManager
-    {
-        emit UnJailed(validatorId, signer);
-    }
-
-    function logSlashed(uint256 nonce, uint256 amount)
-        public
-        onlySlashingManager
-    {
-        emit Slashed(nonce, amount);
-    }
-
     function logThresholdChange(uint256 newThreshold, uint256 oldThreshold)
         public
         onlyStakeManager
@@ -361,22 +318,6 @@ contract StakingInfo is Ownable {
         emit ClaimRewards(validatorId, amount, totalAmount);
     }
 
-    function logStartAuction(
-        uint256 validatorId,
-        uint256 amount,
-        uint256 auctionAmount
-    ) public onlyStakeManager {
-        emit StartAuction(validatorId, amount, auctionAmount);
-    }
-
-    function logConfirmAuction(
-        uint256 newValidatorId,
-        uint256 oldValidatorId,
-        uint256 amount
-    ) public onlyStakeManager {
-        emit ConfirmAuction(newValidatorId, oldValidatorId, amount);
-    }
-
     // function logTopUpFee(address user, uint256 fee) public onlyStakeManager {
     //     emit TopUpFee(user, fee);
     // }
@@ -407,7 +348,6 @@ contract StakingInfo is Ownable {
             reward,
             activationEpoch,
             deactivationEpoch,
-            ,
             signer,
             _contract,
             status
@@ -424,7 +364,7 @@ contract StakingInfo is Ownable {
         returns (uint256 validatorStake)
     {
         address contractAddress;
-        (validatorStake, , , , , , contractAddress, ) = IStakeManagerLocal(
+        (validatorStake, ,  , , , contractAddress, ) = IStakeManagerLocal(
             registry.getStakeManagerAddress()
         )
             .validators(validatorId);
@@ -433,21 +373,12 @@ contract StakingInfo is Ownable {
         }
     }
 
-    function getAccountStateRoot()
-        public
-        view
-        returns (bytes32 accountStateRoot)
-    {
-        accountStateRoot = IStakeManagerLocal(registry.getStakeManagerAddress())
-            .accountStateRoot();
-    }
-
     function getValidatorContractAddress(uint256 validatorId)
         public
         view
         returns (address ValidatorContract)
     {
-        (, , , , , , ValidatorContract, ) = IStakeManagerLocal(
+        (, , , , , ValidatorContract, ) = IStakeManagerLocal(
             registry.getStakeManagerAddress()
         )
             .validators(validatorId);

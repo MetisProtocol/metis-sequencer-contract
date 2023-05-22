@@ -4,22 +4,8 @@ const {
 } = require("hardhat");
 
 const web3 = require("web3");
+const utils = require('./utils');
 
-let govProxyAddress = "0x937aaFF6b2aDdD3593CaE0d135530f4EDD6e4b65";
-let registryAddress = "0x9Ebe9b50C08617158267654F893f8859991fd806";
-let validatorShareFactoryAddress = "0xa7cdd83CE970FfF8Eb4452824663049d7c447813";
-let stakingInfoAddress = "0x934b77c79bCD81510de51e61da58bE29Bce91497";
-let stakingNftAddress = "0x8Cc705ccAe9a16566573BBc3405b347751e30992";
-let metisTokenAddress = "0xD331E3CA3e51d3dd6712541CB01d7100E24DAdD1";
-let testTokenAddress = "0x384d2a29acBf54F375939D0Ea6FD85969a628D74";
-let stakeManagerProxyAddress = "0x95f54194847bEECC0b6af1C7D6C6cD4cddeE62A6";
-let stakeManagerExtensionAddress = "0x81955bcCA0f852C072c877D1CCA1eD1b14c0E5eB";
-let slashingManagerAddress = "0x2B3a174C812f550B58CAD89A23345d3867e99367";
-let eventHubProxyAddress = "0xF7Ee63689b05B062Ebd15327CD80Cf81cC133fd0";
-let stakingNftName = "Metis Sequencer";
-let stakingNftSymbol = "MS";
-let testTokenName = "Test ERC20";
-let testTokenSymbol = "TST20";
 
 const main = async () => {
     //  const validatorShare = await ethers.getContractFactory("ValidatorShare");
@@ -30,46 +16,73 @@ const main = async () => {
     //  console.log("approve tx:", approveTx.hash);
     //  return 
 
-   
-
-
-    await delegate(4);
+    await delegate(3);
 }
 
 async function delegate(validatorId) {
     const accounts = await ethers.getSigners();
-    const amount = web3.utils.toWei('1000')
-    console.log(`Delegating ${amount} for ${validatorId}...`)
+    signer = accounts[0].address;
+    console.log("signer address:%s", signer);
+
+    const contractAddresses = utils.getContractAddresses();
+    console.log("contractAddresses:", contractAddresses);
+
+    const amount = web3.utils.toWei('1000');
+    console.log(`Delegating ${amount} for ${validatorId}...`);
 
     //  const metisToken = await ethers.getContractFactory("TestToken");
-    //  const metisTokenObj = await metisToken.attach(metisTokenAddress);
-    //  console.log('Sender accounts has a balanceOf', (await metisTokenObj.balanceOf(accounts[0])).toString())
-    //  let approveTx = await metisTokenObj.approve(stakeManagerProxyAddress, web3.utils.toWei('1000000000000'))
+    //  const metisTokenObj = await metisToken.attach(contractAddresses.contracts.tokens.MetisToken);
+    //  console.log('Sender accounts has a balanceOf', (await metisTokenObj.balanceOf(signer)).toString())
+    //  let approveTx = await metisTokenObj.approve(contractAddresses.contracts.StakingManagerProxy, web3.utils.toWei('1000000000000'))
     //  console.log("approve tx:", approveTx.hash);
 
     const stakeManager = await ethers.getContractFactory("StakeManager");
-    const smObj = await stakeManager.attach(stakeManagerProxyAddress);
+    const smObj = await stakeManager.attach(contractAddresses.contracts.StakingManagerProxy);
     const _validator = await smObj.validators(validatorId)
 
     const validatorShare = await ethers.getContractFactory("ValidatorShare");
     const vsObj = await validatorShare.attach(_validator.contractAddress);
+    console.log("validatorShare proxy:", _validator.contractAddress)
 
     // view methods
-    let exchangeRate = await vsObj.exchangeRate();
-    console.log("exchangeRate :", exchangeRate);
+    // let exchangeRate = await vsObj.exchangeRate();
+    // console.log("exchangeRate :", exchangeRate);
 
-    let getTotalStake = await vsObj.getTotalStake();
-    console.log("getTotalStake :", getTotalStake);
+    // let getTotalStake = await vsObj.getTotalStake(signer);
+    // console.log("getTotalStake :", getTotalStake[0]);
+    // console.log("rate :", getTotalStake[1]);
 
-    let withdrawExchangeRate = await vsObj.withdrawExchangeRate();
-    console.log("withdrawExchangeRate :", withdrawExchangeRate);
+    // let withdrawExchangeRate = await vsObj.withdrawExchangeRate();
+    // console.log("withdrawExchangeRate :", withdrawExchangeRate);
 
-    let getRewardPerShare = await vsObj.getRewardPerShare();
-    console.log("getRewardPerShare :", getRewardPerShare);
+    // let getRewardPerShare = await vsObj.getRewardPerShare();
+    // console.log("getRewardPerShare :", getRewardPerShare);
 
+    // buy 
+    // let result = await vsObj.buyVoucher(web3.utils.toWei('100'), web3.utils.toWei('1'));
+    // console.log(`buyVoucher from ${validatorId}: ${result.hash}`);
 
-    let result = await vsObj.sellVoucher(web3.utils.toWei('1'), web3.utils.toWei('10'))
+    // withdrawReward
+    // let result = await vsObj.withdrawRewards();
+    // console.log("withdrawRewards :", result.hash);
+
+    // sell
+     let getTotalStake = await vsObj.getTotalStake(signer);
+     let totalStake = getTotalStake[0];
+     let rate = getTotalStake[1];
+     console.log("getTotalStake :", web3.utils.fromWei(totalStake.toString(), 'ether'));
+     console.log("rate :", rate);
+
+    let claimAmount = web3.utils.toWei('100');
+    let shares = claimAmount * 100 / (rate);
+
+    console.log("shares :", web3.utils.fromWei(shares.toString(), 'ether'));
+    // return
+    //    require(shares <= maximumSharesToBurn, "too much slippage");
+
+    let result = await vsObj.sellVoucher(claimAmount, web3.utils.toWei('100'))
     console.log(`UnBond from ${validatorId}: ${result.hash}`)
+
 }
 
 main()

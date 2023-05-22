@@ -5,5 +5,4 @@ contract StakeManagerStorageExtension {
     uint256 public rewardPerStake;
     address public extensionCode;
     address[] public signers;
-    uint256 constant BLOCK_REWARD_PRECISION = 100;
 }   

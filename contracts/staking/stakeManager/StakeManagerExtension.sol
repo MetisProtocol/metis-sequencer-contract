@@ -14,7 +14,9 @@ import {ValidatorShare} from "../validatorShare/ValidatorShare.sol";
 
 contract StakeManagerExtension is StakeManagerStorage, StakeManagerStorageExtension {
     using SafeMath for uint256;
-   
+
+    // constructor() public GovernanceLockable(address(0x0)) {}
+
     function updateCommissionRate(uint256 validatorId, uint256 newCommissionRate) external {
         uint256 _epoch = currentEpoch;
         uint256 _lastCommissionUpdate = validators[validatorId].commission.lastCommissionUpdate;
