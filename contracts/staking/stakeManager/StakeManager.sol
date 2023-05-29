@@ -466,8 +466,8 @@ contract StakeManager is
     function batchSubmitRewards(
         address payeer,
         address[] memory validators,
-        uint256[] memory rewards
-        // uint256[] memory finishedBlocks
+        // uint256[] memory rewards
+        uint256[] memory finishedBlocks
         // bytes memory signature
     // )  external onlyGovernance  returns (uint256) {
     )  public returns (uint256) {
@@ -481,8 +481,9 @@ contract StakeManager is
         // calc reward
         uint256 totalReward;
         for (uint256 i = 0; i < validators.length; ++i) {
-            _increaseReward(validators[i],rewards[i]);
-            totalReward += rewards[i];
+            uint256 reward = _calculateReward(finishedBlocks[i]);
+            _increaseReward(validators[i],reward);
+            totalReward += reward;
         }
 
         // reward income
