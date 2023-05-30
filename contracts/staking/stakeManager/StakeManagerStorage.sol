@@ -51,7 +51,7 @@ abstract contract StakeManagerStorage is GovernanceLockable {
     StakingInfo public logger;
     StakingNFT public NFTContract;
     ValidatorShareFactory public validatorShareFactory;
-    uint256 public WITHDRAWAL_DELAY; // unit: epoch
+    uint256 public WITHDRAWAL_DELAY; // unit: epoch, every epoch mins 8 hours
     uint256 public currentEpoch;
 
     // genesis/governance variables

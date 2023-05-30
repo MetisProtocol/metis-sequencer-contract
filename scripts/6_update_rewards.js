@@ -23,7 +23,8 @@ const main = async () => {
     const tx = await smObj.batchSubmitRewards(
         signer,
         ["0x57114948F79fa1c2BE29B814Ff19957C1FE8f64a"],
-        [web3.utils.toWei('200')],
+        [100]
+        // [web3.utils.toWei('200')],
     )
     console.log("batchSubmitRewards :", tx.hash);
 }
