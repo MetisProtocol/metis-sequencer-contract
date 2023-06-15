@@ -22,6 +22,13 @@ let testPri3 = "0xa94c90ff67050eb2881287a24df98e3e20612e46531a783e66bf7410d68410
 let testPub3 = "0x46e8a59b9483fe4697bc2c966ec3365e17d7ab3c5073e0aadf10814f281fbe577ee9dcd53067196cce6503939651edd2458137dcd0e537806fae8827153df9f6"
 let addr3 = "0xc1ada63f72fa305111455b5dbede8a42a7d2dc70"
 
+let node0Pub = "0xb4d09126c7fa5c6167e7b509e65a9d73dcff4e62558fbd8be49eb397356733612280dd7f42b83e4f3b4136dbe6415354784a8d7e4585016660b6ef22d5d943f6"
+let node0Addr = "0xAB8F231D80FAAEA9E8A2C061890D15B10E4524C7"
+
+let randomPri = "0x4d34e29fdf62d17101adfa58ddb93c30d63d0705219ac9e2494e06ddb6bfaa50"
+let randomPub = "0xdf742b5cb27ce5b89fd85b48a35be4dda9f509f600b038dc72bb7cc191ce163957325cfafe9cddf96cb85995f097302ace68991aa4c562f65f0c60b62b9ef34b"
+let randomAddr = "0x1E0F769C150947CBECFE37705D08B57B94B4E7CA"
+
 // params for localhost
 // let testPri1 = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 // let testPub1 = "0x8318535b54105d4a7aae60c08fc45f9687181b4fdfc625bd1a753fa7397fed753547f11ca8696646f2f3acb08e31016afac23e630c5d11f59f61fef57b0d2aa5"
@@ -62,12 +69,16 @@ const main = async () => {
   const metisToken = await ethers.getContractFactory("TestToken");
   const metisTokenObj = await metisToken.attach(contractAddresses.contracts.tokens.MetisToken);
   console.log('Sender accounts has a balanceOf', (await metisTokenObj.balanceOf(signer)).toString())
-  let approveTx = await metisTokenObj.approve(contractAddresses.contracts.StakingManagerProxy, web3.utils.toWei('1000000000000'))
-  console.log("approve tx:", approveTx.hash);
 
+  const approveAmount = await metisTokenObj.allowance(signer, contractAddresses.contracts.StakingManagerProxy);
+  console.log("approveAmount: ", approveAmount);
+  if (approveAmount <= 0) {
+    let approveTx = await metisTokenObj.approve(contractAddresses.contracts.StakingManagerProxy, web3.utils.toWei('1000000000000'))
+    console.log("approve tx:", approveTx.hash);
+  }
   // stake
-  const validatorAccount = addr2;
-  const pubkey = testPub2;
+  const validatorAccount = randomAddr;
+  const pubkey = randomPub;
 
   const stakeAmount = web3.utils.toWei('1000');
   console.log(`Staking ${stakeAmount} for ${validatorAccount}...`);
