@@ -47,6 +47,18 @@ contract StakeManager is
         require(validators[validatorId].contractAddress == msg.sender, "Invalid contract address");
     }
 
+    modifier onlyMpc() {
+        _assertMpc();
+        _;
+    }
+
+    function _assertMpc() private view {
+        require(
+            msg.sender == address(mpcAddress),
+            "Only mpc address is authorized"
+        );
+    }
+
     address public owner;
 
     modifier onlyOwner() {
@@ -76,9 +88,14 @@ contract StakeManager is
         owner = _owner;
         mpcAddress = _mpc;
 
+        mpcHistory.push(MpcHistoryItem({
+            startBlock: block.number,
+            newMpcAddress: _mpc
+        }));
+
         WITHDRAWAL_DELAY = (2**13); // unit: epoch 提现延迟时间，默认超大数，会通过updateDynastyValue方法进行更新
         currentEpoch = 1;  // 默认从第1个epoch开始
-        dynasty = 886; // unit: epoch 50 days  ？？这个参
+        dynasty = 886; // unit: epoch 50 days  
         BLOCK_REWARD = 2 * (10**18); // update via governance
         minDeposit = (10**18); // in ERC20 token
         signerUpdateLimit = 100; 
@@ -259,10 +276,14 @@ contract StakeManager is
         _transferToken(destination, amount);
     }
 
-    function setMpc(address _newMpc) external onlyGovernance {
+    function setMpc(address _newMpc) external onlyMpc {
         require(!isContract(_newMpc),"_newMpc is a contract");
         require(_newMpc != address(0x0),"_newMpc is zero address");
         mpcAddress = _newMpc;
+        mpcHistory.push(MpcHistoryItem({
+            startBlock: block.number,
+            newMpcAddress: _newMpc
+        }));
     }
 
     function reinitialize(
@@ -552,6 +573,16 @@ contract StakeManager is
         require(contractAddr != address(0x0), "Delegation is disabled");
 
         IValidatorShare(contractAddr).updateDelegation(delegation);
+    }
+
+    function FetchMpcAddress(uint256 blockHeight) public view returns(address){
+        for (uint i = mpcHistory.length-1; i>=0; i--) {
+            if (blockHeight>= mpcHistory[i].startBlock){
+                return mpcHistory[i].newMpcAddress;
+            }
+        }
+
+        return address(0);
     }
 
     /**

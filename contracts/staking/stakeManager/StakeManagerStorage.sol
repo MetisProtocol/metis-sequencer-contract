@@ -78,4 +78,11 @@ abstract contract StakeManagerStorage is GovernanceLockable {
 
     // validatorId to last signer update epoch
     mapping(uint256 => uint256) public latestSignerUpdateEpoch;
+
+    // mpc history
+    struct MpcHistoryItem {
+        uint256 startBlock;
+        address newMpcAddress;
+    }
+    MpcHistoryItem[] public mpcHistory; // recent mpc
 }
