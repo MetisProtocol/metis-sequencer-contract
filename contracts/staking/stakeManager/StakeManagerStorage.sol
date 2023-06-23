@@ -31,6 +31,7 @@ abstract contract StakeManagerStorage is GovernanceLockable {
         uint256 reward;
         uint256 activationEpoch;
         uint256 deactivationEpoch;
+        uint256 deactivationTime;
         address signer;
         address contractAddress;
         Status status;
@@ -51,11 +52,11 @@ abstract contract StakeManagerStorage is GovernanceLockable {
     StakingInfo public logger;
     StakingNFT public NFTContract;
     ValidatorShareFactory public validatorShareFactory;
-    uint256 public WITHDRAWAL_DELAY; // unit: epoch, every epoch mins 8 hours
+    uint256 public WITHDRAWAL_DELAY; 
     uint256 public currentEpoch;
 
     // genesis/governance variables
-    uint256 public dynasty; // unit: epoch
+    // uint256 public dynasty; // unit: epoch
     uint256 public BLOCK_REWARD; // update via governance
     uint256 public minDeposit; // in ERC20 token
     uint256 public signerUpdateLimit;

@@ -93,17 +93,15 @@ contract StakeManager is
             newMpcAddress: _mpc
         }));
 
-        WITHDRAWAL_DELAY = (2**13); // unit: epoch 提现延迟时间，默认超大数，会通过updateDynastyValue方法进行更新
-        currentEpoch = 1;  // 默认从第1个epoch开始
-        dynasty = 886; // unit: epoch 50 days  
-        BLOCK_REWARD = 2 * (10**18); // update via governance
-        minDeposit = (10**18); // in ERC20 token
+        WITHDRAWAL_DELAY = 21 days; 
+        currentEpoch = 1;  // default start from epoch1
+        BLOCK_REWARD = 2 * (10**18); // per block reward, update via governance
+        minDeposit = (10**18); 
         signerUpdateLimit = 100; 
 
-        validatorThreshold = 100; //允许最大的验证节点数量
+        validatorThreshold = 100; // allow max validators
         NFTCounter = 1; // validator id
-        proposerBonus = 10; // 10 % of total rewards, 发起slash用户的奖励分成
-        delegationEnabled = true; // 是否开启delegate
+        delegationEnabled = true; // delagate enable
     }
 
 
@@ -122,32 +120,32 @@ contract StakeManager is
         return NFTContract.ownerOf(tokenId);
     }
 
-    // 查询当前epoch
+    // current epoch
     function epoch() override public view returns (uint256) {
         return currentEpoch;
     }
 
-    // 查询退出时间
+    // withdraw delay time
     function withdrawalDelay() override public view returns (uint256) {
         return WITHDRAWAL_DELAY;
     }
 
-    // 查询验证节点stake数量
+    // query current stake amount by validator id
     function validatorStake(uint256 validatorId) override public view returns (uint256) {
         return validators[validatorId].amount;
     }
 
-    // 根据地址获取validator id
+    // get validator id by address
     function getValidatorId(address user)  public view returns (uint256) {
         return NFTContract.tokenOfOwnerByIndex(user, 0);
     }
 
-    // 查询验证节点抵押数量
+    // get delagated amount by validator id
     function delegatedAmount(uint256 validatorId) override public view returns (uint256) {
         return validators[validatorId].delegatedAmount;
     }
 
-    // 查询被代理抵押奖励数量
+    // get delagated reward by validator id
     function delegatorsReward(uint256 validatorId) override public view returns (uint256) {
         uint256 _delegatorsReward;
         if (validators[validatorId].deactivationEpoch == 0) {
@@ -156,7 +154,7 @@ contract StakeManager is
         return validators[validatorId].delegatorsReward.add(_delegatorsReward).sub(INITIALIZED_AMOUNT);
     }
 
-    // 查询某个验证节点的总奖励
+    //  get validator reward by validator id
     function validatorReward(uint256 validatorId) public view returns (uint256) {
         uint256 _validatorReward;
         if (validators[validatorId].deactivationEpoch == 0) {
@@ -165,17 +163,17 @@ contract StakeManager is
         return validators[validatorId].reward.add(_validatorReward).sub(INITIALIZED_AMOUNT);
     }
 
-    // 查询当前验证节点数量
+    // get all validator count
     function currentValidatorSetSize() public view returns (uint256) {
         return validatorState.stakerCount;
     }
 
-    // 查询验证节点总抵押数量
+    // get total stake amount for all validators
     function currentValidatorSetTotalStake() public view returns (uint256) {
         return validatorState.amount;
     }
 
-    // 查询某个验证节点的合约地址
+    // get 
     function getValidatorContract(uint256 validatorId) public view returns (address) {
         return validators[validatorId].contractAddress;
     }
@@ -207,20 +205,20 @@ contract StakeManager is
         currentEpoch = _currentEpoch;
     }
 
-    // 设置staking代币
+    // set staking token
     function setStakingToken(address _token) public onlyGovernance {
         require(_token != address(0x0));
         token = IERC20(_token);
     }
 
-    // 设置允许的最大验证节点数量
+    // set max validator threshold
     function updateValidatorThreshold(uint256 newThreshold) public onlyGovernance {
         require(newThreshold != 0);
         logger.logThresholdChange(newThreshold, validatorThreshold);
         validatorThreshold = newThreshold;
     }
 
-    // 设置batch提交区块奖励
+    // set per block reward
     function updateBlockReward(uint256 newReward) public onlyGovernance {
         require(newReward != 0);
         logger.logRewardUpdate(newReward, BLOCK_REWARD);
@@ -239,11 +237,10 @@ contract StakeManager is
         validators[validatorId].contractAddress = newContractAddress;
     }
 
-    function updateDynastyValue(uint256 newDynasty) public onlyGovernance {
-        require(newDynasty > 0);
-        logger.logDynastyValueChange(newDynasty, dynasty);
-        dynasty = newDynasty;
-        WITHDRAWAL_DELAY = newDynasty;
+    function updateWithdrwDelayTimeValue(uint256 newWithdrwDelayTime) public onlyGovernance {
+        require(newWithdrwDelayTime > 0);
+        logger.logWithrawDelayTimeChange(newWithdrwDelayTime, WITHDRAWAL_DELAY);
+        WITHDRAWAL_DELAY = newWithdrwDelayTime;
     }
 
     function updateProposerBonus(uint256 newProposerBonus) public onlyGovernance {
@@ -271,7 +268,6 @@ contract StakeManager is
         IValidatorShare(contractAddr).drain(tokenAddr, destination, amount);
     }
 
-    // 提出指定数量的代币
     function drain(address destination, uint256 amount) external onlyGovernance {
         _transferToken(destination, amount);
     }
@@ -303,7 +299,8 @@ contract StakeManager is
     /**
         Public Methods
      */
-    // 查询某个验证节点地址总的抵押金额
+
+    // query total delagated amount by validator address
     function totalStakedFor(address user) override external view returns (uint256) {
         if (user == address(0x0) || NFTContract.balanceOf(user) == 0) {
             return 0;
@@ -311,7 +308,7 @@ contract StakeManager is
         return validators[NFTContract.tokenOfOwnerByIndex(user, 0)].amount;
     }
 
-    // 某个验证节点退出
+    // validator exit
     function unstake(uint256 validatorId) override external onlyStaker(validatorId) {
         Status status = validators[validatorId].status;
         require(
@@ -330,9 +327,7 @@ contract StakeManager is
         address delegator
     ) override external returns (bool) {
         require(
-            // validators[validatorId].contractAddress == msg.sender ||
             validators[validatorId].contractAddress == msg.sender,
-                // Registry(registry).getSlashingManagerAddress() == msg.sender,
             "not allowed"
         );
         return token.transfer(delegator, amount);
@@ -360,10 +355,12 @@ contract StakeManager is
 
     function unstakeClaim(uint256 validatorId) public onlyStaker(validatorId) {
         uint256 deactivationEpoch = validators[validatorId].deactivationEpoch;
+        uint256 deactivationTime = validators[validatorId].deactivationTime;
+
         // can only claim stake back after WITHDRAWAL_DELAY
         require(
             deactivationEpoch > 0 &&
-                deactivationEpoch.add(WITHDRAWAL_DELAY) <= currentEpoch &&
+                deactivationTime.add(WITHDRAWAL_DELAY) <= block.timestamp &&
                 validators[validatorId].status != Status.Unstaked
         );
 
@@ -483,7 +480,9 @@ contract StakeManager is
         latestSignerUpdateEpoch[validatorId] = _currentEpoch;
     }
 
-// submit every epoch
+    // submit every epoch
+    // TODO: submit with mpc signature
+
     function batchSubmitRewards(
         address payeer,
         address[] memory validators,
@@ -575,6 +574,7 @@ contract StakeManager is
         IValidatorShare(contractAddr).updateDelegation(delegation);
     }
 
+    // query mpc address by L1 block height, used by batch-submitter
     function FetchMpcAddress(uint256 blockHeight) public view returns(address){
         for (uint i = mpcHistory.length-1; i>=0; i--) {
             if (blockHeight>= mpcHistory[i].startBlock){
@@ -614,11 +614,9 @@ contract StakeManager is
 
     function _increaseReward(
         address validator,
-        // uint256 blockInterval
         uint256 reward
     ) private returns (uint256) {
         uint256 currentTotalStake = validatorState.amount;
-        // uint256 reward = _calculateReward(blockInterval);
 
         // validator reward update
         uint256 validatorId = signerToValidator[validator];
@@ -807,6 +805,7 @@ contract StakeManager is
             amount: amount,
             activationEpoch: _currentEpoch,
             deactivationEpoch: 0,
+            deactivationTime: 0,
             signer: signer,
             contractAddress: acceptDelegation
                 ? validatorShareFactory.create(validatorId, address(_logger), registry)
@@ -844,6 +843,7 @@ contract StakeManager is
         address validator = ownerOf(validatorId);
 
         validators[validatorId].deactivationEpoch = exitEpoch;
+        validators[validatorId].deactivationTime = block.timestamp;
 
         // unbond all delegators in future
         int256 delegationAmount = int256(validators[validatorId].delegatedAmount);

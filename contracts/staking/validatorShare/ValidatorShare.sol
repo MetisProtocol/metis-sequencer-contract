@@ -23,6 +23,7 @@ contract ValidatorShare is
     struct DelegatorUnbond {
         uint256 shares;
         uint256 withdrawEpoch;
+        uint256 withdrawTime;
     }
 
     uint256 constant EXCHANGE_RATE_PRECISION = 100;
@@ -201,6 +202,7 @@ contract ValidatorShare is
         unbond.shares = unbond.shares.add(_withdrawPoolShare);
         // refresh undond period
         unbond.withdrawEpoch = stakeManager.epoch();
+        unbond.withdrawTime = block.timestamp;
         unbonds[msg.sender] = unbond;
 
         StakingInfo logger = stakingLogger;
@@ -316,9 +318,16 @@ contract ValidatorShare is
         DelegatorUnbond memory unbond
     ) private returns (uint256) {
         uint256 shares = unbond.shares;
+        // require(
+        //     unbond.withdrawEpoch.add(stakeManager.withdrawalDelay()) <=
+        //         stakeManager.epoch() &&
+        //         shares > 0,
+        //     "Incomplete withdrawal period"
+        // );
+
         require(
-            unbond.withdrawEpoch.add(stakeManager.withdrawalDelay()) <=
-                stakeManager.epoch() &&
+            unbond.withdrawTime.add(stakeManager.withdrawalDelay()) <=
+                block.timestamp &&
                 shares > 0,
             "Incomplete withdrawal period"
         );

@@ -98,7 +98,7 @@ contract StakingInfo is Ownable {
     );
     event Restaked(uint256 indexed validatorId, uint256 amount, uint256 total);
     event ThresholdChange(uint256 newThreshold, uint256 oldThreshold);
-    event DynastyValueChange(uint256 newDynasty, uint256 oldDynasty);
+    event WithrawDelayTimeChange(uint256 newWithrawDelayTime, uint256 oldWithrawDelayTime);
     event ProposerBonusChange(
         uint256 newProposerBonus,
         uint256 oldProposerBonus
@@ -277,11 +277,11 @@ contract StakingInfo is Ownable {
         emit ThresholdChange(newThreshold, oldThreshold);
     }
 
-    function logDynastyValueChange(uint256 newDynasty, uint256 oldDynasty)
+    function logWithrawDelayTimeChange(uint256 newWithrawDelayTime, uint256 oldWithrawDelayTime)
         public
         onlyStakeManager
     {
-        emit DynastyValueChange(newDynasty, oldDynasty);
+        emit WithrawDelayTimeChange(newWithrawDelayTime, oldWithrawDelayTime);
     }
 
     function logProposerBonusChange(
