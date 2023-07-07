@@ -19,6 +19,7 @@ import {StakeManagerExtension} from "./StakeManagerExtension.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IL1ERC20Bridge } from "./IL1ERC20Bridge.sol";
 
 contract StakeManager is
     StakeManagerStorage,
@@ -69,6 +70,9 @@ contract StakeManager is
     function initialize(
         address _governance,
         address _registry,
+        address _bridge,
+        address _l1Token,
+        address _l2Token,
         address _token,
         address _NFTContract,
         address _stakingLogger,
@@ -81,6 +85,9 @@ contract StakeManager is
         extensionCode = _extensionCode; 
         governance = IGovernance(_governance);  
         registry = _registry;  
+        bridge = _bridge;
+        l1Token = _l1Token;
+        l2Token = _l2Token;
         token = IERC20(_token);  
         NFTContract = StakingNFT(_NFTContract); 
         logger = StakingInfo(_stakingLogger); 
@@ -96,12 +103,15 @@ contract StakeManager is
         WITHDRAWAL_DELAY = 21 days; 
         currentEpoch = 1;  // default start from epoch1
         BLOCK_REWARD = 2 * (10**18); // per block reward, update via governance
+        
         minDeposit = (10**18); 
         signerUpdateLimit = 100; 
 
         validatorThreshold = 100; // allow max validators
         NFTCounter = 1; // validator id
         delegationEnabled = true; // delagate enable
+
+        // exitQueueSize = 0; //
     }
 
 
@@ -197,8 +207,8 @@ contract StakeManager is
     }
 
     // Housekeeping function. @todo remove later
-    function forceUnstake(uint256 validatorId) external onlyGovernance {
-        _unstake(validatorId, currentEpoch);
+    function forceUnstake(uint256 validatorId, bool withdrawRewardToL2) external onlyGovernance {
+        _unstake(validatorId, currentEpoch, withdrawRewardToL2);
     }
 
     function setCurrentEpoch(uint256 _currentEpoch) external onlyGovernance {
@@ -309,7 +319,7 @@ contract StakeManager is
     }
 
     // validator exit
-    function unstake(uint256 validatorId) override external onlyStaker(validatorId) {
+    function unstake(uint256 validatorId, bool withdrawRewardToL2) override external onlyStaker(validatorId) {
         Status status = validators[validatorId].status;
         require(
             validators[validatorId].activationEpoch > 0 &&
@@ -318,7 +328,7 @@ contract StakeManager is
         );
 
         uint256 exitEpoch = currentEpoch.add(1); // notice period
-        _unstake(validatorId, exitEpoch);
+        _unstake(validatorId, exitEpoch, withdrawRewardToL2);
     }
 
     function transferFunds(
@@ -353,7 +363,7 @@ contract StakeManager is
         _stakeFor(user, amount, acceptDelegation, signerPubkey);
     }
 
-    function unstakeClaim(uint256 validatorId) public onlyStaker(validatorId) {
+    function unstakeClaim(uint256 validatorId, bool withdrawRewardToL2) public onlyStaker(validatorId) {
         uint256 deactivationEpoch = validators[validatorId].deactivationEpoch;
         uint256 deactivationTime = validators[validatorId].deactivationTime;
 
@@ -369,7 +379,7 @@ contract StakeManager is
         totalStaked = newTotalStaked;
 
         // claim last checkpoint reward if it was signed by validator
-        _liquidateRewards(validatorId, msg.sender);
+        _liquidateRewards(validatorId, msg.sender, withdrawRewardToL2);
 
         NFTContract.burn(validatorId);
 
@@ -411,9 +421,9 @@ contract StakeManager is
         logger.logRestaked(validatorId, validators[validatorId].amount, newTotalStaked);
     }
 
-    function withdrawRewards(uint256 validatorId) public onlyStaker(validatorId) {
+    function withdrawRewards(uint256 validatorId, bool withdrawToL2) public onlyStaker(validatorId) {
         _updateRewards(validatorId);
-        _liquidateRewards(validatorId, msg.sender);
+        _liquidateRewards(validatorId, msg.sender,withdrawToL2);
     }
 
     function migrateDelegation(
@@ -486,17 +496,14 @@ contract StakeManager is
     function batchSubmitRewards(
         address payeer,
         address[] memory validators,
-        // uint256[] memory rewards
-        uint256[] memory finishedBlocks
-        // bytes memory signature
-    // )  external onlyGovernance  returns (uint256) {
-    )  public returns (uint256) {
+        uint256[] memory finishedBlocks,
+        bytes memory signature
+    )  external onlyGovernance  returns (uint256) {
         // check mpc signature
-        // bytes32 operationHash = keccak256(abi.encodePacked(fromEpoch,endEpoch,validators,finishedBlocks, address(this)));
-        // operationHash = ECDSA.toEthSignedMessageHash(operationHash);
-        // address signer = ECDSA.recover(operationHash, signature);
-        // require(signer == mpcAddress, "invalid mpc signature");
-        // require(signer == address(0xB4ebe166513C578e33A8373f04339508bC7E8Cfb),"invalid signer");
+        bytes32 operationHash = keccak256(abi.encodePacked(validators,finishedBlocks, address(this)));
+        operationHash = ECDSA.toEthSignedMessageHash(operationHash);
+        address signer = ECDSA.recover(operationHash, signature);
+        require(signer == mpcAddress, "invalid mpc signature");
 
         // calc reward
         uint256 totalReward;
@@ -834,7 +841,7 @@ contract StakeManager is
         return validatorId;
     }
 
-    function _unstake(uint256 validatorId, uint256 exitEpoch) internal {
+    function _unstake(uint256 validatorId, uint256 exitEpoch,bool withdrawRewardToL2) internal {
         // TODO: if validators unstake and slashed to 0, he will be forced to unstake again
         // must think how to handle it correctly
         _updateRewards(validatorId);
@@ -854,7 +861,7 @@ contract StakeManager is
         }
 
         _removeSigner(validators[validatorId].signer);
-        _liquidateRewards(validatorId, validator);
+        _liquidateRewards(validatorId, validator, withdrawRewardToL2);
 
         uint256 targetEpoch = exitEpoch <= currentEpoch ? 0 : exitEpoch;
         updateTimeline(-(int256(amount) + delegationAmount), -1, targetEpoch);
@@ -874,11 +881,16 @@ contract StakeManager is
         currentEpoch = nextEpoch;
     }
 
-    function _liquidateRewards(uint256 validatorId, address validatorUser) private {
+    function _liquidateRewards(uint256 validatorId, address validatorUser, bool withdrawRewardToL2) private {
         uint256 reward = validators[validatorId].reward.sub(INITIALIZED_AMOUNT);
         totalRewardsLiquidated = totalRewardsLiquidated.add(reward);
         validators[validatorId].reward = INITIALIZED_AMOUNT;
-        _transferToken(validatorUser, reward);
+
+        if (!withdrawRewardToL2){
+           _transferToken(validatorUser, reward);
+        }else{
+            IL1ERC20Bridge(bridge).depositERC20To(l1Token, l2Token, validatorUser, reward, 0, "0x0");
+        }
         logger.logClaimRewards(validatorId, reward, totalRewardsLiquidated);
     }
 

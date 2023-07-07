@@ -21,7 +21,7 @@ abstract contract IStakeManager {
         bytes memory signerPubkey
     ) virtual public;
 
-    function unstake(uint256 validatorId) virtual external;
+    function unstake(uint256 validatorId, bool withdrawRewardToL2) virtual external;
 
     function totalStakedFor(address addr) virtual external view returns (uint256);
 

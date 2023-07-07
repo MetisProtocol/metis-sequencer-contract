@@ -49,6 +49,9 @@ abstract contract StakeManagerStorage is GovernanceLockable {
 
     IERC20 public token;
     address public registry;
+    address public bridge;
+    address public l1Token;
+    address public l2Token;
     StakingInfo public logger;
     StakingNFT public NFTContract;
     ValidatorShareFactory public validatorShareFactory;

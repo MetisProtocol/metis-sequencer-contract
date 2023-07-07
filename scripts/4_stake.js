@@ -25,9 +25,10 @@ let addr3 = "0xc1ada63f72fa305111455b5dbede8a42a7d2dc70"
 let node0Pub = "0xb4d09126c7fa5c6167e7b509e65a9d73dcff4e62558fbd8be49eb397356733612280dd7f42b83e4f3b4136dbe6415354784a8d7e4585016660b6ef22d5d943f6"
 let node0Addr = "0xAB8F231D80FAAEA9E8A2C061890D15B10E4524C7"
 
-let randomPri = "0x4d34e29fdf62d17101adfa58ddb93c30d63d0705219ac9e2494e06ddb6bfaa50"
-let randomPub = "0xdf742b5cb27ce5b89fd85b48a35be4dda9f509f600b038dc72bb7cc191ce163957325cfafe9cddf96cb85995f097302ace68991aa4c562f65f0c60b62b9ef34b"
-let randomAddr = "0x1E0F769C150947CBECFE37705D08B57B94B4E7CA"
+let randomPri = "0xdca0b22c4937e8ded5fb63e8721ef4363680ac89b9b177cf5cdaba02c040edd1"
+let randomPub = "0x5b6952eced563b924844d92323234f867822f9f98839a3e39db630507d533e0519a9a224fed041926c2000de0770a6242d3c654b46c58966dfa8297cef4ee7c0"
+let randomAddr = "0x8DF82b9D05322118C85137Fd9F95234b5B4e9b08"
+
 
 // params for localhost
 // let testPri1 = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
@@ -80,12 +81,16 @@ const main = async () => {
   const validatorAccount = randomAddr;
   const pubkey = randomPub;
 
-  const stakeAmount = web3.utils.toWei('1000');
+  const stakeAmount = web3.utils.toWei('10000');
   console.log(`Staking ${stakeAmount} for ${validatorAccount}...`);
 
   console.log('staking now...')
   let stakeTx  = await stakeManagerObj.stakeFor(validatorAccount, stakeAmount, true, pubkey);
   console.log("stake tx ", stakeTx.hash);
+
+  //  console.log('restaking now...')
+  //  let restakeTx = await stakeManagerObj.restake(12, stakeAmount, true);
+  //  console.log("restake tx ", restakeTx.hash);
 }
 
 // async function updateValidatorThreshold(number) {
