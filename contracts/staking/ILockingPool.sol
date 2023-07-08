@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -6,7 +7,7 @@ import {LockingNFT} from "./LockingNFT.sol";
 
 
 abstract contract ILockingPool {
-    enum Status {Inactive, Active, Locked, Unlocked}
+    enum Status {Inactive, Active, Unlocked}  // Unlocked means sequencer exist
 
     struct State {
         uint256 amount;

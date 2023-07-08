@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -6,9 +7,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 // contract LockingNFT is ERC721Full, Ownable {
 contract LockingNFT is ERC721Enumerable, Ownable {
-    constructor(string memory name, string memory symbol)
-        public
-        ERC721(name, symbol)
+    constructor(string memory name, string memory symbol) ERC721(name, symbol)
     {
         // solhint-disable-previous-line no-empty-blocks
     }

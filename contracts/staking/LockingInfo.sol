@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -5,7 +6,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 // dummy interface to avoid cyclic dependency
 abstract contract ILockingPoolLocal {
-    enum Status {Inactive, Active, Locked, Unlockd}
+    enum Status {Inactive, Active, Unlockd}
 
     struct Sequencer {
         uint256 amount;
@@ -128,7 +129,7 @@ contract LockingInfo is Ownable {
         _;
     }
 
-    constructor(address _lockingPool) public {
+    constructor(address _lockingPool) {
        lockingPool = _lockingPool;
     }
 
