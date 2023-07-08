@@ -5,18 +5,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 
-contract Governance is IGovernance,Initializable {
+contract Governance is IGovernance,Initializable,Ownable {
     address internal proxyTo;
-    address public owner;
-
-    modifier onlyOwner() {
-        require(msg.sender == owner, "ONLY_OWNER");
-        _;
-    }
-
-    function initialize(address newOwner) public initializer {
-        owner = newOwner;
-    }
 
     function update(address target, bytes memory data) override public onlyOwner {
         (bool success, ) = target.call(data); 
