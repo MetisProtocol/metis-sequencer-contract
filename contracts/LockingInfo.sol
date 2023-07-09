@@ -101,11 +101,6 @@ contract LockingInfo is Ownable {
     event Relocked(uint256 indexed sequencerId, uint256 amount, uint256 total);
     event ThresholdChange(uint256 newThreshold, uint256 oldThreshold);
     event WithrawDelayTimeChange(uint256 newWithrawDelayTime, uint256 oldWithrawDelayTime);
-    event ProposerBonusChange(
-        uint256 newProposerBonus,
-        uint256 oldProposerBonus
-    );
-
     event RewardUpdate(uint256 newReward, uint256 oldReward);
 
     /// @dev Emitted when sequencer confirms the auction bid and at the time of restaking in confirmAuctionBid() and relock().

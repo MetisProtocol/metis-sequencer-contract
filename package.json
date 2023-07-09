@@ -33,11 +33,10 @@
     "test_watch": "npx hardhat watch test",
     "deploy": "hardhat run scripts/1_deploy.js --network goerli",
     "verify": "hardhat run scripts/2_verify.js --network goerli",
-    "stake": "hardhat run scripts/4_stake.js --network goerli",
-    "registry": "hardhat run scripts/3_registry_update.js --network goerli",
-    "delegate": "hardhat run scripts/5_delegate.js --network goerli",
-    "rewards": "hardhat run scripts/6_update_rewards.js --network goerli",
-    "unstake": "hardhat run scripts/7_unstake.js --network goerli"
+    "lock": "hardhat run scripts/3_lock.js --network goerli",
+    "rewards": "hardhat run scripts/4_update_rewards.js --network goerli",
+    "claim": "hardhat run scripts/5_claim_reward.js --network goerli",
+    "unlock": "hardhat run scripts/6_unlock.js --network goerli"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.6",
@@ -59,7 +58,8 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.8.3",
-    "@openzeppelin/contracts-upgradeable": "^4.8.3",
+    "@openzeppelin/contracts-ethereum-package": "^3.0.0",
+    "@openzeppelin/contracts-upgradeable": "^4.9.2",
     "@openzeppelin/upgrades": "^2.8.0",
     "@poanet/solidity-flattener": "^3.0.7",
     "@uniswap/lib": "^4.0.1-alpha",
