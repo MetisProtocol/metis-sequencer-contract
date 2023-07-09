@@ -11,13 +11,13 @@ npm install
 npm run compile
 ```
 
-## Run Tests
-```
-npm run test  
-```
-
 ## Run Deploy
 ```
 > set .env
 npm run deploy
+```
+
+## Others
+```
+see scripts
 ```
