@@ -37,7 +37,6 @@ abstract contract ILockingPool {
     uint256 internal constant INITIALIZED_AMOUNT = 1;
 
     IERC20 public token;       // lock token address
-    // address public registry;    // ignore
     address public bridge;     // L1 metis bridge address
     address public l1Token;    // L1 metis token address
     address public l2Token;    // L2 metis token address
@@ -48,7 +47,6 @@ abstract contract ILockingPool {
     uint256 public currentBatch;    // current batch id
     uint256 public totalLocked;     // total locked amount of all sequencers
     uint256 public NFTCounter;      // current nft holder count
-    // uint256 public totalRewards;    
     uint256 public totalRewardsLiquidated; // total rewards had been liquidated
     uint256 public rewardPerLock;   // current reward per block
     address[] public signers; // all signers
