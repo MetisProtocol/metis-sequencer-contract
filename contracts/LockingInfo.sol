@@ -263,7 +263,7 @@ contract LockingInfo is Ownable {
         return sequencerLock;
     }
 
-     function getLockrDetails(uint256 sequencerId)
+     function getLockerDetails(uint256 sequencerId)
         public
         view
         returns (
