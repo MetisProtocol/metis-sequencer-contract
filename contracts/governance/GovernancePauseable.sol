@@ -11,10 +11,16 @@ contract GovernancePauseable is Pauseable, Governable {
         governance = IGovernance(_governance);
     }
 
+    /**
+     * @dev setPause can set the contract not suspended status
+     */  
     function setPause() override public onlyGovernance {
         super.setPause();
     }
 
+    /**
+     * @dev setUnpause can cancel the suspended state
+     */  
     function setUnpause() override public onlyGovernance {
         super.setUnpause();
     }

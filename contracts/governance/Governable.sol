@@ -12,6 +12,11 @@ contract Governable is Initializable {
         governance = IGovernance(_governance);
     }
 
+    
+     /**
+     * @dev onlyGovernance Only the gov address can be used to call the contract method
+     *
+     */    
     modifier onlyGovernance() {
         _assertGovernance();
         _;

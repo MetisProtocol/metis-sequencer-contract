@@ -13,10 +13,16 @@ contract Pauseable {
         require(!pause, "pause");
     }
 
+     /**
+     * @dev setPause can set the contract not suspended status
+     */  
     function setPause() virtual public {
         pause = true;
     }
 
+     /**
+     * @dev setUnpause can cancel the suspended state
+     */  
     function setUnpause() virtual public {
         pause = false;
     }

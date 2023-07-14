@@ -56,6 +56,7 @@ contract LockingPool is
     }
 
 
+    // 
     function ownerOf(uint256 tokenId) override public view returns (address) {
         return NFTContract.ownerOf(tokenId);
     }
@@ -110,64 +111,110 @@ contract LockingPool is
         Governance Methods
      */
 
+    /**
+     * @dev forceUnlock Allow gov to force a sequencer node to exit
+     * @param sequencerId unique integer to identify a sequencer.
+     * @param withdrawRewardToL2 Whether the current reward is withdrawn to L2
+     */
     function forceUnlock(uint256 sequencerId, bool withdrawRewardToL2) external onlyGovernance {
         _unlock(sequencerId, currentBatch, withdrawRewardToL2);
     }
 
+    /**
+     * @dev updateNFTContract Allow gov update the NFT contract address
+     * @param _nftContract new NFT contract address
+     */
+    function updateNFTContract(address _nftContract) external onlyGovernance {
+        require(_nftContract != address(0x0));
+        NFTContract = LockingNFT(_nftContract);
+    }
+
+     /**
+     * @dev updateLockingInfo Allow gov update the locking info contract address
+     * @param _lockingInfo new locking info contract address
+     */
     function updateLockingInfo(address _lockingInfo) external onlyGovernance {
+        require(_lockingInfo != address(0x0));
         logger = LockingInfo(_lockingInfo); 
     }
 
+    /**
+     * @dev setCurrentBatch  Allow gov to set current batch id
+     * @param _currentBatch batch id to set
+     */
     function setCurrentBatch(uint256 _currentBatch) external onlyGovernance {
         currentBatch = _currentBatch;
     }
 
-    // set staking token
+    /**
+     * @dev setCurrentBatch  Allow gov to set locking token
+     * @param _token the token address
+     */
     function setLockingToken(address _token) public onlyGovernance {
         require(_token != address(0x0));
         token = IERC20(_token);
     }
 
-    // set max sequencer threshold
+    /**
+     * @dev updateSequencerThreshold  Allow gov to set max sequencer threshold
+     * @param newThreshold the new threshold
+     */
     function updateSequencerThreshold(uint256 newThreshold) public onlyGovernance {
         require(newThreshold != 0);
         logger.logThresholdChange(newThreshold, sequencerThreshold);
         sequencerThreshold = newThreshold;
     }
 
-    // set per block reward
+     /**
+     * @dev updateBlockReward  Allow gov to set per block reward
+     * @param newReward the block reward
+     */
     function updateBlockReward(uint256 newReward) public onlyGovernance {
         require(newReward != 0);
         logger.logRewardUpdate(newReward, BLOCK_REWARD);
         BLOCK_REWARD = newReward;
     }
 
+     /**
+     * @dev insertSigners  Allow gov to update signers
+     * @param _signers the new signers
+     */
     function insertSigners(address[] memory _signers) public onlyGovernance {
         signers = _signers;
     }
 
     /**
-        @dev Sequencer must exit before this update or all funds may get lost
-     */
-
+    *  @dev updateWithdrwDelayTimeValue Allow gov to set withdraw delay time.
+    *  @param newWithdrwDelayTime new withdraw delay time
+    */
     function updateWithdrwDelayTimeValue(uint256 newWithdrwDelayTime) public onlyGovernance {
         require(newWithdrwDelayTime > 0);
         logger.logWithrawDelayTimeChange(newWithdrwDelayTime, WITHDRAWAL_DELAY);
         WITHDRAWAL_DELAY = newWithdrwDelayTime;
     }
 
+    /**
+     * @dev updateSignerUpdateLimit Allow gov to set signer update max limit
+     * @param _limit new limit
+     */
     function updateSignerUpdateLimit(uint256 _limit) public onlyGovernance {
         signerUpdateLimit = _limit;
     }
 
+
+    /**
+     * @dev updateMinAmounts Allow gov to update min lock amount 
+     * @param _minLock new min lock amount
+     */
     function updateMinAmounts(uint256 _minLock) public onlyGovernance {
         minLock = _minLock;
     }
 
-    function drain(address destination, uint256 amount) external onlyGovernance {
-        _transferToken(destination, amount);
-    }
 
+    /**
+     * @dev updateMpc Allow gov to update new mpc address
+     * @param _newMpc new mpc
+     */
     function updateMpc(address _newMpc) external onlyGovernance {
         require(!isContract(_newMpc),"_newMpc is a contract");
         require(_newMpc != address(0x0),"_newMpc is zero address");
@@ -178,19 +225,14 @@ contract LockingPool is
         }));
     }
 
-    function reinitialize(
-        address _NFTContract,
-        address _stakingLogger
-    ) external onlyGovernance {
-        NFTContract = LockingNFT(_NFTContract);
-        logger = LockingInfo(_stakingLogger);
-    }
-
     /**
         Public Methods
      */
 
-     // query mpc address by L1 block height, used by batch-submitter
+     /**
+      * @dev fetchMpcAddress query mpc address by L1 block height, used by batch-submitter
+      * @param blockHeight the L1 block height
+      */
     function fetchMpcAddress(uint256 blockHeight) override public view returns(address){
         for (uint i = mpcHistory.length-1; i>=0; i--) {
             if (blockHeight>= mpcHistory[i].startBlock){
@@ -201,6 +243,9 @@ contract LockingPool is
         return address(0);
     }
 
+    /**
+     * @dev getL2ChainId return the l2 chain id
+     */
     function getL2ChainId() override public view returns(uint256) {
         uint256 l2ChainId;
         if (block.chainid == 1) {
@@ -211,6 +256,12 @@ contract LockingPool is
         return l2ChainId;
     }
 
+     /**
+     * @dev lockFor is used to lock Metis and participate in the sequencer block node application
+     * @param user sequencer signer address
+     * @param amount Amount of L1 metis token to lock for.
+     * @param signerPubkey sequencer signer pubkey
+     */    
      function lockFor(
         address user,
         uint256 amount,
@@ -224,6 +275,12 @@ contract LockingPool is
     }
 
 
+     /**
+     * @dev unlock is used to unlock Metis and exit the sequencer node
+     *
+     * @param sequencerId sequencer id
+     * @param withdrawRewardToL2 Whether the current reward is withdrawn to L2
+     */    
     function unlock(uint256 sequencerId, bool withdrawRewardToL2) override external onlySequencer(sequencerId) {
         Status status = sequencers[sequencerId].status;
         require(
@@ -236,6 +293,13 @@ contract LockingPool is
         _unlock(sequencerId, exitBatch, withdrawRewardToL2);
     }
 
+
+     /**
+     * @dev unlockClaim Because unlock has a waiting period, after the waiting period is over, you can claim locked tokens
+     *
+     * @param sequencerId sequencer id
+     * @param withdrawToL2 Whether the current reward is withdrawn to L2
+     */   
     function unlockClaim(uint256 sequencerId, bool withdrawToL2) override public onlySequencer(sequencerId) {
         uint256 deactivationBatch = sequencers[sequencerId].deactivationBatch;
         uint256 unlockClaimTime = sequencers[sequencerId].unlockClaimTime;
@@ -273,6 +337,12 @@ contract LockingPool is
         logger.logUnlocked(msg.sender, sequencerId, amount, newTotalLocked);
     }
 
+    /**
+     * @dev relock Allow sequencer to increase the amount of locked positions
+     * @param sequencerId unique integer to identify a sequencer.
+     * @param amount Amount of L1 metis token to relock for.
+     * @param lockRewards Whether to lock the current rewards
+     */
     function relock(
         uint256 sequencerId,
         uint256 amount,
@@ -302,12 +372,22 @@ contract LockingPool is
         logger.logRelockd(sequencerId, sequencers[sequencerId].amount, newTotalLocked);
     }
 
+    /**
+     * @dev withdrawRewards withdraw current rewards
+     *
+     * @param sequencerId unique integer to identify a sequencer.
+     * @param withdrawToL2 Whether the current reward is withdrawn to L2
+     */   
     function withdrawRewards(uint256 sequencerId, bool withdrawToL2) override public onlySequencer(sequencerId) {
         _updateRewards(sequencerId);
         _liquidateRewards(sequencerId, msg.sender, withdrawToL2);
     }
 
-
+    /**
+     * @dev updateSigner Allow sqeuencer to update new signers to replace old signer addresses
+     * @param sequencerId unique integer to identify a sequencer.
+     * @param signerPubkey the new signer pubkey address
+     */
     function updateSigner(uint256 sequencerId, bytes memory signerPubkey) public onlySequencer(sequencerId) {
         address signer = _getAndAssertSigner(signerPubkey);
         uint256 _currentBatch = currentBatch;
@@ -331,7 +411,13 @@ contract LockingPool is
         latestSignerUpdateBatch[sequencerId] = _currentBatch;
     }
 
-    //  batch submit rewards
+    /**
+     * @dev batchSubmitRewards Allow gov or other roles to submit L2 sequencer block information, and attach Metis reward tokens for reward distribution
+     * @param payeer Who Pays the Reward Tokens
+     * @param sequencers Those sequencers can receive rewards
+     * @param finishedBlocks How many blocks each sequencer finished.
+     * @param signature Confirmed by mpc and signed for reward distribution
+     */
     function batchSubmitRewards(
         address payeer,
         address[] memory sequencers,
@@ -362,6 +448,12 @@ contract LockingPool is
     }
 
 
+      /**
+     * @dev updateTimeline Used to update sequencerState information
+     * @param amount The number of locked positions changed
+     * @param lockerCount The number of lock sequencer changed
+     * @param targetBatch When does the change take effect
+     */
     function updateTimeline(
         int256 amount,
         int256 lockerCount,

@@ -12,6 +12,11 @@ contract LockingNFT is ERC721Enumerable, Ownable {
         // solhint-disable-previous-line no-empty-blocks
     }
 
+    /**
+     * @dev mint a NFT, on behalf of the user successfully applied to become a sequencer
+     * @param to the signer address of sequencer
+     * @param tokenId mint token id
+     */
     function mint(address to, uint256 tokenId) public onlyOwner {
         require(
             balanceOf(to) == 0,
@@ -20,6 +25,10 @@ contract LockingNFT is ERC721Enumerable, Ownable {
         _mint(to, tokenId);
     }
 
+     /**
+     * @dev burn a NFT, give up the sequencer role on behalf of the user
+     * @param tokenId the NFT token id
+     */
     function burn(uint256 tokenId) public onlyOwner {
         _burn(tokenId);
     }

@@ -113,8 +113,7 @@ abstract contract ILockingPool {
 
 
      /**
-     * @dev relock is used to lock Metis again
-     *
+     * @dev relock Allow sequencer to increase the amount of locked positions
      * @param sequencerId sequencer id
      * @param amount Amount of L1 metis token to relock for.
      * @param lockRewards Whether to lock the current reward
@@ -205,7 +204,7 @@ abstract contract ILockingPool {
     function isSequencer(uint256 sequencerId) virtual public view returns (bool);
 
      /**
-     * @dev getL2ChainId query current  l2 chain id
+     * @dev getL2ChainId query current l2 chain id
      */  
     function getL2ChainId() virtual public view returns(uint256);
 
