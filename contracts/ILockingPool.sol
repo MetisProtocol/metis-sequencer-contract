@@ -28,7 +28,7 @@ abstract contract ILockingPool {
         uint256 unlockClaimTime;    // sequencer unlock lock amount timestamp, has a withdraw delay time
         address signer;             // sequencer signer address
         Status status;              // sequencer status
-        uint256 initialRewardPerLock; // initialRewardPerLock
+        uint256 initialRewardPerLock; // initial reward per lock
     }
 
     uint256 constant MAX_COMMISION_RATE = 100;
@@ -48,7 +48,6 @@ abstract contract ILockingPool {
     uint256 public totalLocked;     // total locked amount of all sequencers
     uint256 public NFTCounter;      // current nft holder count
     uint256 public totalRewardsLiquidated; // total rewards had been liquidated
-    uint256 public rewardPerLock;   // current reward per block
     address[] public signers; // all signers
     uint256 public currentUnlockedInit; // sequencer unlock queue count, need have a limit
 

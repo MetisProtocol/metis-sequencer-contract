@@ -45,23 +45,22 @@ contract LockingPool is
             newMpcAddress: _mpc
         }));
 
-        WITHDRAWAL_DELAY = 21 days; 
-        currentBatch = 1;  // default start from batch1
+        WITHDRAWAL_DELAY = 21 days; // sequencer exit withdraw delay time
+        currentBatch = 1;  // default start from batch 1
         BLOCK_REWARD = 2 * (10**18); // per block reward, update via governance
         minLock = 20000* (10**18);  // min lock amount
-        signerUpdateLimit = 100; 
-
+        signerUpdateLimit = 100; // allow max signer update
         sequencerThreshold = 10; // allow max sequencers
         NFTCounter = 1; // sequencer id
     }
 
 
-    // 
+    // query owenr by NFT token id
     function ownerOf(uint256 tokenId) override public view returns (address) {
         return NFTContract.ownerOf(tokenId);
     }
 
-    // withdraw delay time
+    // query withdraw delay time
     function withdrawalDelay() override public view returns (uint256) {
         return WITHDRAWAL_DELAY;
     }
@@ -78,11 +77,7 @@ contract LockingPool is
 
     //  get sequencer reward by sequencer id
     function sequencerReward(uint256 sequencerId) override public view returns (uint256) {
-        uint256 _sequencerReward;
-        if (sequencers[sequencerId].deactivationBatch == 0) {
-            _sequencerReward = _evaluateSequencerReward(sequencerId);
-        }
-        return sequencers[sequencerId].reward.add(_sequencerReward).sub(INITIALIZED_AMOUNT);
+        return sequencers[sequencerId].reward.sub(INITIALIZED_AMOUNT);
     }
 
     // get all sequencer count
@@ -355,8 +350,6 @@ contract LockingPool is
             _transferTokenFrom(msg.sender, address(this), amount);
         }
 
-        _updateRewards(sequencerId);
-
         if (lockRewards) {
             amount = amount.add(sequencers[sequencerId].reward).sub(INITIALIZED_AMOUNT);
             sequencers[sequencerId].reward = INITIALIZED_AMOUNT;
@@ -379,7 +372,6 @@ contract LockingPool is
      * @param withdrawToL2 Whether the current reward is withdrawn to L2
      */   
     function withdrawRewards(uint256 sequencerId, bool withdrawToL2) override public onlySequencer(sequencerId) {
-        _updateRewards(sequencerId);
         _liquidateRewards(sequencerId, msg.sender, withdrawToL2);
     }
 
@@ -441,6 +433,8 @@ contract LockingPool is
             _increaseReward(sequencers[i],reward);
             totalReward += reward;
         }
+
+        _finalizeCommit();
 
         // reward income
         token.safeTransferFrom(payeer, address(this), totalReward);
@@ -508,76 +502,19 @@ contract LockingPool is
     function _increaseReward(
         address sequencer,
         uint256 reward
-    ) private returns (uint256) {
-        uint256 currentTotalLock = sequencerState.amount;
-
-        // sequencer reward update
+    ) private {
         uint256 sequencerId = signerToSequencer[sequencer];
+        Sequencer memory sequencerInfo = sequencers[sequencerId];
 
         // rewardPerLock update
-        uint256 newRewardPerLock = rewardPerLock.add(reward.mul(REWARD_PRECISION).div(currentTotalLock));
-        _updateRewardsAndCommitWithFixedReward(sequencerId, reward,newRewardPerLock);
-        rewardPerLock = newRewardPerLock;
-        
-        _finalizeCommit();
-        return reward;
-    }
-
-    function _updateRewardsAndCommitWithFixedReward(uint256 sequencerId,uint256 reward, uint256 newRewardPerLock) private{
-        uint256 deactivationBatch = sequencers[sequencerId].deactivationBatch;
-        if (deactivationBatch != 0 && currentBatch >= deactivationBatch) {
+        uint256 newRewardPerLock = sequencerInfo.initialRewardPerLock.add(reward.mul(REWARD_PRECISION).div(sequencerInfo.amount));
+        sequencers[sequencerId].initialRewardPerLock = newRewardPerLock;
+      
+        // update reward
+        if (sequencerInfo.deactivationBatch != 0 && currentBatch >= sequencerInfo.deactivationBatch) {
             return;
         }
-
         _increaseSequencerReward(sequencerId,reward);
-
-        uint256 initialRewardPerLock = sequencers[sequencerId].initialRewardPerLock;
-        if (newRewardPerLock > initialRewardPerLock) {
-            sequencers[sequencerId].initialRewardPerLock = newRewardPerLock;
-        }
-    }
-
-    function _updateRewardsAndCommit(
-        uint256 sequencerId,
-        uint256 currentRewardPerLock,
-        uint256 newRewardPerLock
-    ) private {
-        uint256 deactivationBatch = sequencers[sequencerId].deactivationBatch;
-        if (deactivationBatch != 0 && currentBatch >= deactivationBatch) {
-            return;
-        }
-
-        uint256 initialRewardPerLock = sequencers[sequencerId].initialRewardPerLock;
-
-        // attempt to save gas in case if rewards were updated previosuly
-        if (initialRewardPerLock < currentRewardPerLock) {
-            uint256 sequencersLock = sequencers[sequencerId].amount;
-                _increaseSequencerReward(
-                    sequencerId,
-                    _getEligibleSequencerReward(
-                        sequencersLock,
-                        currentRewardPerLock,
-                        initialRewardPerLock
-                    )
-                );
-        }
-
-        if (newRewardPerLock > initialRewardPerLock) {
-            sequencers[sequencerId].initialRewardPerLock = newRewardPerLock;
-        }
-    }
-
-    function _updateRewards(uint256 sequencerId) private {
-        _updateRewardsAndCommit(sequencerId, rewardPerLock, rewardPerLock);
-    }
-
-    function _getEligibleSequencerReward(
-        uint256 sequencerLockPower,
-        uint256 currentRewardPerLock,
-        uint256 initialRewardPerLock
-    ) private pure returns (uint256) {
-        uint256 eligibleReward = currentRewardPerLock - initialRewardPerLock;
-        return eligibleReward.mul(sequencerLockPower).div(REWARD_PRECISION);
     }
 
     function _increaseSequencerReward(uint256 sequencerId, uint256 reward) private {
@@ -586,16 +523,6 @@ contract LockingPool is
         }
     }
 
-
-    function _evaluateSequencerReward(uint256 sequencerId)
-        private
-        view
-        returns (uint256  )
-    {
-        uint256 sequencersLock = sequencers[sequencerId].amount;
-        uint256 eligibleReward = rewardPerLock - sequencers[sequencerId].initialRewardPerLock;
-        return eligibleReward.mul(sequencersLock).div(REWARD_PRECISION);
-    }
 
     function _lockFor(
         address user,
@@ -619,7 +546,7 @@ contract LockingPool is
             unlockClaimTime: 0,
             signer: signer,
             status: Status.Active,
-            initialRewardPerLock: rewardPerLock
+            initialRewardPerLock: 0
         });
 
         latestSignerUpdateBatch[sequencerId] = _currentBatch;
@@ -638,8 +565,6 @@ contract LockingPool is
     function _unlock(uint256 sequencerId, uint256 exitBatch, bool withdrawRewardToL2) internal {
         // Ensure that the number of exit sequencer is less than 1/3 of the total
         require(currentUnlockedInit + 1 < sequencerState.lockerCount/3, "not allowed");
-
-        _updateRewards(sequencerId);
 
         uint256 amount = sequencers[sequencerId].amount;
         address sequencer = ownerOf(sequencerId);
