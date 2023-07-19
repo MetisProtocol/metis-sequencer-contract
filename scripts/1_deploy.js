@@ -52,27 +52,27 @@ const main = async () => {
 
   let mpcAddress = signer;
   // deploy locking and proxy
-  // const LockingPool = await hre.ethers.getContractFactory("LockingPool");
-  // if (lockingPoolProxyAddress == ""){
-  //   const lockingPoolProxy = await upgrades.deployProxy(LockingPool,
-  //             [
-  //               govProxyAddress,
-  //               l1BridgeAddress,
-  //               l1MetisToken,
-  //               l2MetisToken,
-  //               l2Gas,
-  //               lockingNftAddress,
-  //               mpcAddress
-  //             ]);
-  //   await lockingPoolProxy.deployed();
-  //   console.log("LockingPool deployed to:", lockingPoolProxy.address);
-  //   lockingPoolProxyAddress = lockingPoolProxy.address;
-  // }
+  const LockingPool = await hre.ethers.getContractFactory("LockingPool");
+  if (lockingPoolProxyAddress == ""){
+    const lockingPoolProxy = await upgrades.deployProxy(LockingPool,
+              [
+                govProxyAddress,
+                l1BridgeAddress,
+                l1MetisToken,
+                l2MetisToken,
+                l2Gas,
+                lockingNftAddress,
+                mpcAddress
+              ]);
+    await lockingPoolProxy.deployed();
+    console.log("LockingPool deployed to:", lockingPoolProxy.address);
+    lockingPoolProxyAddress = lockingPoolProxy.address;
+  }
 
-  const lockingPoolUpgrade = await hre.ethers.getContractFactory("LockingPool");
-  let upgrade = await upgrades.upgradeProxy(lockingPoolProxyAddress, lockingPoolUpgrade);
-  console.log("LockingPool deployed to:", upgrade.address);
-  return
+  // const lockingPoolUpgrade = await hre.ethers.getContractFactory("LockingPool");
+  // let upgrade = await upgrades.upgradeProxy(lockingPoolProxyAddress, lockingPoolUpgrade);
+  // console.log("LockingPool deployed to:", upgrade.address);
+  // return
 
   //  deploy locking info
    const LockingInfo = await hre.ethers.getContractFactory("LockingInfo");

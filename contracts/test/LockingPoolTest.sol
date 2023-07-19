@@ -7,14 +7,14 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-import {GovernancePauseable} from "./governance/GovernancePauseable.sol";
-import {IGovernance} from "./governance/IGovernance.sol";
-import {ILockingPool} from "./interfaces/ILockingPool.sol";
-import {LockingInfo} from "./LockingInfo.sol";
-import {LockingNFT} from "./LockingNFT.sol";
-import { IL1ERC20Bridge } from "./interfaces/IL1ERC20Bridge.sol";
+import {GovernancePauseable} from "../governance/GovernancePauseable.sol";
+import {IGovernance} from "../governance/IGovernance.sol";
+import {ILockingPool} from "../interfaces/ILockingPool.sol";
+import {LockingInfoTest} from "./LockingInfoTest.sol";
+import {LockingNFT} from "../LockingNFT.sol";
+import { IL1ERC20Bridge } from "../interfaces/IL1ERC20Bridge.sol";
 
-contract LockingPool is
+contract LockingPoolTest is
     ILockingPool,
     Initializable,
     GovernancePauseable
@@ -22,20 +22,17 @@ contract LockingPool is
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    function initialize(
+    constructor(
         address _governance,
-        address _bridge,
         address _l1Token,
-        address _l2Token,
-        uint32 _l2Gas,
         address _NFTContract,
         address _mpc
-    ) external initializer {
+    )   {
         governance = IGovernance(_governance);  
-        bridge = _bridge;
+        bridge = 0xCF7257A86A5dBba34bAbcd2680f209eb9a05b2d2;
         l1Token = _l1Token;
-        l2Token = _l2Token;
-        l2Gas = _l2Gas;
+        l2Token = 0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000;
+        l2Gas = 200000;
         token = IERC20(_l1Token);  
         NFTContract = LockingNFT(_NFTContract); 
         mpcAddress = _mpc;
@@ -45,12 +42,12 @@ contract LockingPool is
             newMpcAddress: _mpc
         }));
 
-        WITHDRAWAL_DELAY = 21 days; // sequencer exit withdraw delay time
+        WITHDRAWAL_DELAY = 10; // sequencer exit withdraw delay time
         currentBatch = 1;  // default start from batch 1
         BLOCK_REWARD = 2 * (10**18); // per block reward, update via governance
-        minLock = 20000* (10**18);  // min lock amount
+        minLock = 2 * (10**18);  // min lock amount
         signerUpdateLimit = 100; // allow max signer update
-        sequencerThreshold = 10; // allow max sequencers
+        sequencerThreshold = 3; // allow max sequencers
         NFTCounter = 1; // sequencer id
     }
 
@@ -130,7 +127,7 @@ contract LockingPool is
      */
     function updateLockingInfo(address _lockingInfo) external onlyGovernance {
         require(_lockingInfo != address(0x0));
-        logger = LockingInfo(_lockingInfo); 
+        logger = LockingInfoTest(_lockingInfo); 
     }
 
     /**
@@ -532,7 +529,6 @@ contract LockingPool is
         address signer = _getAndAssertSigner(signerPubkey);
         uint256 _currentBatch = currentBatch;
         uint256 sequencerId = NFTCounter;
-        LockingInfo _logger = logger;
 
         uint256 newTotalLocked = totalLocked.add(amount);
         totalLocked = newTotalLocked;
@@ -555,7 +551,7 @@ contract LockingPool is
         signerToSequencer[signer] = sequencerId;
         updateTimeline(int256(amount), 1, 0);
 
-        _logger.logLocked(signer, signerPubkey, sequencerId, _currentBatch, amount, newTotalLocked);
+        logger.logLocked(signer, signerPubkey, sequencerId, _currentBatch, amount, newTotalLocked);
         NFTCounter = sequencerId.add(1);
 
         _insertSigner(signer);
