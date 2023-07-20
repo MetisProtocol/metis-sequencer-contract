@@ -47,7 +47,7 @@ contract LockingPoolTest is
         BLOCK_REWARD = 2 * (10**18); // per block reward, update via governance
         minLock = 2 * (10**18);  // min lock amount
         signerUpdateLimit = 100; // allow max signer update
-        sequencerThreshold = 3; // allow max sequencers
+        sequencerThreshold = 4; // allow max sequencers
         NFTCounter = 1; // sequencer id
     }
 
@@ -300,7 +300,8 @@ contract LockingPoolTest is
         require(
             deactivationBatch > 0 &&
                 unlockClaimTime <= block.timestamp &&
-                sequencers[sequencerId].status != Status.Unlocked
+                sequencers[sequencerId].status != Status.Unlocked,
+            "claim not allowed"
         );
 
         uint256 amount = sequencers[sequencerId].amount;
@@ -423,8 +424,8 @@ contract LockingPoolTest is
         // calc reward
         uint256 totalReward;
         for (uint256 i = 0; i < sequencers.length; ++i) {
-            require(signerToSequencer[signer] > 0,"sequencer not exist");
-            require(isSequencer(signerToSequencer[signer]), "invalid sequencer");
+            require(signerToSequencer[sequencers[i]] > 0,"sequencer not exist");
+            require(isSequencer(signerToSequencer[sequencers[i]]), "invalid sequencer");
 
             uint256 reward = _calculateReward(finishedBlocks[i]);
             _increaseReward(sequencers[i],reward);
@@ -527,6 +528,8 @@ contract LockingPoolTest is
         bytes memory signerPubkey
     ) internal returns (uint256) {
         address signer = _getAndAssertSigner(signerPubkey);
+        require(user == signer,"user and signerPubkey mismatch");
+        
         uint256 _currentBatch = currentBatch;
         uint256 sequencerId = NFTCounter;
 
@@ -560,7 +563,7 @@ contract LockingPoolTest is
 
     function _unlock(uint256 sequencerId, uint256 exitBatch, bool withdrawRewardToL2) internal {
         // Ensure that the number of exit sequencer is less than 1/3 of the total
-        require(currentUnlockedInit + 1 < sequencerState.lockerCount/3, "not allowed");
+        require(currentUnlockedInit + 1 <= sequencerState.lockerCount/3, "not allowed");
 
         uint256 amount = sequencers[sequencerId].amount;
         address sequencer = ownerOf(sequencerId);

@@ -9,7 +9,7 @@ const l2MetisToken = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
 const l1BridgeAddress = "0xCF7257A86A5dBba34bAbcd2680f209eb9a05b2d2";
 const l2Gas = 200000;
 
-let lockingNftName = "Metis Validator";
+let lockingNftName = "Metis Sequencer";
 let lockingNftSymbol = "MS";
 
 let govProxyAddress = "0x21f7eA6766Ed0F202b5292dA3B39F9915D097207";
