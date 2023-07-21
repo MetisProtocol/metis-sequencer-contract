@@ -204,7 +204,7 @@ describe('LockingPoolTest', async () => {
             signer: admin
         }
         let signature = await calcSignature(params);
-        await lockingPool.connect(admin).batchSubmitRewards(params.batchId,params.payeer, params.sequencers, params.finishedBlocks, signature);
+        await lockingPool.connect(admin).batchSubmitRewards(params.batchId, params.payeer, params.sequencers, params.finishedBlocks, signature);
 
         // check withdrawable reward
         let withdrawableReward = await calcWithdrawableRewards(lockingPool, sequencerId);
