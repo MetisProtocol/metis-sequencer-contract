@@ -60,6 +60,7 @@ abstract contract ILockingPool {
  
     mapping(uint256 => Sequencer) public sequencers;
     mapping(address => uint256) public signerToSequencer;
+    mapping(uint256 => bool) batchSubmitHistory;   // batch submit
 
     // current Batch lock power and lockers count
     State public sequencerState;

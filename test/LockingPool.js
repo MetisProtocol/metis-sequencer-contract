@@ -20,15 +20,19 @@ describe('LockingPoolTest', async () => {
 
     let testUser2Pub = "0x1ceee1fb393241b8347ae0f1783924303bd0be6efcc3b38b2d1190b48ee746a4d7da834a7af5f6431456f31ada49eff5485c16c655e7a8dd148f73d796d057a8";
     let testUser2Address = "0x36675727a189e156570edb68f8075bf7b699127a";
+    let testUser2Pri = "0x9958b983b4b9d9b2a4e44da155c2b83e34e3167bd8759fc47c333e66aab31651"
 
     let testUser3Pub = "0xc840b67802e9b65413ff5bf264d69aef1d06169252bf5878cc3b64b0066a648fc93722b977792aebb3b2138b85b9e53696e5a357939623e9e60e65bf891a3f49";
     let testUser3Address = "0xbed1010c3920448edc377cad7389306b6b61ebba";
+    let testUser3Pri = "0x06bf12da83c8c6d76e9daac6d405756b8d8c4d9fc901299488fa86b95ecd4991"
 
     let testUser4Pub = "0x04faef4197c8617a0a32863c345e92a7c93a31a45f62f24f419c8bf52bdd9f7b023802a11a467e582c3952558696e1a0a594ef54d8a5910c57d6889f986c8d30";
     let testUser4Address = "0x1ba02e8b7acefd56700c4bd324bf01f56dd613e5";
+    let testUser4Pri = "0x39620a5d4feef6d337c79dc1e9a500c84c50b8c2d90b80a5dec6282099587cb5"
 
     let testUser5Pub = "0x42adad65660d1690d935bff0861bd40a328c7ee6e557be0c4a15a3963360f8bfcc7d41447d1262f5703df87b0ba8671714d1c67eaa72db23b8d419e25a8563a1";
     let testUser5Address = "0xd4a1db298a100d1159fcbf5b8e0bf6a0795b1fba";
+    let testUser5Pri = "0xd63d7585bcec935e47b6f8c4b537025eb226bdbf46805b0fd685b95a3996cbf7"
 
     before('get wallets', async () => {
         wallets = await ethers.getSigners();
@@ -85,6 +89,18 @@ describe('LockingPoolTest', async () => {
         // transfer ether to test user
         await admin.sendTransaction({
             to: testUserAddress,
+            value: ethers.utils.parseEther("10.0"), // Sends exactly 10.0 ether
+        });
+        await admin.sendTransaction({
+            to: testUser2Address,
+            value: ethers.utils.parseEther("10.0"), // Sends exactly 10.0 ether
+        });
+        await admin.sendTransaction({
+            to: testUser3Address,
+            value: ethers.utils.parseEther("10.0"), // Sends exactly 10.0 ether
+        });
+        await admin.sendTransaction({
+            to: testUser4Address,
             value: ethers.utils.parseEther("10.0"), // Sends exactly 10.0 ether
         });
 
@@ -177,9 +193,10 @@ describe('LockingPoolTest', async () => {
          let isSequencer = await lockingPool.isSequencer(sequencerId);
          expect(isSequencer).to.eq(true);
 
-
+        let curBatchId = await lockingPool.currentBatch();
          // submit reward
         const params = {
+            batchId: ethers.BigNumber.from(curBatchId.toString()).add(1),
             payeer: admin.address,
             sequencers: [testUserAddress],
             finishedBlocks: [10],
@@ -187,7 +204,7 @@ describe('LockingPoolTest', async () => {
             signer: admin
         }
         let signature = await calcSignature(params);
-        await lockingPool.connect(admin).batchSubmitRewards(params.payeer, params.sequencers, params.finishedBlocks, signature);
+        await lockingPool.connect(admin).batchSubmitRewards(params.batchId,params.payeer, params.sequencers, params.finishedBlocks, signature);
 
         // check withdrawable reward
         let withdrawableReward = await calcWithdrawableRewards(lockingPool, sequencerId);
@@ -206,7 +223,7 @@ describe('LockingPoolTest', async () => {
          expect(afterRelockAmount.sub(beforeRelockAmount)).to.eq(ethers.BigNumber.from(relockAmount.toString()).add(withdrawable));
      })
 
-    it('lock for sequencer no more slots', async () => {
+    it('lock for sequencer reverted with no more slots', async () => {
         // console.log("lockingPool:", lockingPool.address);
         const lockAmount = web3.utils.toWei('2');
         // console.log("lockAmount:", lockAmount);
@@ -239,7 +256,12 @@ describe('LockingPoolTest', async () => {
         expect(isSequencer).to.eq(true);
 
         // update reward
+        let curBatchId = await lockingPool.currentBatch();
+        // console.log("curBatchId:", curBatchId);
+
+        // submit reward
         const params = {
+            batchId: ethers.BigNumber.from(curBatchId.toString()).add(1),
             payeer: admin.address,
             sequencers: [testUserAddress],
             finishedBlocks: [10],
@@ -247,7 +269,8 @@ describe('LockingPoolTest', async () => {
             signer: admin
         }
         let signature = await calcSignature(params);
-        await lockingPool.connect(admin).batchSubmitRewards(params.payeer, params.sequencers, params.finishedBlocks, signature);
+        // console.log("params.batchId:", params.batchId);
+        await lockingPool.connect(admin).batchSubmitRewards(params.batchId, params.payeer, params.sequencers, params.finishedBlocks, signature);
 
         // check withdrawable reward
         let withdrawableReward = await calcWithdrawableRewards(lockingPool, sequencerId);
@@ -267,7 +290,7 @@ describe('LockingPoolTest', async () => {
         expect(afterWithdrawReward.sub(beforeWithdrawReward)).to.eq(withdrawable);
     })
 
-    it('unlock to exit not allowed', async () => {
+    it('unlock to exit reverted with not allowed', async () => {
         const lockAmount = web3.utils.toWei('2');
         // console.log("lockAmount:", lockAmount);
 
@@ -310,7 +333,7 @@ describe('LockingPoolTest', async () => {
         // let currentUnlockedInit = await lockingPool.currentUnlockedInit();
         // console.log("currentUnlockedInit:", currentUnlockedInit);
         // console.log("div:", state.lockerCount / 3);
-        // console.log("allowed:", currentUnlockedInit + 1 < state.lockerCount/3);
+        // console.log("allowed:", currentUnlockedInit + 1 <= state.lockerCount/3);
 
         const testUser = new ethers.Wallet(testUserPri, ethers.provider);
         await lockingPool.connect(testUser).unlock(sequencerId, false);
@@ -350,6 +373,45 @@ describe('LockingPoolTest', async () => {
         // console.log("afterUnlockClaim balance:", afterUnlockClaim);
         expect(afterUnlockClaim.sub(beforeUnlockClaim)).to.eq(lockAmount);
     })
+
+    it('force unlock', async () => {
+        const lockAmount = web3.utils.toWei('2');
+
+        // lock for
+        await lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, testUserPub);
+        await lockingPool.connect(admin).lockFor(testUser2Address, lockAmount, testUser2Pub);
+        await lockingPool.connect(admin).lockFor(testUser3Address, lockAmount, testUser3Pub);
+        await lockingPool.connect(admin).lockFor(testUser4Address, lockAmount, testUser4Pub);
+
+        const testUser = new ethers.Wallet(testUserPri, ethers.provider);
+        const testUser2 = new ethers.Wallet(testUser2Pri, ethers.provider);
+        const testUser3 = new ethers.Wallet(testUser3Pri, ethers.provider);
+        const testUser4 = new ethers.Wallet(testUser4Pri, ethers.provider);
+
+        // unlock
+        await lockingPool.connect(testUser).unlock(1, false);
+
+        // not allowed
+        await expect(lockingPool.connect(testUser2).unlock(2, false)).to.be.revertedWith("not allowed");
+
+        // use force unlock
+        await forceUnlock(gov, 2, lockingPool.address);
+        await forceUnlock(gov, 3, lockingPool.address);
+        await forceUnlock(gov, 4, lockingPool.address);
+
+        // time increase for withdraw delay time
+        time.increase(10);
+
+        // claim after withdraw delay time
+        await lockingPool.connect(testUser).unlockClaim(1, false);
+        await lockingPool.connect(testUser2).unlockClaim(2, false);
+        await lockingPool.connect(testUser3).unlockClaim(3, false);
+        await lockingPool.connect(testUser4).unlockClaim(4, false);
+
+        // check pool balance
+        let lockingPoolBalance = await testERC20.balanceOf(lockingPool.address);
+        expect(lockingPoolBalance).to.eq(0);
+    })
 })
 
 async function updateLockingPoolLoggerAddress(govObj,loggerAddress,lockingPoolAddress) {
@@ -368,8 +430,26 @@ async function updateLockingPoolLoggerAddress(govObj,loggerAddress,lockingPoolAd
     )
 }
 
+async function forceUnlock(govObj, sequencerId, lockingPoolAddress) {
+    let ABI = [
+        "function forceUnlock(uint256 sequencerId, bool withdrawRewardToL2)"
+    ];
+    let iface = new ethers.utils.Interface(ABI);
+    let forceUnlockEncodeData = iface.encodeFunctionData("forceUnlock", [
+        sequencerId,
+        false
+    ])
+    // console.log("updateLockingInfo: ", forceUnlockEncodeData)
+
+    return govObj.update(
+        lockingPoolAddress,
+        forceUnlockEncodeData
+    )
+}
+
 async function calcSignature(params) {
-    let message = ethers.utils.solidityPack(["address[]", "uint256[]", "address"], [
+    let message = ethers.utils.solidityPack(["uint256", "address[]", "uint256[]", "address"], [
+        params.batchId,
         params.sequencers,
         params.finishedBlocks,
         params.lockingPool

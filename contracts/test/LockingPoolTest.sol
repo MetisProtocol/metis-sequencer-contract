@@ -109,7 +109,7 @@ contract LockingPoolTest is
      * @param withdrawRewardToL2 Whether the current reward is withdrawn to L2
      */
     function forceUnlock(uint256 sequencerId, bool withdrawRewardToL2) external onlyGovernance {
-        _unlock(sequencerId, currentBatch, withdrawRewardToL2);
+        _unlock(sequencerId, currentBatch, withdrawRewardToL2,true);
     }
 
     /**
@@ -282,7 +282,7 @@ contract LockingPoolTest is
         );
 
         uint256 exitBatch = currentBatch.add(1); // notice period
-        _unlock(sequencerId, exitBatch, withdrawRewardToL2);
+        _unlock(sequencerId, exitBatch, withdrawRewardToL2,false);
     }
 
 
@@ -403,23 +403,30 @@ contract LockingPoolTest is
 
     /**
      * @dev batchSubmitRewards Allow gov or other roles to submit L2 sequencer block information, and attach Metis reward tokens for reward distribution
+     * @param batchId The batchId that submitted the reward is that
      * @param payeer Who Pays the Reward Tokens
      * @param sequencers Those sequencers can receive rewards
      * @param finishedBlocks How many blocks each sequencer finished.
      * @param signature Confirmed by mpc and signed for reward distribution
      */
-    function batchSubmitRewards(
+      function batchSubmitRewards(
+        uint256 batchId,
         address payeer,
         address[] memory sequencers,
         uint256[] memory finishedBlocks,
         bytes memory signature
     // )  external onlyGovernance  returns (uint256) {
     )  external returns (uint256) {
+        uint256 nextBatch = currentBatch.add(1);
+        require(nextBatch == batchId,"invalid batch id");
+        require(!batchSubmitHistory[nextBatch], "already submited");
+        
         // check mpc signature
-        bytes32 operationHash = keccak256(abi.encodePacked(sequencers, finishedBlocks, address(this)));
+        bytes32 operationHash = keccak256(abi.encodePacked(batchId, sequencers, finishedBlocks, address(this)));
         operationHash = ECDSA.toEthSignedMessageHash(operationHash);
         address signer = ECDSA.recover(operationHash, signature);
         require(signer == mpcAddress, "invalid mpc signature");
+
 
         // calc reward
         uint256 totalReward;
@@ -561,9 +568,11 @@ contract LockingPoolTest is
         return sequencerId;
     }
 
-    function _unlock(uint256 sequencerId, uint256 exitBatch, bool withdrawRewardToL2) internal {
-        // Ensure that the number of exit sequencer is less than 1/3 of the total
-        require(currentUnlockedInit + 1 <= sequencerState.lockerCount/3, "not allowed");
+    function _unlock(uint256 sequencerId, uint256 exitBatch, bool withdrawRewardToL2,bool force) internal {
+        if (!force){
+            // Ensure that the number of exit sequencer is less than 1/3 of the total
+            require(currentUnlockedInit + 1 <= sequencerState.lockerCount/3, "not allowed");
+        }
 
         uint256 amount = sequencers[sequencerId].amount;
         address sequencer = ownerOf(sequencerId);
