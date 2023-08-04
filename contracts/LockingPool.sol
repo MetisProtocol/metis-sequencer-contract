@@ -408,6 +408,8 @@ contract LockingPool is
      * @dev batchSubmitRewards Allow gov or other roles to submit L2 sequencer block information, and attach Metis reward tokens for reward distribution
      * @param batchId The batchId that submitted the reward is that
      * @param payeer Who Pays the Reward Tokens
+     * @param startEpoch The startEpoch that submitted the reward is that
+     * @param endEpoch The endEpoch that submitted the reward is that
      * @param sequencers Those sequencers can receive rewards
      * @param finishedBlocks How many blocks each sequencer finished.
      * @param signature Confirmed by mpc and signed for reward distribution
@@ -415,6 +417,8 @@ contract LockingPool is
     function batchSubmitRewards(
         uint256 batchId,
         address payeer,
+        uint256 startEpoch,
+        uint256 endEpoch,
         address[] memory sequencers,
         uint256[] memory finishedBlocks,
         bytes memory signature
@@ -425,7 +429,7 @@ contract LockingPool is
         require(!batchSubmitHistory[nextBatch], "already submited");
 
         // check mpc signature
-        bytes32 operationHash = keccak256(abi.encodePacked(batchId, sequencers, finishedBlocks, address(this)));
+        bytes32 operationHash = keccak256(abi.encodePacked(batchId, startEpoch,endEpoch,sequencers, finishedBlocks, address(this)));
         operationHash = ECDSA.toEthSignedMessageHash(operationHash);
         address signer = ECDSA.recover(operationHash, signature);
         require(signer == mpcAddress, "invalid mpc signature");
