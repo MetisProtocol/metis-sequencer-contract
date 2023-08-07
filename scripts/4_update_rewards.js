@@ -32,17 +32,23 @@ const main = async () => {
         console.log("approve tx:", approveTx.hash);
     }
 
-    let curBatchId = await lockingPool.currentBatch();
+    let curBatchId = await LockingPoolObj.currentBatch();
     const params = {
         batchId: ethers.BigNumber.from(curBatchId.toString()).add(1),
         payeer: signer.address,
-        sequencers: [signer.address],
-        finishedBlocks: [10],
+        startEpoch: ethers.BigNumber.from("1"),
+        endEpoch: ethers.BigNumber.from("2"),
+        // sequencers: [signer.address],
+        sequencers: ["0x1267397fb5BF6f6Dcc3d18d673616D512dbcd8F0"],
+        finishedBlocks: [100],
         lockingPool: contractAddresses.contracts.LockingPoolProxy,
         signer: signer
     }
+    console.log("params: ", params);
+
 
     let signature = await calcSignature(params);
+    return 
     let batchSubmitRewardsTx = await LockingPoolObj.batchSubmitRewards(params.payeer, params.sequencers, params.finishedBlocks, signature);
     console.log("batchSubmitRewards tx ", batchSubmitRewardsTx.hash);
 }
@@ -52,17 +58,19 @@ async function updateRewardByGov(govObj, params) {
     console.log("signature:", signature);
 
     let ABI = [
-        "function batchSubmitRewards(uin256 batchId,address payeer,address[] memory sequencers,uint256[] memory finishedBlocks,bytes memory signature)"
+        "function batchSubmitRewards(uin256 batchId,address payeer,uin256 startEpoch,uin256 endEpoch,address[] memory sequencers,uint256[] memory finishedBlocks,bytes memory signature)"
     ];
     let iface = new ethers.utils.Interface(ABI);
     let updateRewardData = iface.encodeFunctionData("batchSubmitRewards", [
         params.batchId,
         params.signer.address,
+        params.startEpoch,
+        params.endEpoch,
         params.sequencers,
         params.finishedBlocks,
         signature,
     ])
-    console.log("updateMinAmounts: ", updateRewardData)
+    console.log("updateRewardByGov: ", updateRewardData)
 
     return govObj.update(
         lockingPool,
@@ -71,13 +79,19 @@ async function updateRewardByGov(govObj, params) {
 }
 
 async function calcSignature(params) {
-    let message = ethers.utils.solidityPack(["uint256", "address[]", "uint256[]", "address"], [
+    let message = ethers.utils.solidityPack(["uint256", "uint256", "uint256", "address[]", "uint256[]", "address"], [
         params.batchId,
+        params.startEpoch,
+        params.endEpoch,
         params.sequencers,
         params.finishedBlocks,
         params.lockingPool
     ])
+    console.log("message:", message);
+
     const messageHash = ethers.utils.solidityKeccak256(["bytes"], [message]);
+    console.log("messageHash:", messageHash);
+    
     const messageHashBinary = ethers.utils.arrayify(messageHash);
     console.log("messageHashBinary:", messageHashBinary);   
 

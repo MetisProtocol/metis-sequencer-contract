@@ -9,9 +9,9 @@ const IERC20_SOURCE = "@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20";
 
 // params for goerli
 // pubkey should not have the leading 04 prefix
-let testPri1 = "0x1f9a552c0aad1f104401316375f0737bba5fba0b34a83b0069f2a02c57514a0c"
-let testPub1 = "0xeeef8d4d35c9dc2d64df24af6bb4be3b08557a995b2907d97039c536f96477fecbd56bb78fdcde962ccaa579dcc75376e7839f6211cf62cea8b2871b84106674"
-let addr1 = "0x70fb083ab9bc2ed3c4cebe08054e82827368ed1e"
+let testPri1 = "0xed3f195449409dc1d22f0119da7678200710a447ff75baa06bfc42829d02d28c"
+let testPub1 = "0xb548c2a036db2b5cdeb9501ff6c73e4653b691e3365e345bdddeb20145fa2f50f8a527550211b4b0664127a36f370d91c2adc33b14423327097f411c4c68ee96"
+let addr1 = "0x1267397FB5BF6F6DCC3D18D673616D512DBCD8F0"
 
 let testPri2 = "0x87f4f773ff72685f05494c4d2f4b484d9ac958f9d010b9abda174e9ce1266e05"
 let testPub2 = "0xde61a8a5e89510a7dcbcf9ec79aa4ae502341f001b53c0fdb08f4d16adff9c1848b7301f8f616a45a3aad950a68235e41a122fd8f213b1b7f98f661c91acefc2"
@@ -42,17 +42,20 @@ const main = async () => {
   }
 
   // lock params
-  const sequencerSigner = signer;
-  const pubkey = signerPubkey;
+  // const sequencerSigner = signer;
+  // const pubkey = signerPubkey;
+
+   const sequencerSigner = addr1;
+   const pubkey = testPub1;
 
   const lockAmount = web3.utils.toWei('2');
-  console.log(`Staking ${lockAmount} for ${sequencerSigner}...`);
+  console.log(`Locking ${lockAmount} for ${sequencerSigner}...`);
 
-  console.log('staking now...')
+  console.log('locking now...')
   let lockTx = await LockingPoolObj.lockFor(sequencerSigner, lockAmount, pubkey);
   console.log("lock tx ", lockTx.hash);
 
-  //  console.log('restaking now...')
+  //  console.log('relocking now...')
   //  let reLockTx = await LockingPoolObj.relock(1, lockAmount, true);
   //  console.log("reLock tx ", reLockTx.hash);
 }

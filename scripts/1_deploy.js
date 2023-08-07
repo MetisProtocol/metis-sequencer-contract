@@ -12,10 +12,15 @@ const l2Gas = 200000;
 let lockingNftName = "Metis Sequencer";
 let lockingNftSymbol = "MS";
 
-let govProxyAddress = "0x21f7eA6766Ed0F202b5292dA3B39F9915D097207";
-let lockingNftAddress = "0x8C63357C0b02c3CB082e2A6846F5D048cc737c69";
-let lockingPoolProxyAddress = "0x73D5B3D9C5502953E51E3dDeDFf81A3e86FA874D";
-let lockingInfoAddress = "0x33CdB54Fb5B0A469adB7D294dd868f4b782E2fBA";
+// let govProxyAddress = "0x21f7eA6766Ed0F202b5292dA3B39F9915D097207";
+// let lockingNftAddress = "0x8C63357C0b02c3CB082e2A6846F5D048cc737c69";
+// let lockingPoolProxyAddress = "0x73D5B3D9C5502953E51E3dDeDFf81A3e86FA874D";
+// let lockingInfoAddress = "0x33CdB54Fb5B0A469adB7D294dd868f4b782E2fBA";
+
+let govProxyAddress = "0x548Cb5Fae380F7Df107BFfE85114BecFf58E65c8";
+let lockingNftAddress = "0x1C5812241B395810476841Af7304d4309d3334e8";
+let lockingPoolProxyAddress = "0xBF10ba6759FB74E251c0ACB89686382B0daAa50e";
+let lockingInfoAddress = "0x2fAA14d2CC5Fc245d6a9324920679f4210bfeC5f";
 
 const main = async () => {
   const accounts = await hre.ethers.getSigners();
@@ -25,6 +30,13 @@ const main = async () => {
   console.log('deploying contracts...');
    // deploy gov and gov proxy
    const gov = await hre.ethers.getContractFactory("Governance");
+
+   // updateMpc
+  // const govProxyObj = await gov.attach(govProxyAddress);
+  // let updateMpcTx = await updateMpc(govProxyObj, "0x563870eA4f826f1460C8Ce2800ed275f07B234E4");
+  // console.log("updateMpcTx:", updateMpcTx.hash);
+  // await delay(3000);
+  // return
 
   // updateMinLock
   //  const govProxyObj = await gov.attach(govProxyAddress);
@@ -63,7 +75,10 @@ const main = async () => {
                 l2Gas,
                 lockingNftAddress,
                 mpcAddress
-              ]);
+              ],
+              {
+                initializer: 'initialize(address,address,address,address,uint32,address,address)'
+              });
     await lockingPoolProxy.deployed();
     console.log("LockingPool deployed to:", lockingPoolProxy.address);
     lockingPoolProxyAddress = lockingPoolProxy.address;
@@ -137,7 +152,7 @@ async function updateLockingPoolLoggerAddress(govObj) {
 
 async function updateMinLock(govObj) {
   let ABI = [
-    " function updateMinAmounts(uint256 _minLock)"
+    "function updateMinAmounts(uint256 _minLock)"
   ];
   let iface = new ethers.utils.Interface(ABI);
   let updateMinAmountsData = iface.encodeFunctionData("updateMinAmounts", [
@@ -148,6 +163,22 @@ async function updateMinLock(govObj) {
   return govObj.update(
     lockingPoolProxyAddress,
     updateMinAmountsData
+  )
+}
+
+async function updateMpc(govObj, newMpc) {
+  let ABI = [
+    "function updateMpc(address _newMpc)"
+  ];
+  let iface = new ethers.utils.Interface(ABI);
+  let updateMpcData = iface.encodeFunctionData("updateMpc", [
+    newMpc
+  ])
+  console.log("updateMpc: ", updateMpcData)
+
+  return govObj.update(
+    lockingPoolProxyAddress,
+    updateMpcData
   )
 }
 

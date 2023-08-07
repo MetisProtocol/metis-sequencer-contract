@@ -1,8 +1,9 @@
 require("@nomiclabs/hardhat-etherscan");
 const utils = require('./utils');
 
-let stakingNftName = "Metis Validator";
-let stakingNftSymbol = "MS";
+let lockingNftName = "Metis Sequencer";
+let lockingNftSymbol = "MS";
+
 
 const main = async () => {
   const accounts = await hre.ethers.getSigners();
@@ -23,8 +24,8 @@ const main = async () => {
     address: contractAddresses.contracts.LockingNFT,
     contract: "contracts/LockingNFT.sol:LockingNFT",
     constructorArguments: [
-      stakingNftName,
-      stakingNftSymbol
+      lockingNftName,
+      lockingNftSymbol
     ],
   });
 
