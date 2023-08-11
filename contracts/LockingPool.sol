@@ -22,6 +22,10 @@ contract LockingPool is
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         address _governance,
         address _bridge,

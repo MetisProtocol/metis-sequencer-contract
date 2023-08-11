@@ -6,6 +6,10 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 
 contract Governance is IGovernance,OwnableUpgradeable {
     address internal proxyTo;
+
+    constructor() {
+        _disableInitializers();
+    }
    
     function initialize() public initializer {
         __Ownable_init();

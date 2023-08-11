@@ -8,6 +8,10 @@ import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.s
 contract Governable is Initializable {
     IGovernance public governance;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(address _governance) public virtual initializer {
         governance = IGovernance(_governance);
     }
