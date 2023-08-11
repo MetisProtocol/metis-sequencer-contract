@@ -22,6 +22,15 @@ contract LockingPool is
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    event UpdateLockingInfo(address _newLockingInfo);
+    event UpdateNFTContract(address _newNftContract);
+    event SetCurrentBatch(uint256 _newCurrentBatch);
+    event SetLockingToken(address _newLockingToken);
+    event InsertSigners(address[] _newSigners);
+    event UpdateSignerUpdateLimit(uint256 _newLimit);
+    event UpdateMinAmounts(uint256 _newMinLock);
+    event UpdateMpc(address _newMpc);
+
     constructor() {
         _disableInitializers();
     }
@@ -126,6 +135,7 @@ contract LockingPool is
     function updateNFTContract(address _nftContract) external onlyGovernance {
         require(_nftContract != address(0x0));
         NFTContract = LockingNFT(_nftContract);
+        emit UpdateNFTContract(_nftContract);
     }
 
      /**
@@ -135,6 +145,7 @@ contract LockingPool is
     function updateLockingInfo(address _lockingInfo) external onlyGovernance {
         require(_lockingInfo != address(0x0));
         logger = LockingInfo(_lockingInfo); 
+        emit UpdateLockingInfo(_lockingInfo);
     }
 
     /**
@@ -143,6 +154,7 @@ contract LockingPool is
      */
     function setCurrentBatch(uint256 _currentBatch) external onlyGovernance {
         currentBatch = _currentBatch;
+        emit SetCurrentBatch(_currentBatch);
     }
 
     /**
@@ -152,6 +164,7 @@ contract LockingPool is
     function setLockingToken(address _token) public onlyGovernance {
         require(_token != address(0x0));
         token = IERC20(_token);
+        emit SetLockingToken(_token);
     }
 
     /**
@@ -180,6 +193,7 @@ contract LockingPool is
      */
     function insertSigners(address[] memory _signers) public onlyGovernance {
         signers = _signers;
+        emit InsertSigners(_signers);
     }
 
     /**
@@ -198,6 +212,7 @@ contract LockingPool is
      */
     function updateSignerUpdateLimit(uint256 _limit) public onlyGovernance {
         signerUpdateLimit = _limit;
+        emit UpdateSignerUpdateLimit(_limit);
     }
 
 
@@ -207,6 +222,7 @@ contract LockingPool is
      */
     function updateMinAmounts(uint256 _minLock) public onlyGovernance {
         minLock = _minLock;
+        emit UpdateMinAmounts(_minLock);
     }
 
 
@@ -222,6 +238,8 @@ contract LockingPool is
             startBlock: block.number,
             newMpcAddress: _newMpc
         }));
+
+        emit UpdateMpc(_newMpc);
     }
 
     /**
