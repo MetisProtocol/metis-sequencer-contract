@@ -283,7 +283,7 @@ contract LockingPool is
         address user,
         uint256 amount,
         bytes memory signerPubkey
-    ) override public  onlyWhenUnpaused {
+    ) override public  whenNotPaused {
         require(currentSequencerSetSize() < sequencerThreshold, "no more slots");
         require(amount >= minLock, "not enough deposit");
 
@@ -365,7 +365,7 @@ contract LockingPool is
         uint256 sequencerId,
         uint256 amount,
         bool lockRewards
-    ) override public onlyWhenUnpaused onlySequencer(sequencerId) {
+    ) override public whenNotPaused onlySequencer(sequencerId) {
         require(amount >= minLock, "not enough deposit");
         require(sequencers[sequencerId].deactivationBatch == 0, "No restaking");
 
