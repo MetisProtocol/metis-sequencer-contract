@@ -574,6 +574,9 @@ contract LockingPool is
         return sequencerId;
     }
 
+    // The function restricts the sequencer's exit if the number of total locked sequencers divided by 3 is less than the number of 
+    // sequencers that have already exited. This would effectively freeze the sequencer's unlock function until a sufficient number of 
+    // new sequencers join the system.
     function _unlock(uint256 sequencerId, uint256 exitBatch, bool withdrawRewardToL2,bool force) internal {
         if (!force){
             // Ensure that the number of exit sequencer is less than 1/3 of the total
