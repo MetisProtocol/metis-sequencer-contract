@@ -22,7 +22,7 @@ contract LockingNFT is ERC721Enumerable, Ownable {
             balanceOf(to) == 0,
             "Sequencers MUST NOT own multiple stake position"
         );
-        _mint(to, tokenId);
+        _safeMint(to, tokenId);
     }
 
      /**
@@ -38,6 +38,6 @@ contract LockingNFT is ERC721Enumerable, Ownable {
             balanceOf(to) == 0,
             "Sequencers MUST NOT own multiple stake position"
         );
-        super._transfer(from, to, tokenId);
+        _safeTransfer(from, to, tokenId, "");
     }
 }

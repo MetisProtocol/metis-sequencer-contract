@@ -15,13 +15,13 @@ contract GovernancePauseable is Pausable, Governable {
      * @dev setPause can set the contract not suspended status
      */  
     function setPause() public onlyGovernance {
-        super._pause();
+        _pause();
     }
 
     /**
      * @dev setUnpause can cancel the suspended state
      */  
     function setUnpause() public onlyGovernance {
-        super._unpause();
+        _unpause();
     }
 }
