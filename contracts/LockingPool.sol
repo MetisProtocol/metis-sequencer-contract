@@ -95,7 +95,7 @@ contract LockingPool is
     }
 
     function _assertSequencer(uint256 sequencerId) private view {
-        require(NFTContract.ownerOf(sequencerId) == msg.sender);
+        require(NFTContract.ownerOf(sequencerId) == msg.sender,"not nft owner");
     }
 
     modifier onlyMpc() {
@@ -269,7 +269,7 @@ contract LockingPool is
      * @param _nftContract new NFT contract address
      */
     function updateNFTContract(address _nftContract) external onlyGovernance {
-        require(_nftContract != address(0));
+        require(_nftContract != address(0),"invalid _nftContract");
         NFTContract = LockingNFT(_nftContract);
         emit UpdateNFTContract(_nftContract);
     }
@@ -279,7 +279,7 @@ contract LockingPool is
      * @param _lockingInfo new locking info contract address
      */
     function updateLockingInfo(address _lockingInfo) external onlyGovernance {
-        require(_lockingInfo != address(0));
+        require(_lockingInfo != address(0),"invalid _lockingInfo");
         logger = LockingInfo(_lockingInfo); 
         emit UpdateLockingInfo(_lockingInfo);
     }
@@ -289,6 +289,7 @@ contract LockingPool is
      * @param _currentBatch batch id to set
      */
     function setCurrentBatch(uint256 _currentBatch) external onlyGovernance {
+        require(_currentBatch != 0,"invalid _currentBatch");
         currentBatch = _currentBatch;
         emit SetCurrentBatch(_currentBatch);
     }
@@ -298,7 +299,7 @@ contract LockingPool is
      * @param _token the token address
      */
     function setLockingToken(address _token) public onlyGovernance {
-        require(_token != address(0));
+        require(_token != address(0),"invalid _token");
         token = IERC20(_token);
         emit SetLockingToken(_token);
     }
@@ -308,7 +309,7 @@ contract LockingPool is
      * @param newThreshold the new threshold
      */
     function updateSequencerThreshold(uint256 newThreshold) public onlyGovernance {
-        require(newThreshold != 0);
+        require(newThreshold != 0,"invalid newThreshold");
         logger.logThresholdChange(newThreshold, sequencerThreshold);
         sequencerThreshold = newThreshold;
     }
@@ -318,7 +319,7 @@ contract LockingPool is
      * @param newReward the block reward
      */
     function updateBlockReward(uint256 newReward) public onlyGovernance {
-        require(newReward != 0);
+        require(newReward != 0,"invalid newReward");
         logger.logRewardUpdate(newReward, BLOCK_REWARD);
         BLOCK_REWARD = newReward;
     }
@@ -337,7 +338,7 @@ contract LockingPool is
     *  @param newWithdrwDelayTime new withdraw delay time
     */
     function updateWithdrwDelayTimeValue(uint256 newWithdrwDelayTime) public onlyGovernance {
-        require(newWithdrwDelayTime > 0);
+        require(newWithdrwDelayTime > 0,"invlaid newWithdrwDelayTime");
         logger.logWithrawDelayTimeChange(newWithdrwDelayTime, WITHDRAWAL_DELAY);
         WITHDRAWAL_DELAY = newWithdrwDelayTime;
     }
@@ -347,6 +348,7 @@ contract LockingPool is
      * @param _limit new limit
      */
     function updateSignerUpdateLimit(uint256 _limit) public onlyGovernance {
+        require(_limit > 0,"invlaid _limit");
         signerUpdateLimit = _limit;
         emit UpdateSignerUpdateLimit(_limit);
     }
@@ -357,6 +359,7 @@ contract LockingPool is
      * @param _minLock new min lock amount
      */
     function updateMinAmounts(uint256 _minLock) public onlyGovernance {
+        require(_minLock > 0,"invlaid _minLock");
         minLock = _minLock;
         emit UpdateMinAmounts(_minLock);
     }
@@ -439,7 +442,8 @@ contract LockingPool is
         require(
             sequencers[sequencerId].activationBatch > 0 &&
                 sequencers[sequencerId].deactivationBatch == 0 &&
-                status == Status.Active
+                status == Status.Active,
+                "invlaid sequencer status"
         );
 
         uint256 exitBatch = currentBatch.add(1); // notice period
