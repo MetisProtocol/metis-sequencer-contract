@@ -4,23 +4,159 @@ pragma solidity ^0.8.0;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import {GovernancePauseable} from "../governance/GovernancePauseable.sol";
 import {IGovernance} from "../governance/IGovernance.sol";
 import {ILockingPool} from "../interfaces/ILockingPool.sol";
-import {LockingInfoTest} from "./LockingInfoTest.sol";
+import {LockingInfo} from "../LockingInfo.sol";
 import {LockingNFT} from "../LockingNFT.sol";
 import { IL1ERC20Bridge } from "../interfaces/IL1ERC20Bridge.sol";
 
-contract LockingPoolTest is
+contract LockingPool is
     ILockingPool,
-    Initializable,
     GovernancePauseable
 {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+
+    enum Status {Inactive, Active, Unlocked}  // Unlocked means sequencer exist
+
+    struct State {
+        uint256 amount;
+        uint256 lockerCount;
+    }
+
+    struct StateChange {
+        int256 amount;
+        int256 lockerCount;
+    }
+
+    struct Sequencer {
+        uint256 amount;         // sequencer current lock amount 
+        uint256 reward;         // sequencer current reward
+        uint256 activationBatch;    // sequencer activation batch id
+        uint256 deactivationBatch;  // sequencer deactivation batch id
+        uint256 deactivationTime;   // sequencer deactivation timestamp
+        uint256 unlockClaimTime;    // sequencer unlock lock amount timestamp, has a withdraw delay time
+        address signer;             // sequencer signer address
+        Status status;              // sequencer status
+        uint256 initialRewardPerLock; // initial reward per lock
+    }
+
+    uint256 constant MAX_COMMISION_RATE = 100;
+    uint256 constant REWARD_PRECISION = 10**25;
+    uint256 internal constant INCORRECT_SEQUENCER_ID = 2**256 - 1;
+    uint256 internal constant INITIALIZED_AMOUNT = 1;
+
+    IERC20 public token;       // lock token address
+    address public bridge;     // L1 metis bridge address
+    address public l1Token;    // L1 metis token address
+    address public l2Token;    // L2 metis token address
+    uint32 public l2Gas;        // bridge metis to l2 gaslimit
+    LockingInfo public logger;  // logger lockingPool event
+    LockingNFT public NFTContract;  // NFT for locker
+    uint256 public WITHDRAWAL_DELAY;    // delay time for unlock
+    uint256 public currentBatch;    // current batch id
+    uint256 public totalLocked;     // total locked amount of all sequencers
+    uint256 public NFTCounter;      // current nft holder count
+    uint256 public totalRewardsLiquidated; // total rewards had been liquidated
+    address[] public signers; // all signers
+    uint256 public currentUnlockedInit; // sequencer unlock queue count, need have a limit
+
+    // genesis/governance variables
+    uint256 public BLOCK_REWARD; // update via governance
+    uint256 public minLock; // min lock Metis token 
+    uint256 public signerUpdateLimit; // sequencer signer need have a update limit
+    address public mpcAddress; // current mpc address for batch submit reward 
+    uint256 public sequencerThreshold; // maximum sequencer limit
+ 
+    mapping(uint256 => Sequencer) public sequencers;
+    mapping(address => uint256) public signerToSequencer;
+    mapping(uint256 => bool) batchSubmitHistory;   // batch submit
+
+    // current Batch lock power and lockers count
+    State public sequencerState;
+    mapping(uint256 => StateChange) public sequencerStateChanges;
+
+    // sequencerId to last signer update Batch
+    mapping(uint256 => uint256) public latestSignerUpdateBatch;
+
+    // mpc history
+    struct MpcHistoryItem {
+        uint256 startBlock;
+        address newMpcAddress;
+    }
+    MpcHistoryItem[] public mpcHistory; // recent mpc
+
+    modifier onlySequencer(uint256 sequencerId) {
+        _assertSequencer(sequencerId);
+        _;
+    }
+
+    function _assertSequencer(uint256 sequencerId) private view {
+        require(NFTContract.ownerOf(sequencerId) == msg.sender);
+    }
+
+    modifier onlyMpc() {
+        _assertMpc();
+        _;
+    }
+
+    function _assertMpc() private view {
+        require(
+            msg.sender == address(mpcAddress),
+            "Only mpc address is authorized"
+        );
+    }
+
+    /**
+     * @dev Emitted when nft contract update in 'UpdateLockingInfo'
+     * @param _newLockingInfo new contract address.
+     */
+    event UpdateLockingInfo(address _newLockingInfo);
+     /**
+     * @dev Emitted when nft contract update in 'UpdateNFTContract'
+     * @param _newNftContract new contract address.
+     */
+    event UpdateNFTContract(address _newNftContract);
+
+    /**
+     * @dev Emitted when current batch update in 'SetCurrentBatch'
+     * @param _newCurrentBatch new batch id.
+     */
+    event SetCurrentBatch(uint256 _newCurrentBatch);
+
+    /**
+     * @dev Emitted when locking token update in 'SetLockingToken'
+     * @param _newLockingToken new contract address.
+     */
+    event SetLockingToken(address _newLockingToken);
+
+    /**
+     * @dev Emitted when signers update in 'InsertSigners'
+     * @param _newSigners new contract address.
+     */
+    event InsertSigners(address[] _newSigners);
+
+    /**
+     * @dev Emitted when signer update limit update in 'UpdateSignerUpdateLimit'
+     * @param _newLimit new limit.
+     */
+    event UpdateSignerUpdateLimit(uint256 _newLimit);
+
+    /**
+     * @dev Emitted when min lock amount update in 'UpdateMinAmounts'
+     * @param _newMinLock new min lock.
+     */
+    event UpdateMinAmounts(uint256 _newMinLock);
+
+    /**
+     * @dev Emitted when mpc address update in 'UpdateMpc'
+     * @param _newMpc new min lock.
+     */
+    event UpdateMpc(address _newMpc);
+
 
     constructor(
         address _governance,
@@ -50,7 +186,6 @@ contract LockingPoolTest is
         sequencerThreshold = 4; // allow max sequencers
         NFTCounter = 1; // sequencer id
     }
-
 
     // query owenr by NFT token id
     function ownerOf(uint256 tokenId) override public view returns (address) {
@@ -119,6 +254,7 @@ contract LockingPoolTest is
     function updateNFTContract(address _nftContract) external onlyGovernance {
         require(_nftContract != address(0));
         NFTContract = LockingNFT(_nftContract);
+        emit UpdateNFTContract(_nftContract);
     }
 
      /**
@@ -127,7 +263,8 @@ contract LockingPoolTest is
      */
     function updateLockingInfo(address _lockingInfo) external onlyGovernance {
         require(_lockingInfo != address(0));
-        logger = LockingInfoTest(_lockingInfo); 
+        logger = LockingInfo(_lockingInfo); 
+        emit UpdateLockingInfo(_lockingInfo);
     }
 
     /**
@@ -136,6 +273,7 @@ contract LockingPoolTest is
      */
     function setCurrentBatch(uint256 _currentBatch) external onlyGovernance {
         currentBatch = _currentBatch;
+        emit SetCurrentBatch(_currentBatch);
     }
 
     /**
@@ -145,6 +283,7 @@ contract LockingPoolTest is
     function setLockingToken(address _token) public onlyGovernance {
         require(_token != address(0));
         token = IERC20(_token);
+        emit SetLockingToken(_token);
     }
 
     /**
@@ -173,6 +312,7 @@ contract LockingPoolTest is
      */
     function insertSigners(address[] memory _signers) public onlyGovernance {
         signers = _signers;
+        emit InsertSigners(_signers);
     }
 
     /**
@@ -191,6 +331,7 @@ contract LockingPoolTest is
      */
     function updateSignerUpdateLimit(uint256 _limit) public onlyGovernance {
         signerUpdateLimit = _limit;
+        emit UpdateSignerUpdateLimit(_limit);
     }
 
 
@@ -200,6 +341,7 @@ contract LockingPoolTest is
      */
     function updateMinAmounts(uint256 _minLock) public onlyGovernance {
         minLock = _minLock;
+        emit UpdateMinAmounts(_minLock);
     }
 
 
@@ -215,6 +357,8 @@ contract LockingPoolTest is
             startBlock: block.number,
             newMpcAddress: _newMpc
         }));
+
+        emit UpdateMpc(_newMpc);
     }
 
     /**
@@ -359,7 +503,7 @@ contract LockingPoolTest is
 
         updateTimeline(int256(amount), 0, 0);
 
-        logger.logLockUpdate(sequencerId);
+        logger.logLockUpdate(sequencerId,sequencers[sequencerId].amount);
         logger.logRelockd(sequencerId, sequencers[sequencerId].amount, newTotalLocked);
     }
 
@@ -405,13 +549,17 @@ contract LockingPoolTest is
      * @dev batchSubmitRewards Allow gov or other roles to submit L2 sequencer block information, and attach Metis reward tokens for reward distribution
      * @param batchId The batchId that submitted the reward is that
      * @param payeer Who Pays the Reward Tokens
+     * @param startEpoch The startEpoch that submitted the reward is that
+     * @param endEpoch The endEpoch that submitted the reward is that
      * @param sequencers Those sequencers can receive rewards
      * @param finishedBlocks How many blocks each sequencer finished.
      * @param signature Confirmed by mpc and signed for reward distribution
      */
-      function batchSubmitRewards(
+    function batchSubmitRewards(
         uint256 batchId,
         address payeer,
+        uint256 startEpoch,
+        uint256 endEpoch,
         address[] memory sequencers,
         uint256[] memory finishedBlocks,
         bytes memory signature
@@ -420,13 +568,12 @@ contract LockingPoolTest is
         uint256 nextBatch = currentBatch.add(1);
         require(nextBatch == batchId,"invalid batch id");
         require(!batchSubmitHistory[nextBatch], "already submited");
-        
+
         // check mpc signature
-        bytes32 operationHash = keccak256(abi.encodePacked(batchId, sequencers, finishedBlocks, address(this)));
+        bytes32 operationHash = keccak256(abi.encodePacked(batchId, startEpoch,endEpoch,sequencers, finishedBlocks, address(this)));
         operationHash = ECDSA.toEthSignedMessageHash(operationHash);
         address signer = ECDSA.recover(operationHash, signature);
         require(signer == mpcAddress, "invalid mpc signature");
-
 
         // calc reward
         uint256 totalReward;
@@ -536,7 +683,7 @@ contract LockingPoolTest is
     ) internal returns (uint256) {
         address signer = _getAndAssertSigner(signerPubkey);
         require(user == signer,"user and signerPubkey mismatch");
-        
+
         uint256 _currentBatch = currentBatch;
         uint256 sequencerId = NFTCounter;
 
@@ -568,6 +715,9 @@ contract LockingPoolTest is
         return sequencerId;
     }
 
+    // The function restricts the sequencer's exit if the number of total locked sequencers divided by 3 is less than the number of 
+    // sequencers that have already exited. This would effectively freeze the sequencer's unlock function until a sufficient number of 
+    // new sequencers join the system.
     function _unlock(uint256 sequencerId, uint256 exitBatch, bool withdrawRewardToL2,bool force) internal {
         if (!force){
             // Ensure that the number of exit sequencer is less than 1/3 of the total
@@ -577,6 +727,7 @@ contract LockingPoolTest is
         uint256 amount = sequencers[sequencerId].amount;
         address sequencer = ownerOf(sequencerId);
 
+        sequencers[sequencerId].status = Status.Inactive;
         sequencers[sequencerId].deactivationBatch = exitBatch;
         sequencers[sequencerId].deactivationTime = block.timestamp;
         sequencers[sequencerId].unlockClaimTime = block.timestamp + WITHDRAWAL_DELAY;
@@ -600,13 +751,13 @@ contract LockingPoolTest is
     }
 
     function _finalizeCommit() internal {
-        uint256 _currentBatch = currentBatch;
-        uint256 nextBatch = _currentBatch.add(1);
+        uint256 nextBatch = currentBatch.add(1);
+        batchSubmitHistory[nextBatch]=true;
 
         StateChange memory changes = sequencerStateChanges[nextBatch];
         updateTimeline(changes.amount, changes.lockerCount, 0);
 
-        delete sequencerStateChanges[_currentBatch];
+        delete sequencerStateChanges[currentBatch];
 
         currentBatch = nextBatch;
     }
@@ -626,7 +777,7 @@ contract LockingPoolTest is
     }
 
     function _transferToken(address destination, uint256 amount) private {
-        require(token.transfer(destination, amount), "transfer failed");
+        token.safeTransfer(destination, amount);
     }
 
     function _transferTokenFrom(
@@ -634,7 +785,7 @@ contract LockingPoolTest is
         address destination,
         uint256 amount
     ) private {
-        require(token.transferFrom(from, destination, amount), "transfer from failed");
+        token.safeTransferFrom(from, destination, amount);
     }
 
     function _insertSigner(address newSigner) internal {

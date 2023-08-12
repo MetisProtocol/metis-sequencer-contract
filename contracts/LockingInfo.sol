@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ILockingPoolLocal} from "./interfaces/ILockingPoolLocal.sol";
 
 contract LockingInfo is Ownable {
     using SafeMath for uint256;
@@ -281,7 +280,7 @@ contract LockingInfo is Ownable {
     /**
      * @dev logLockUpdate log event LockUpdate
      */
-    function logLockUpdate(uint256 sequencerId)
+    function logLockUpdate(uint256 sequencerId,uint256 totalLock)
         public
         onlyLockingPool()
     {
@@ -289,7 +288,7 @@ contract LockingInfo is Ownable {
         emit LockUpdate(
             sequencerId,
             sequencerNonce[sequencerId],
-            totalSequencerLock(sequencerId)
+            totalLock
         );
     }
 
@@ -302,41 +301,5 @@ contract LockingInfo is Ownable {
         uint256 totalAmount
     ) public onlyLockingPool {
         emit ClaimRewards(sequencerId, amount, totalAmount);
-    }
-
-
-     /**
-     * @dev totalSequencerLock return the total locked amount of seqencerId
-     * @param sequencerId unique integer to identify a sequencer.
-     */
-    function totalSequencerLock(uint256 sequencerId)
-        public
-        view
-        returns (uint256 sequencerLock)
-    {
-        (sequencerLock, ,  , , , , , , ) = ILockingPoolLocal(lockingPool).sequencers(sequencerId);
-        return sequencerLock;
-    }
-
-     /**
-     * @dev getLockerDetails return the detail info of seqencerId
-     * @param sequencerId unique integer to identify a sequencer.
-     */
-     function getLockerDetails(uint256 sequencerId)
-        public
-        view
-        returns (
-            uint256 amount,
-            uint256 reward,
-            uint256 activationBatch,
-            uint256 deactivationBatch,
-            address signer,
-            uint256 _status
-        )
-    {
-       
-        ILockingPoolLocal.Status status;
-        (amount,reward ,activationBatch,deactivationBatch , , ,signer ,status , ) = ILockingPoolLocal(lockingPool).sequencers(sequencerId);
-        _status = uint256(status);
     }
 }
