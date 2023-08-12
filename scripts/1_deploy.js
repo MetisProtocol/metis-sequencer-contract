@@ -12,15 +12,10 @@ const l2Gas = 200000;
 let lockingNftName = "Metis Sequencer";
 let lockingNftSymbol = "MS";
 
-// let govProxyAddress = "0x21f7eA6766Ed0F202b5292dA3B39F9915D097207";
-// let lockingNftAddress = "0x8C63357C0b02c3CB082e2A6846F5D048cc737c69";
-// let lockingPoolProxyAddress = "0x73D5B3D9C5502953E51E3dDeDFf81A3e86FA874D";
-// let lockingInfoAddress = "0x33CdB54Fb5B0A469adB7D294dd868f4b782E2fBA";
-
-let govProxyAddress = "0x548Cb5Fae380F7Df107BFfE85114BecFf58E65c8";
-let lockingNftAddress = "0x1C5812241B395810476841Af7304d4309d3334e8";
-let lockingPoolProxyAddress = "0xBF10ba6759FB74E251c0ACB89686382B0daAa50e";
-let lockingInfoAddress = "0x2fAA14d2CC5Fc245d6a9324920679f4210bfeC5f";
+let govProxyAddress = "0x3aBe7d27Bc6c57B13718F231125cF2EC182f345b";
+let lockingNftAddress = "0xFd54217796253D5A1BAE9d3BE15D871C475393C9";
+let lockingPoolProxyAddress = "0x1cafFf714F5e5cB5194d9839309B516D1F9cBa97";
+let lockingInfoAddress = "0x752C0741253097F72c373D836210d43fDc8b9108";
 
 const main = async () => {
   const accounts = await hre.ethers.getSigners();
@@ -175,17 +170,17 @@ async function updateMinLock(govObj) {
 
 async function updateWithdrawDelay(govObj) {
   let ABI = [
-    "function updateWithdrwDelayTimeValue(uint256 newWithdrwDelayTime) "
+    "function updateWithdrawDelayTimeValue(uint256 newWithdrawDelayTime) "
   ];
   let iface = new ethers.utils.Interface(ABI);
-  let updateWithdrwDelayTimeValueData = iface.encodeFunctionData("updateWithdrwDelayTimeValue", [
+  let updateWithdrawDelayTimeValueData = iface.encodeFunctionData("updateWithdrawDelayTimeValue", [
     600,
   ])
-  console.log("updateWithdrwDelayTimeValue: ", updateWithdrwDelayTimeValueData)
+  console.log("updateWithdrawDelayTimeValue: ", updateWithdrawDelayTimeValueData)
 
   return govObj.update(
     lockingPoolProxyAddress,
-    updateWithdrwDelayTimeValueData
+    updateWithdrawDelayTimeValueData
   )
 }
 
