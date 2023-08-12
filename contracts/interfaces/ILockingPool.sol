@@ -91,11 +91,6 @@ abstract contract ILockingPool {
      */    
     function sequencerLock(uint256 sequencerId) virtual public view returns (uint256);
 
-    /**
-     * @dev withdrawalDelay return current withdrawal delay time
-     */    
-    function withdrawalDelay() virtual public view returns (uint256);
-
      /**
      * @dev currentSequencerSetSize  get all sequencer count
      */    

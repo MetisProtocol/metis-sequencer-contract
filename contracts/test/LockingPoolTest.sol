@@ -13,7 +13,7 @@ import {LockingInfo} from "../LockingInfo.sol";
 import {LockingNFT} from "../LockingNFT.sol";
 import { IL1ERC20Bridge } from "../interfaces/IL1ERC20Bridge.sol";
 
-contract LockingPool is
+contract LockingPoolTest is
     ILockingPool,
     GovernancePauseable
 {
@@ -191,11 +191,6 @@ contract LockingPool is
     // query owenr by NFT token id
     function ownerOf(uint256 tokenId) override public view returns (address) {
         return NFTContract.ownerOf(tokenId);
-    }
-
-    // query withdraw delay time
-    function withdrawalDelay() override public view returns (uint256) {
-        return WITHDRAWAL_DELAY;
     }
 
     // query current lock amount by sequencer id
