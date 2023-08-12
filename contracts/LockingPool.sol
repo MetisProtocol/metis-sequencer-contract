@@ -584,6 +584,7 @@ contract LockingPool is
         uint256 nextBatch = currentBatch.add(1);
         require(nextBatch == batchId,"invalid batch id");
         require(!batchSubmitHistory[nextBatch], "already submited");
+        require(sequencers.length == finishedBlocks.length, "mismatch length");
 
         // check mpc signature
         bytes32 operationHash = keccak256(abi.encodePacked(batchId, startEpoch,endEpoch,sequencers, finishedBlocks, address(this)));
