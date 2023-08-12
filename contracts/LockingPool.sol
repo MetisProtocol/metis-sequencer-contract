@@ -209,10 +209,6 @@ contract LockingPool is
         return NFTContract.ownerOf(tokenId);
     }
 
-    // query withdraw delay time
-    function withdrawalDelay() override public view returns (uint256) {
-        return WITHDRAWAL_DELAY;
-    }
 
     // query current lock amount by sequencer id
     function sequencerLock(uint256 sequencerId) override public view returns (uint256) {
