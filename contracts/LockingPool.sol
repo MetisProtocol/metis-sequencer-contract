@@ -51,6 +51,9 @@ contract LockingPool is
         l2Gas = _l2Gas;
         token = IERC20(_l1Token);  
         NFTContract = LockingNFT(_NFTContract); 
+
+        require(!isContract(_mpc),"_mpc is a contract");
+        require(_mpc != address(0),"_mpc is zero address");
         mpcAddress = _mpc;
 
         mpcHistory.push(MpcHistoryItem({
