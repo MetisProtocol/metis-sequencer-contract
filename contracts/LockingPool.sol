@@ -330,13 +330,13 @@ contract LockingPool is
     }
 
     /**
-    *  @dev updateWithdrwDelayTimeValue Allow gov to set withdraw delay time.
-    *  @param newWithdrwDelayTime new withdraw delay time
+    *  @dev updateWithdrawDelayTimeValue Allow gov to set withdraw delay time.
+    *  @param newWithdrawDelayTime new withdraw delay time
     */
-    function updateWithdrwDelayTimeValue(uint256 newWithdrwDelayTime) public onlyGovernance {
-        require(newWithdrwDelayTime > 0,"invlaid newWithdrwDelayTime");
-        logger.logWithrawDelayTimeChange(newWithdrwDelayTime, WITHDRAWAL_DELAY);
-        WITHDRAWAL_DELAY = newWithdrwDelayTime;
+    function updateWithdrawDelayTimeValue(uint256 newWithdrawDelayTime) public onlyGovernance {
+        require(newWithdrawDelayTime > 0,"invlaid newWithdrawDelayTime");
+        logger.logWithrawDelayTimeChange(newWithdrawDelayTime, WITHDRAWAL_DELAY);
+        WITHDRAWAL_DELAY = newWithdrawDelayTime;
     }
 
     /**

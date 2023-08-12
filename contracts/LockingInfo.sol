@@ -95,7 +95,7 @@ contract LockingInfo is Ownable {
     event ThresholdChange(uint256 newThreshold, uint256 oldThreshold);
 
     /**
-     * @dev Emitted when the gov update threshold in 'updateWithdrwDelayTimeValue()'.
+     * @dev Emitted when the gov update threshold in 'updateWithdrawDelayTimeValue()'.
      * @param newWithrawDelayTime new withdraw delay time
      * @param oldWithrawDelayTime  old withdraw delay time
      */
