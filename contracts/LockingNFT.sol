@@ -8,7 +8,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract LockingNFT is ERC721Enumerable, Ownable {
     constructor(string memory name, string memory symbol) ERC721(name, symbol)
     {
-        // solhint-disable-previous-line no-empty-blocks
+        require(bytes(name).length > 0, "invalid name");
+        require(bytes(symbol).length >0, "invalid symbol");
     }
 
     /**
