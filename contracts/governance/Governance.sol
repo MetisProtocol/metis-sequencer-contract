@@ -21,6 +21,7 @@ contract Governance is IGovernance,OwnableUpgradeable {
      * @param data calldata to target
      */  
     function update(address target, bytes memory data) override public onlyOwner {
+        require(target != address(0),"invalid target");
         (bool success, ) = target.call(data); 
         require(success, "Update failed");
     }

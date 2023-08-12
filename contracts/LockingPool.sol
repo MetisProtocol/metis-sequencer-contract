@@ -44,6 +44,13 @@ contract LockingPool is
         address _NFTContract,
         address _mpc
     ) external initializer {
+        require(_governance != address(0),"invalid _governance");
+        require(_bridge != address(0),"invalid _bridge");
+        require(_l1Token != address(0),"invalid _l1Token");
+        require(_l2Token != address(0),"invalid _l2Token");
+        require(_NFTContract != address(0),"invalid _NFTContract");
+        require(_mpc != address(0),"_mpc is zero address");
+        
         governance = IGovernance(_governance);  
         bridge = _bridge;
         l1Token = _l1Token;
@@ -53,7 +60,6 @@ contract LockingPool is
         NFTContract = LockingNFT(_NFTContract); 
 
         require(!isContract(_mpc),"_mpc is a contract");
-        require(_mpc != address(0),"_mpc is zero address");
         mpcAddress = _mpc;
 
         mpcHistory.push(MpcHistoryItem({
@@ -136,7 +142,7 @@ contract LockingPool is
      * @param _nftContract new NFT contract address
      */
     function updateNFTContract(address _nftContract) external onlyGovernance {
-        require(_nftContract != address(0x0));
+        require(_nftContract != address(0));
         NFTContract = LockingNFT(_nftContract);
         emit UpdateNFTContract(_nftContract);
     }
@@ -146,7 +152,7 @@ contract LockingPool is
      * @param _lockingInfo new locking info contract address
      */
     function updateLockingInfo(address _lockingInfo) external onlyGovernance {
-        require(_lockingInfo != address(0x0));
+        require(_lockingInfo != address(0));
         logger = LockingInfo(_lockingInfo); 
         emit UpdateLockingInfo(_lockingInfo);
     }
@@ -165,7 +171,7 @@ contract LockingPool is
      * @param _token the token address
      */
     function setLockingToken(address _token) public onlyGovernance {
-        require(_token != address(0x0));
+        require(_token != address(0));
         token = IERC20(_token);
         emit SetLockingToken(_token);
     }
@@ -235,7 +241,7 @@ contract LockingPool is
      */
     function updateMpc(address _newMpc) external onlyGovernance {
         require(!isContract(_newMpc),"_newMpc is a contract");
-        require(_newMpc != address(0x0),"_newMpc is zero address");
+        require(_newMpc != address(0),"_newMpc is zero address");
         mpcAddress = _newMpc;
         mpcHistory.push(MpcHistoryItem({
             startBlock: block.number,

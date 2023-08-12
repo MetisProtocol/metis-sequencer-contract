@@ -8,6 +8,7 @@ import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.s
 
 contract GovernancePauseable is Pausable, Governable {
     function initialize(address _governance) override public initializer {
+        require(_governance != address(0),"invalid _governance");
         governance = IGovernance(_governance);
     }
 

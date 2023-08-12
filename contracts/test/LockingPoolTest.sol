@@ -117,7 +117,7 @@ contract LockingPoolTest is
      * @param _nftContract new NFT contract address
      */
     function updateNFTContract(address _nftContract) external onlyGovernance {
-        require(_nftContract != address(0x0));
+        require(_nftContract != address(0));
         NFTContract = LockingNFT(_nftContract);
     }
 
@@ -126,7 +126,7 @@ contract LockingPoolTest is
      * @param _lockingInfo new locking info contract address
      */
     function updateLockingInfo(address _lockingInfo) external onlyGovernance {
-        require(_lockingInfo != address(0x0));
+        require(_lockingInfo != address(0));
         logger = LockingInfoTest(_lockingInfo); 
     }
 
@@ -143,7 +143,7 @@ contract LockingPoolTest is
      * @param _token the token address
      */
     function setLockingToken(address _token) public onlyGovernance {
-        require(_token != address(0x0));
+        require(_token != address(0));
         token = IERC20(_token);
     }
 
@@ -209,7 +209,7 @@ contract LockingPoolTest is
      */
     function updateMpc(address _newMpc) external onlyGovernance {
         require(!isContract(_newMpc),"_newMpc is a contract");
-        require(_newMpc != address(0x0),"_newMpc is zero address");
+        require(_newMpc != address(0),"_newMpc is zero address");
         mpcAddress = _newMpc;
         mpcHistory.push(MpcHistoryItem({
             startBlock: block.number,
