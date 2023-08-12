@@ -158,6 +158,7 @@ contract LockingPool is
     event UpdateMpc(address _newMpc);
 
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }

@@ -4,9 +4,10 @@ pragma solidity ^0.8.0;
 import {IGovernance} from "./IGovernance.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract Governance is IGovernance,OwnableUpgradeable {
+contract Governance is IGovernance, OwnableUpgradeable {
     address internal proxyTo;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
