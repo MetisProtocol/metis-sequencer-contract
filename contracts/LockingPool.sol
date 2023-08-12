@@ -611,6 +611,7 @@ contract LockingPool is
         uint256 amount = sequencers[sequencerId].amount;
         address sequencer = ownerOf(sequencerId);
 
+        sequencers[sequencerId].status = Status.Inactive;
         sequencers[sequencerId].deactivationBatch = exitBatch;
         sequencers[sequencerId].deactivationTime = block.timestamp;
         sequencers[sequencerId].unlockClaimTime = block.timestamp + WITHDRAWAL_DELAY;
@@ -660,7 +661,7 @@ contract LockingPool is
     }
 
     function _transferToken(address destination, uint256 amount) private {
-        require(token.transfer(destination, amount), "transfer failed");
+        token.safeTransfer(destination, amount);
     }
 
     function _transferTokenFrom(
@@ -668,7 +669,7 @@ contract LockingPool is
         address destination,
         uint256 amount
     ) private {
-        require(token.transferFrom(from, destination, amount), "transfer from failed");
+        token.safeTransferFrom(from, destination, amount);
     }
 
     function _insertSigner(address newSigner) internal {
