@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import {Governable} from "../governance/Governable.sol";
 import {IGovernance} from "../governance/IGovernance.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 contract GovernancePauseable is Pausable, Governable {
     function initialize(address _governance) override public initializer {
