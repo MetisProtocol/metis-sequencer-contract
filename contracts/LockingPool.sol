@@ -584,7 +584,6 @@ contract LockingPool is
         address[] memory sequencers,
         uint256[] memory finishedBlocks,
         bytes memory signature
-    // )  external onlyGovernance  returns (uint256) {
     )  external returns (uint256) {
         uint256 nextBatch = currentBatch.add(1);
         require(nextBatch == batchId,"invalid batch id");

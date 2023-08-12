@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 
-// contract LockingNFT is ERC721Full, Ownable {
 contract LockingNFT is ERC721Enumerable, Ownable {
     constructor(string memory name, string memory symbol) ERC721(name, symbol)
     {
