@@ -45,6 +45,13 @@ const main = async () => {
   //  await delay(3000);
   //  return
 
+   // updateMinLock
+    const govProxyObj = await gov.attach(govProxyAddress);
+    let updateWithdrawDelayTx = await updateWithdrawDelay(govProxyObj);
+    console.log("updateWithdrawDelay:", updateWithdrawDelayTx.hash);
+    await delay(3000);
+    return
+
   if (govProxyAddress == ""){
     const govProxy = await upgrades.deployProxy(gov, []);
     await govProxy.deployed();
@@ -165,6 +172,23 @@ async function updateMinLock(govObj) {
     updateMinAmountsData
   )
 }
+
+async function updateWithdrawDelay(govObj) {
+  let ABI = [
+    "function updateWithdrwDelayTimeValue(uint256 newWithdrwDelayTime) "
+  ];
+  let iface = new ethers.utils.Interface(ABI);
+  let updateWithdrwDelayTimeValueData = iface.encodeFunctionData("updateWithdrwDelayTimeValue", [
+    600,
+  ])
+  console.log("updateWithdrwDelayTimeValue: ", updateWithdrwDelayTimeValueData)
+
+  return govObj.update(
+    lockingPoolProxyAddress,
+    updateWithdrwDelayTimeValueData
+  )
+}
+
 
 async function updateMpc(govObj, newMpc) {
   let ABI = [
