@@ -6,7 +6,7 @@ import {IGovernance} from "./IGovernance.sol";
 import {Pausable} from "./Pausable.sol";
 
 contract GovernancePauseable is Pausable, Governable {
-     /// @custom:oz-upgrades-unsafe-allow constructor
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(){
         _disableInitializers();
     }

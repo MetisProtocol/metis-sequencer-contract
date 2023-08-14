@@ -72,7 +72,7 @@ contract LockingPoolTest is
  
     mapping(uint256 => Sequencer) public sequencers;
     mapping(address => uint256) public signerToSequencer;
-    mapping(uint256 => bool) batchSubmitHistory;   // batch submit
+    mapping(uint256 => bool) public batchSubmitHistory;   // batch submit
 
     // current Batch lock power and lockers count
     State public sequencerState;
@@ -156,7 +156,6 @@ contract LockingPoolTest is
      */
     event UpdateMpc(address _newMpc);
 
-
     constructor(
         address _governance,
         address _l1Token,
@@ -186,24 +185,24 @@ contract LockingPoolTest is
         NFTCounter = 1; // sequencer id
     }
 
-
     // query owenr by NFT token id
-    function ownerOf(uint256 tokenId) override public view returns (address) {
+    function ownerOf(uint256 tokenId) override external view returns (address) {
         return NFTContract.ownerOf(tokenId);
     }
 
+
     // query current lock amount by sequencer id
-    function sequencerLock(uint256 sequencerId) override public view returns (uint256) {
+    function sequencerLock(uint256 sequencerId) override external view returns (uint256) {
         return sequencers[sequencerId].amount;
     }
 
     // get sequencer id by address
-    function getSequencerId(address user) override public view returns (uint256) {
+    function getSequencerId(address user) override external view returns (uint256) {
         return NFTContract.tokenOfOwnerByIndex(user, 0);
     }
 
     //  get sequencer reward by sequencer id
-    function sequencerReward(uint256 sequencerId) override public view returns (uint256) {
+    function sequencerReward(uint256 sequencerId) override external view returns (uint256) {
         return sequencers[sequencerId].reward.sub(INITIALIZED_AMOUNT);
     }
 
@@ -213,13 +212,13 @@ contract LockingPoolTest is
     }
 
     // get total lock amount for all sequencers
-    function currentSequencerSetTotalLock() override public view returns (uint256) {
+    function currentSequencerSetTotalLock() override external view returns (uint256) {
         return sequencerState.amount;
     }
 
 
     // query whether an id is a sequencer
-    function isSequencer(uint256 sequencerId) public view returns (bool) {
+    function isSequencer(uint256 sequencerId)  public view returns (bool) {
         return
             _isSequencer(
                 sequencers[sequencerId].status,
@@ -276,7 +275,7 @@ contract LockingPoolTest is
      * @dev setCurrentBatch  Allow gov to set locking token
      * @param _token the token address
      */
-    function setLockingToken(address _token) public onlyGovernance {
+    function setLockingToken(address _token) external onlyGovernance {
         require(_token != address(0),"invalid _token");
         token = IERC20(_token);
         emit SetLockingToken(_token);
@@ -286,7 +285,7 @@ contract LockingPoolTest is
      * @dev updateSequencerThreshold  Allow gov to set max sequencer threshold
      * @param newThreshold the new threshold
      */
-    function updateSequencerThreshold(uint256 newThreshold) public onlyGovernance {
+    function updateSequencerThreshold(uint256 newThreshold) external onlyGovernance {
         require(newThreshold != 0,"invalid newThreshold");
         logger.logThresholdChange(newThreshold, sequencerThreshold);
         sequencerThreshold = newThreshold;
@@ -296,7 +295,7 @@ contract LockingPoolTest is
      * @dev updateBlockReward  Allow gov to set per block reward
      * @param newReward the block reward
      */
-    function updateBlockReward(uint256 newReward) public onlyGovernance {
+    function updateBlockReward(uint256 newReward) external onlyGovernance {
         require(newReward != 0,"invalid newReward");
         logger.logRewardUpdate(newReward, BLOCK_REWARD);
         BLOCK_REWARD = newReward;
@@ -306,7 +305,7 @@ contract LockingPoolTest is
      * @dev insertSigners  Allow gov to update signers
      * @param _signers the new signers
      */
-    function insertSigners(address[] memory _signers) public onlyGovernance {
+    function insertSigners(address[] memory _signers) external onlyGovernance {
         signers = _signers;
         emit InsertSigners(_signers);
     }
@@ -315,7 +314,7 @@ contract LockingPoolTest is
     *  @dev updateWithdrawDelayTimeValue Allow gov to set withdraw delay time.
     *  @param newWithdrawDelayTime new withdraw delay time
     */
-    function updateWithdrawDelayTimeValue(uint256 newWithdrawDelayTime) public onlyGovernance {
+    function updateWithdrawDelayTimeValue(uint256 newWithdrawDelayTime) external onlyGovernance {
         require(newWithdrawDelayTime > 0,"invlaid newWithdrawDelayTime");
         logger.logWithrawDelayTimeChange(newWithdrawDelayTime, WITHDRAWAL_DELAY);
         WITHDRAWAL_DELAY = newWithdrawDelayTime;
@@ -325,7 +324,7 @@ contract LockingPoolTest is
      * @dev updateSignerUpdateLimit Allow gov to set signer update max limit
      * @param _limit new limit
      */
-    function updateSignerUpdateLimit(uint256 _limit) public onlyGovernance {
+    function updateSignerUpdateLimit(uint256 _limit) external onlyGovernance {
         require(_limit > 0,"invlaid _limit");
         signerUpdateLimit = _limit;
         emit UpdateSignerUpdateLimit(_limit);
@@ -336,7 +335,7 @@ contract LockingPoolTest is
      * @dev updateMinAmounts Allow gov to update min lock amount 
      * @param _minLock new min lock amount
      */
-    function updateMinAmounts(uint256 _minLock) public onlyGovernance {
+    function updateMinAmounts(uint256 _minLock) external onlyGovernance {
         require(_minLock > 0,"invlaid _minLock");
         minLock = _minLock;
         emit UpdateMinAmounts(_minLock);
@@ -367,7 +366,7 @@ contract LockingPoolTest is
       * @dev fetchMpcAddress query mpc address by L1 block height, used by batch-submitter
       * @param blockHeight the L1 block height
       */
-    function fetchMpcAddress(uint256 blockHeight) override public view returns(address){
+    function fetchMpcAddress(uint256 blockHeight) override external view returns(address){
         for (uint i = mpcHistory.length-1; i>=0; i--) {
             if (blockHeight>= mpcHistory[i].startBlock){
                 return mpcHistory[i].newMpcAddress;
@@ -400,7 +399,7 @@ contract LockingPoolTest is
         address user,
         uint256 amount,
         bytes memory signerPubkey
-    ) override public  whenNotPaused {
+    ) override external  whenNotPaused {
         require(currentSequencerSetSize() < sequencerThreshold, "no more slots");
         require(amount >= minLock, "not enough deposit");
 
@@ -435,7 +434,7 @@ contract LockingPoolTest is
      * @param sequencerId sequencer id
      * @param withdrawToL2 Whether the current reward is withdrawn to L2
      */   
-    function unlockClaim(uint256 sequencerId, bool withdrawToL2) override public onlySequencer(sequencerId) {
+    function unlockClaim(uint256 sequencerId, bool withdrawToL2) override external onlySequencer(sequencerId) {
         uint256 deactivationBatch = sequencers[sequencerId].deactivationBatch;
         uint256 unlockClaimTime = sequencers[sequencerId].unlockClaimTime;
 
@@ -483,7 +482,7 @@ contract LockingPoolTest is
         uint256 sequencerId,
         uint256 amount,
         bool lockRewards
-    ) override public whenNotPaused onlySequencer(sequencerId) {
+    ) override external whenNotPaused onlySequencer(sequencerId) {
         require(amount >= minLock, "not enough deposit");
         require(sequencers[sequencerId].deactivationBatch == 0, "No restaking");
 
@@ -512,7 +511,7 @@ contract LockingPoolTest is
      * @param sequencerId unique integer to identify a sequencer.
      * @param withdrawToL2 Whether the current reward is withdrawn to L2
      */   
-    function withdrawRewards(uint256 sequencerId, bool withdrawToL2) override public onlySequencer(sequencerId) {
+    function withdrawRewards(uint256 sequencerId, bool withdrawToL2) override external onlySequencer(sequencerId) {
         _liquidateRewards(sequencerId, msg.sender, withdrawToL2);
     }
 
@@ -521,7 +520,7 @@ contract LockingPoolTest is
      * @param sequencerId unique integer to identify a sequencer.
      * @param signerPubkey the new signer pubkey address
      */
-    function updateSigner(uint256 sequencerId, bytes memory signerPubkey) public onlySequencer(sequencerId) {
+    function updateSigner(uint256 sequencerId, bytes memory signerPubkey) external onlySequencer(sequencerId) {
         address signer = _getAndAssertSigner(signerPubkey);
         uint256 _currentBatch = currentBatch;
         require(_currentBatch >= latestSignerUpdateBatch[sequencerId].add(signerUpdateLimit), "Not allowed");
@@ -562,11 +561,11 @@ contract LockingPoolTest is
         address[] memory _sequencers,
         uint256[] memory finishedBlocks,
         bytes memory signature
-    // )  external onlyGovernance  returns (uint256) {
     )  external returns (uint256) {
         uint256 nextBatch = currentBatch.add(1);
         require(nextBatch == batchId,"invalid batch id");
         require(!batchSubmitHistory[nextBatch], "already submited");
+        require(_sequencers.length == finishedBlocks.length, "mismatch length");
 
         // check mpc signature
         bytes32 operationHash = keccak256(abi.encodePacked(batchId, startEpoch,endEpoch,_sequencers, finishedBlocks, address(this)));
@@ -582,7 +581,10 @@ contract LockingPoolTest is
 
             uint256 reward = _calculateReward(finishedBlocks[i]);
             _increaseReward(_sequencers[i],reward);
-            totalReward += reward;
+
+            unchecked{
+                totalReward += reward;
+            }
         }
 
         _finalizeCommit();
@@ -724,7 +726,7 @@ contract LockingPoolTest is
         }
 
         uint256 amount = sequencers[sequencerId].amount;
-        address sequencer = ownerOf(sequencerId);
+        address sequencer = NFTContract.ownerOf(sequencerId);
 
         sequencers[sequencerId].status = Status.Inactive;
         sequencers[sequencerId].deactivationBatch = exitBatch;

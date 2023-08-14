@@ -19,7 +19,6 @@ describe('LockingNFTTest', async () => {
         await lockingNFT.mint(wallets[0].address,1);
         let ownerOfTokenId1 = await lockingNFT.ownerOf(1);
         expect(ownerOfTokenId1).to.eq(wallets[0].address);
-
     })
 
     it('burn NFT', async () => {

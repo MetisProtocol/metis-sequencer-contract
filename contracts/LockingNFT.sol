@@ -33,11 +33,11 @@ contract LockingNFT is ERC721Enumerable, Ownable {
         _burn(tokenId);
     }
 
-    function _transfer(address from, address to, uint256 tokenId) override internal {
-        require(
+     function _transfer(address from, address to, uint256 tokenId) override internal {
+         require(
             balanceOf(to) == 0,
             "Sequencers MUST NOT own multiple stake position"
         );
-        _safeTransfer(from, to, tokenId, "");
+        super._transfer(from, to, tokenId);
     }
 }

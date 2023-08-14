@@ -1,4 +1,8 @@
-const {ethers} = require("hardhat");
+const {
+    ethers,
+    upgrades
+} = require("hardhat");
+
 const {expect} = require('chai');
 const web3 = require("web3");
 const {time,mineUpTo,reset} = require("@nomicfoundation/hardhat-network-helpers");
@@ -50,9 +54,11 @@ describe('LockingPoolTest', async () => {
 
         // deploy gov
         const Governance = await ethers.getContractFactory('Governance');
-        gov = await Governance.deploy();
-        await gov.initialize();
-        // console.log("gov:", gov.address);
+        const govProxy = await upgrades.deployProxy(Governance, []);
+        await govProxy.deployed();
+        // console.log("gov:", govProxy.address);
+
+        gov = await ethers.getContractAt('Governance', govProxy.address);
 
         // deploy NFT
         const LockingNFT = await ethers.getContractFactory('LockingNFTTest');
@@ -63,7 +69,7 @@ describe('LockingPoolTest', async () => {
         // deploy Locking Pool
         const LockingPool = await ethers.getContractFactory('LockingPoolTest');
         lockingPool = await LockingPool.deploy(
-                gov.address,
+                govProxy.address,
                 l1MetisToken,
                 lockingNFT.address,
                 mpc
@@ -198,13 +204,15 @@ describe('LockingPoolTest', async () => {
         const params = {
             batchId: ethers.BigNumber.from(curBatchId.toString()).add(1),
             payeer: admin.address,
+            startEpoch: 1,
+            endEpoch: 2,
             sequencers: [testUserAddress],
             finishedBlocks: [10],
             lockingPool: lockingPool.address,
             signer: admin
         }
         let signature = await calcSignature(params);
-        await lockingPool.connect(admin).batchSubmitRewards(params.batchId, params.payeer, params.sequencers, params.finishedBlocks, signature);
+        await lockingPool.connect(admin).batchSubmitRewards(params.batchId, params.payeer,params.startEpoch, params.endEpoch, params.sequencers, params.finishedBlocks, signature);
 
         // check withdrawable reward
         let withdrawableReward = await calcWithdrawableRewards(lockingPool, sequencerId);
@@ -263,6 +271,8 @@ describe('LockingPoolTest', async () => {
         const params = {
             batchId: ethers.BigNumber.from(curBatchId.toString()).add(1),
             payeer: admin.address,
+            startEpoch: 1,
+            endEpoch: 2,
             sequencers: [testUserAddress],
             finishedBlocks: [10],
             lockingPool: lockingPool.address,
@@ -270,7 +280,7 @@ describe('LockingPoolTest', async () => {
         }
         let signature = await calcSignature(params);
         // console.log("params.batchId:", params.batchId);
-        await lockingPool.connect(admin).batchSubmitRewards(params.batchId, params.payeer, params.sequencers, params.finishedBlocks, signature);
+        await lockingPool.connect(admin).batchSubmitRewards(params.batchId, params.payeer, params.startEpoch,params.endEpoch, params.sequencers, params.finishedBlocks, signature);
 
         // check withdrawable reward
         let withdrawableReward = await calcWithdrawableRewards(lockingPool, sequencerId);
@@ -448,8 +458,10 @@ async function forceUnlock(govObj, sequencerId, lockingPoolAddress) {
 }
 
 async function calcSignature(params) {
-    let message = ethers.utils.solidityPack(["uint256", "address[]", "uint256[]", "address"], [
+    let message = ethers.utils.solidityPack(["uint256", "uint256", "uint256", "address[]", "uint256[]", "address"], [
         params.batchId,
+        params.startEpoch,
+        params.endEpoch,
         params.sequencers,
         params.finishedBlocks,
         params.lockingPool

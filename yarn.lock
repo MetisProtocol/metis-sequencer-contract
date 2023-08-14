@@ -919,10 +919,10 @@
   resolved "https://registry.npmjs.org/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.9.2.tgz"
   integrity sha512-siviV3PZV/fHfPaoIC51rf1Jb6iElkYWnNYZ0leO23/ukXuvOyoC/ahy8jqiV7g+++9Nuo3n/rk5ajSN/+d/Sg==
 
-"@openzeppelin/contracts@^4.8.3":
-  version "4.8.3"
-  resolved "https://registry.npmjs.org/@openzeppelin/contracts/-/contracts-4.8.3.tgz"
-  integrity sha512-bQHV8R9Me8IaJoJ2vPG4rXcL7seB7YVuskr4f+f5RyOStSZetwzkWtoqDMl5erkBJy0lDRUnIR2WIkPiC0GJlg==
+"@openzeppelin/contracts@^4.9.3":
+  version "4.9.3"
+  resolved "https://registry.npmjs.org/@openzeppelin/contracts/-/contracts-4.9.3.tgz"
+  integrity sha512-He3LieZ1pP2TNt5JbkPA4PNT9WC3gOTOlDcFGJW4Le4QKqwmiNJCRt44APfxMxvq7OugU/cqYuPcSBzOw38DAg==
 
 "@openzeppelin/hardhat-upgrades@^1.26.0":
   version "1.26.0"
@@ -4591,6 +4591,12 @@ eth-query@^2.0.2, eth-query@^2.1.0, eth-query@^2.1.2:
     json-rpc-random-id "^1.0.0"
     xtend "^4.0.1"
 
+eth-sig-util@^1.4.2:
+  version "1.4.2"
+  dependencies:
+    ethereumjs-abi "git+https://github.com/ethereumjs/ethereumjs-abi.git"
+    ethereumjs-util "^5.1.1"
+
 eth-sig-util@3.0.0:
   version "3.0.0"
   resolved "https://registry.npmjs.org/eth-sig-util/-/eth-sig-util-3.0.0.tgz"
@@ -4999,8 +5005,6 @@ ethereumjs-wallet@0.6.5:
 
 ethers@^4.0.20:
   version "4.0.49"
-  resolved "https://registry.npmjs.org/ethers/-/ethers-4.0.49.tgz"
-  integrity sha512-kPltTvWiyu+OktYy1IStSO16i2e7cS9D9OxZ81q2UUaiNPVrm/RTcbxamCXF9VUSKzJIdJV68EAIhTEVBalRWg==
   dependencies:
     aes-js "3.0.0"
     bn.js "^4.11.9"
@@ -6828,12 +6832,7 @@ is-shared-array-buffer@^1.0.2:
   dependencies:
     call-bind "^1.0.2"
 
-is-stream@^1.0.0, is-stream@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.npmjs.org/is-stream/-/is-stream-1.1.0.tgz"
-  integrity sha512-uQPm8kcs47jx38atAcWTVxyltQYoPT68y9aWYdV6yWXSyW8mzSat0TL6CiWdZeCdF3KrAvpVtnHbTv4RN+rqdQ==
-
-is-stream@^1.0.1:
+is-stream@^1.0.0, is-stream@^1.0.1, is-stream@^1.1.0:
   version "1.1.0"
   resolved "https://registry.npmjs.org/is-stream/-/is-stream-1.1.0.tgz"
   integrity sha512-uQPm8kcs47jx38atAcWTVxyltQYoPT68y9aWYdV6yWXSyW8mzSat0TL6CiWdZeCdF3KrAvpVtnHbTv4RN+rqdQ==
@@ -9595,8 +9594,6 @@ scrypt-js@2.0.4:
 
 "scrypt-shim@github:web3-js/scrypt-shim":
   version "0.1.0"
-  resolved "git+ssh://git@github.com/web3-js/scrypt-shim.git"
-  integrity sha512-6IAk8+6BiN9lMNh5kgAYRPbi7+ejRsJIOX0jh4/I1V7phSsoaizjBGfDrZHpeAcq1IwOVlNetHS4/a+JR2hyZA==
   dependencies:
     scryptsy "^2.1.0"
     semver "^6.3.0"
@@ -9651,8 +9648,6 @@ semver@^5.5.0, semver@^5.6.0:
 
 semver@^5.5.1:
   version "5.7.1"
-  resolved "https://registry.npmjs.org/semver/-/semver-5.7.1.tgz"
-  integrity sha512-sauaDf/PZdVgrLTNYHRtpXa1iRiKcaebiKQ1BJdpQlWH2lCvexQdX55snPFyK7QzpudqbCI0qXFfOasHdyNDGQ==
 
 semver@^5.7.0:
   version "5.7.1"
@@ -10552,12 +10547,7 @@ then-request@^6.0.0:
     promise "^8.0.0"
     qs "^6.4.0"
 
-through@^2.3.8:
-  version "2.3.8"
-  resolved "https://registry.npmjs.org/through/-/through-2.3.8.tgz"
-  integrity sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==
-
-through@~2.3.4, through@~2.3.8:
+through@^2.3.8, through@~2.3.4, through@~2.3.8:
   version "2.3.8"
   resolved "https://registry.npmjs.org/through/-/through-2.3.8.tgz"
   integrity sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==
@@ -11989,7 +11979,7 @@ web3-provider-engine@14.2.1:
     cross-fetch "^2.1.0"
     eth-block-tracker "^3.0.0"
     eth-json-rpc-infura "^3.1.0"
-    eth-sig-util "3.0.0"
+    eth-sig-util "^1.4.2"
     ethereumjs-block "^1.2.2"
     ethereumjs-tx "^1.2.0"
     ethereumjs-util "^5.1.5"
@@ -12350,8 +12340,7 @@ websocket@^1.0.32:
 
 "websocket@github:web3-js/WebSocket-Node#polyfill/globalThis":
   version "1.0.29"
-  resolved "git+ssh://git@github.com/web3-js/WebSocket-Node.git"
-  integrity sha512-fS64f2anyRmFjuEVoqTbtgtV4Ay1dQ6kP078yM1RxnF0+9hNYk4iirrtII6FIoNoNgmhhIqzQaadEU6ZRpGoEw==
+  resolved "git+ssh://git@github.com/web3-js/WebSocket-Node.git#ef5ea2f41daf4a2113b80c9223df884b4d56c400"
   dependencies:
     debug "^2.2.0"
     es5-ext "^0.10.50"
