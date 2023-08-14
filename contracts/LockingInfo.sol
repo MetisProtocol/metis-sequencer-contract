@@ -7,7 +7,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 contract LockingInfo is Ownable {
     using SafeMath for uint256;
     mapping(uint256 => uint256) public sequencerNonce;
-    address public lockingPool;
+    address immutable public lockingPool;
 
     /**
     * @dev Emitted when sequencer locks in '_lockFor()' in LockingPool.
