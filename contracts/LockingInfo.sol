@@ -169,7 +169,7 @@ contract LockingInfo is Ownable {
         uint256 activationBatch,
         uint256 amount,
         uint256 total
-    ) public onlyLockingPool {
+    ) external onlyLockingPool {
         sequencerNonce[sequencerId] = sequencerNonce[sequencerId].add(1);
         emit Locked(
             signer,
@@ -190,7 +190,7 @@ contract LockingInfo is Ownable {
         uint256 sequencerId,
         uint256 amount,
         uint256 total
-    ) public onlyLockingPool {
+    ) external onlyLockingPool {
         emit Unlocked(user, sequencerId, amount, total);
     }
 
@@ -204,7 +204,7 @@ contract LockingInfo is Ownable {
         uint256 deactivationTime,
         uint256 unlockClaimTime,
         uint256 amount
-    ) public onlyLockingPool {
+    ) external onlyLockingPool {
         sequencerNonce[sequencerId] = sequencerNonce[sequencerId].add(1);
         emit UnlockInit(
             user,
@@ -226,7 +226,7 @@ contract LockingInfo is Ownable {
         address oldSigner,
         address newSigner,
         bytes memory signerPubkey
-    ) public onlyLockingPool {
+    ) external onlyLockingPool {
         sequencerNonce[sequencerId] = sequencerNonce[sequencerId].add(1);
         emit SignerChange(
             sequencerId,
@@ -241,7 +241,7 @@ contract LockingInfo is Ownable {
      * @dev logRelockd log event Relocked
      */
     function logRelockd(uint256 sequencerId, uint256 amount, uint256 total)
-        public
+        external
         onlyLockingPool
     {
         emit Relocked(sequencerId, amount, total);
@@ -251,7 +251,7 @@ contract LockingInfo is Ownable {
      * @dev logThresholdChange log event ThresholdChange
      */
     function logThresholdChange(uint256 newThreshold, uint256 oldThreshold)
-        public
+        external
         onlyLockingPool
     {
         emit ThresholdChange(newThreshold, oldThreshold);
@@ -261,7 +261,7 @@ contract LockingInfo is Ownable {
      * @dev logWithrawDelayTimeChange log event WithrawDelayTimeChange
      */
     function logWithrawDelayTimeChange(uint256 newWithrawDelayTime, uint256 oldWithrawDelayTime)
-        public
+        external
         onlyLockingPool
     {
         emit WithrawDelayTimeChange(newWithrawDelayTime, oldWithrawDelayTime);
@@ -271,7 +271,7 @@ contract LockingInfo is Ownable {
      * @dev logRewardUpdate log event RewardUpdate
      */
     function logRewardUpdate(uint256 newReward, uint256 oldReward)
-        public
+        external
         onlyLockingPool
     {
         emit RewardUpdate(newReward, oldReward);
@@ -281,7 +281,7 @@ contract LockingInfo is Ownable {
      * @dev logLockUpdate log event LockUpdate
      */
     function logLockUpdate(uint256 sequencerId,uint256 totalLock)
-        public
+        external
         onlyLockingPool()
     {
         sequencerNonce[sequencerId] = sequencerNonce[sequencerId].add(1);
@@ -299,7 +299,7 @@ contract LockingInfo is Ownable {
         uint256 sequencerId,
         uint256 amount,
         uint256 totalAmount
-    ) public onlyLockingPool {
+    ) external onlyLockingPool {
         emit ClaimRewards(sequencerId, amount, totalAmount);
     }
 }

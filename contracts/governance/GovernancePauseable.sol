@@ -11,7 +11,7 @@ contract GovernancePauseable is Pausable, Governable {
         _disableInitializers();
     }
 
-    function initialize(address _governance) override public initializer {
+    function initialize(address _governance) override external initializer {
         require(_governance != address(0),"invalid _governance");
         governance = IGovernance(_governance);
     }
@@ -19,14 +19,14 @@ contract GovernancePauseable is Pausable, Governable {
     /**
      * @dev setPause can set the contract not suspended status
      */  
-    function setPause() public onlyGovernance {
+    function setPause() external onlyGovernance {
         _pause();
     }
 
     /**
      * @dev setUnpause can cancel the suspended state
      */  
-    function setUnpause() public onlyGovernance {
+    function setUnpause() external onlyGovernance {
         _unpause();
     }
 }

@@ -13,7 +13,7 @@ contract Governable is Initializable {
         _disableInitializers();
     }
 
-    function initialize(address _governance) public virtual initializer {
+    function initialize(address _governance) external virtual initializer {
         require(_governance != address(0), "invlaid _governance");
         governance = IGovernance(_governance);
     }

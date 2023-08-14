@@ -12,7 +12,7 @@ contract Governance is IGovernance, OwnableUpgradeable {
         _disableInitializers();
     }
    
-    function initialize() public initializer {
+    function initialize() external initializer {
         __Ownable_init();
     }
 
@@ -21,7 +21,7 @@ contract Governance is IGovernance, OwnableUpgradeable {
      * @param target Address of target contract
      * @param data calldata to target
      */  
-    function update(address target, bytes memory data) override public onlyOwner {
+    function update(address target, bytes memory data) override external onlyOwner {
         require(target != address(0),"invalid target");
         (bool success, ) = target.call(data); 
         require(success, "Update failed");

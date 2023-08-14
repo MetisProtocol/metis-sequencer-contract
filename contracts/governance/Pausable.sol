@@ -38,7 +38,7 @@ abstract contract Pausable is Context,Initializable {
      */
     error ExpectedPause();
 
-    function initialize() public initializer {
+    function initialize() external initializer {
         _paused = false;
     }
 

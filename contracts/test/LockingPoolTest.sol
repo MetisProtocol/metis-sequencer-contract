@@ -220,7 +220,7 @@ contract LockingPoolTest is
 
 
     // query whether an id is a sequencer
-    function isSequencer(uint256 sequencerId) override public view returns (bool) {
+    function isSequencer(uint256 sequencerId) public view returns (bool) {
         return
             _isSequencer(
                 sequencers[sequencerId].status,

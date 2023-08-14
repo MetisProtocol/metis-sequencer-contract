@@ -17,7 +17,7 @@ contract LockingNFT is ERC721Enumerable, Ownable {
      * @param to the signer address of sequencer
      * @param tokenId mint token id
      */
-    function mint(address to, uint256 tokenId) public onlyOwner {
+    function mint(address to, uint256 tokenId) external onlyOwner {
         require(
             balanceOf(to) == 0,
             "Sequencers MUST NOT own multiple stake position"
@@ -29,7 +29,7 @@ contract LockingNFT is ERC721Enumerable, Ownable {
      * @dev burn a NFT, give up the sequencer role on behalf of the user
      * @param tokenId the NFT token id
      */
-    function burn(uint256 tokenId) public onlyOwner {
+    function burn(uint256 tokenId) external onlyOwner {
         _burn(tokenId);
     }
 
