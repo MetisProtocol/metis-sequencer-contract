@@ -39,8 +39,8 @@ const main = async () => {
         startEpoch: ethers.BigNumber.from("1"),
         endEpoch: ethers.BigNumber.from("2"),
         // sequencers: [signer.address],
-        sequencers: ["0x1267397fb5BF6f6Dcc3d18d673616D512dbcd8F0"],
-        finishedBlocks: [100],
+        sequencers: ["0xc541863d4A18da05dc77dd0003c302b19a1c074E"],
+        finishedBlocks: [2],
         lockingPool: contractAddresses.contracts.LockingPoolProxy,
         signer: signer
     }
@@ -48,8 +48,7 @@ const main = async () => {
 
 
     let signature = await calcSignature(params);
-    return 
-    let batchSubmitRewardsTx = await LockingPoolObj.batchSubmitRewards(params.payeer, params.sequencers, params.finishedBlocks, signature);
+    let batchSubmitRewardsTx = await LockingPoolObj.batchSubmitRewards(params.batchId, params.payeer, params.startEpoch, params.endEpoch, params.sequencers, params.finishedBlocks, signature);
     console.log("batchSubmitRewards tx ", batchSubmitRewardsTx.hash);
 }
 

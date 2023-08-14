@@ -12,7 +12,7 @@ module.exports = {
   solidity: {
     compilers: [
       {
-        version: "0.8.2",
+        version: "0.8.9",
         settings: {
           optimizer: {
             runs: 200,
@@ -20,15 +20,6 @@ module.exports = {
           }
         }
       },
-      // {
-      //   version: "0.8.9",
-      //   settings: {
-      //     optimizer: {
-      //       runs: 200,
-      //       enabled: true
-      //     }
-      //   }
-      // },
     ],
   },
   mocha: {

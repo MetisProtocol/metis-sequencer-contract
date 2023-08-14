@@ -551,7 +551,7 @@ contract LockingPoolTest is
      * @param payeer Who Pays the Reward Tokens
      * @param startEpoch The startEpoch that submitted the reward is that
      * @param endEpoch The endEpoch that submitted the reward is that
-     * @param sequencers Those sequencers can receive rewards
+     * @param _sequencers Those sequencers can receive rewards
      * @param finishedBlocks How many blocks each sequencer finished.
      * @param signature Confirmed by mpc and signed for reward distribution
      */
@@ -560,7 +560,7 @@ contract LockingPoolTest is
         address payeer,
         uint256 startEpoch,
         uint256 endEpoch,
-        address[] memory sequencers,
+        address[] memory _sequencers,
         uint256[] memory finishedBlocks,
         bytes memory signature
     // )  external onlyGovernance  returns (uint256) {
@@ -570,19 +570,19 @@ contract LockingPoolTest is
         require(!batchSubmitHistory[nextBatch], "already submited");
 
         // check mpc signature
-        bytes32 operationHash = keccak256(abi.encodePacked(batchId, startEpoch,endEpoch,sequencers, finishedBlocks, address(this)));
+        bytes32 operationHash = keccak256(abi.encodePacked(batchId, startEpoch,endEpoch,_sequencers, finishedBlocks, address(this)));
         operationHash = ECDSA.toEthSignedMessageHash(operationHash);
         address signer = ECDSA.recover(operationHash, signature);
         require(signer == mpcAddress, "invalid mpc signature");
 
         // calc reward
         uint256 totalReward;
-        for (uint256 i = 0; i < sequencers.length; ++i) {
-            require(signerToSequencer[sequencers[i]] > 0,"sequencer not exist");
-            require(isSequencer(signerToSequencer[sequencers[i]]), "invalid sequencer");
+        for (uint256 i = 0; i < _sequencers.length; ++i) {
+            require(signerToSequencer[_sequencers[i]] > 0,"sequencer not exist");
+            require(isSequencer(signerToSequencer[_sequencers[i]]), "invalid sequencer");
 
             uint256 reward = _calculateReward(finishedBlocks[i]);
-            _increaseReward(sequencers[i],reward);
+            _increaseReward(_sequencers[i],reward);
             totalReward += reward;
         }
 

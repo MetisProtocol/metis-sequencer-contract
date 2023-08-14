@@ -12,10 +12,10 @@ const l2Gas = 200000;
 let lockingNftName = "Metis Sequencer";
 let lockingNftSymbol = "MS";
 
-let govProxyAddress = "0x3aBe7d27Bc6c57B13718F231125cF2EC182f345b";
-let lockingNftAddress = "0xFd54217796253D5A1BAE9d3BE15D871C475393C9";
-let lockingPoolProxyAddress = "0x1cafFf714F5e5cB5194d9839309B516D1F9cBa97";
-let lockingInfoAddress = "0x752C0741253097F72c373D836210d43fDc8b9108";
+let govProxyAddress = "";
+let lockingNftAddress = "";
+let lockingPoolProxyAddress = "";
+let lockingInfoAddress = "";
 
 const main = async () => {
   const accounts = await hre.ethers.getSigners();
@@ -41,11 +41,11 @@ const main = async () => {
   //  return
 
    // updateMinLock
-    const govProxyObj = await gov.attach(govProxyAddress);
-    let updateWithdrawDelayTx = await updateWithdrawDelay(govProxyObj);
-    console.log("updateWithdrawDelay:", updateWithdrawDelayTx.hash);
-    await delay(3000);
-    return
+    // const govProxyObj = await gov.attach(govProxyAddress);
+    // let updateWithdrawDelayTx = await updateWithdrawDelay(govProxyObj);
+    // console.log("updateWithdrawDelay:", updateWithdrawDelayTx.hash);
+    // await delay(3000);
+    // return
 
   if (govProxyAddress == ""){
     const govProxy = await upgrades.deployProxy(gov, []);
