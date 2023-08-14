@@ -601,7 +601,10 @@ contract LockingPool is
 
             uint256 reward = _calculateReward(finishedBlocks[i]);
             _increaseReward(_sequencers[i],reward);
-            totalReward += reward;
+
+            unchecked{
+                totalReward += reward;
+            }
         }
 
         _finalizeCommit();
