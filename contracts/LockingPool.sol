@@ -536,7 +536,7 @@ contract LockingPool is
     }
 
     /**
-     * @dev updateSigner Allow sqeuencer to update new signers to replace old signer addresses
+     * @dev updateSigner Allow sqeuencer to update new signers to replace old signer addresses，and NFT holder will be transfer driectly
      * @param sequencerId unique integer to identify a sequencer.
      * @param signerPubkey the new signer pubkey address
      */
@@ -561,6 +561,9 @@ contract LockingPool is
 
         // reset update time to current time
         latestSignerUpdateBatch[sequencerId] = _currentBatch;
+
+        // transfer NFT driectly
+        NFTContract.transferFrom(msg.sender, signer, sequencerId);
     }
 
     /**
