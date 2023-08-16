@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract LockingInfo is Ownable {
-    using SafeMath for uint256;
     mapping(uint256 => uint256) public sequencerNonce;
     address immutable public lockingPool;
 
@@ -170,7 +168,7 @@ contract LockingInfo is Ownable {
         uint256 amount,
         uint256 total
     ) external onlyLockingPool {
-        sequencerNonce[sequencerId] = sequencerNonce[sequencerId].add(1);
+        sequencerNonce[sequencerId] = sequencerNonce[sequencerId] + 1;
         emit Locked(
             signer,
             sequencerId,
@@ -205,7 +203,7 @@ contract LockingInfo is Ownable {
         uint256 unlockClaimTime,
         uint256 amount
     ) external onlyLockingPool {
-        sequencerNonce[sequencerId] = sequencerNonce[sequencerId].add(1);
+        sequencerNonce[sequencerId] = sequencerNonce[sequencerId] + 1;
         emit UnlockInit(
             user,
             sequencerId,
@@ -227,7 +225,7 @@ contract LockingInfo is Ownable {
         address newSigner,
         bytes memory signerPubkey
     ) external onlyLockingPool {
-        sequencerNonce[sequencerId] = sequencerNonce[sequencerId].add(1);
+        sequencerNonce[sequencerId] = sequencerNonce[sequencerId] + 1;
         emit SignerChange(
             sequencerId,
             sequencerNonce[sequencerId],
@@ -284,7 +282,7 @@ contract LockingInfo is Ownable {
         external
         onlyLockingPool()
     {
-        sequencerNonce[sequencerId] = sequencerNonce[sequencerId].add(1);
+        sequencerNonce[sequencerId] = sequencerNonce[sequencerId] + 1;
         emit LockUpdate(
             sequencerId,
             sequencerNonce[sequencerId],

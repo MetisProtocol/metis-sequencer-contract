@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import {GovernancePauseable} from "./governance/GovernancePauseable.sol";
@@ -17,7 +16,6 @@ contract LockingPool is
     ILockingPool,
     GovernancePauseable
 {
-    using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     enum Status {Inactive, Active, Unlocked}  // Unlocked means sequencer exist
@@ -223,7 +221,7 @@ contract LockingPool is
 
     //  get sequencer reward by sequencer id
     function sequencerReward(uint256 sequencerId) override external view returns (uint256) {
-        return sequencers[sequencerId].reward.sub(INITIALIZED_AMOUNT);
+        return sequencers[sequencerId].reward - INITIALIZED_AMOUNT;
     }
 
     // get all sequencer count
@@ -443,7 +441,7 @@ contract LockingPool is
                 "invlaid sequencer status"
         );
 
-        uint256 exitBatch = currentBatch.add(1); // notice period
+        uint256 exitBatch = currentBatch + 1; // notice period
         _unlock(sequencerId, exitBatch, withdrawRewardToL2,false);
     }
 
@@ -467,7 +465,7 @@ contract LockingPool is
         );
 
         uint256 amount = sequencers[sequencerId].amount;
-        uint256 newTotalLocked = totalLocked.sub(amount);
+        uint256 newTotalLocked = totalLocked - amount;
         totalLocked = newTotalLocked;
 
         // Check for unclaimed rewards
@@ -511,13 +509,13 @@ contract LockingPool is
         }
 
         if (lockRewards) {
-            amount = amount.add(sequencers[sequencerId].reward).sub(INITIALIZED_AMOUNT);
+            amount = amount + sequencers[sequencerId].reward - INITIALIZED_AMOUNT;
             sequencers[sequencerId].reward = INITIALIZED_AMOUNT;
         }
 
-        uint256 newTotalLocked = totalLocked.add(amount);
+        uint256 newTotalLocked = totalLocked + amount;
         totalLocked = newTotalLocked;
-        sequencers[sequencerId].amount = sequencers[sequencerId].amount.add(amount);
+        sequencers[sequencerId].amount = sequencers[sequencerId].amount + amount;
 
         updateTimeline(int256(amount), 0, 0);
 
@@ -543,7 +541,7 @@ contract LockingPool is
     function updateSigner(uint256 sequencerId, bytes memory signerPubkey) external onlySequencer(sequencerId) {
         address signer = _getAndAssertSigner(signerPubkey);
         uint256 _currentBatch = currentBatch;
-        require(_currentBatch >= latestSignerUpdateBatch[sequencerId].add(signerUpdateLimit), "Not allowed");
+        require(_currentBatch >= latestSignerUpdateBatch[sequencerId] + signerUpdateLimit, "Not allowed");
 
         address currentSigner = sequencers[sequencerId].signer;
         // update signer event
@@ -582,7 +580,7 @@ contract LockingPool is
         uint256[] memory finishedBlocks,
         bytes memory signature
     )  external onlyGovernance returns (uint256) {
-        uint256 nextBatch = currentBatch.add(1);
+        uint256 nextBatch = currentBatch + 1;
         require(nextBatch == batchId,"invalid batch id");
         require(!batchSubmitHistory[nextBatch], "already submited");
         require(_sequencers.length == finishedBlocks.length, "mismatch length");
@@ -633,15 +631,15 @@ contract LockingPool is
         if (targetBatch == 0) {
             // update total lock and sequencer count
             if (amount > 0) {
-                sequencerState.amount = sequencerState.amount.add(uint256(amount));
+                sequencerState.amount = sequencerState.amount + uint256(amount);
             } else if (amount < 0) {
-                sequencerState.amount = sequencerState.amount.sub(uint256(amount * -1));
+                sequencerState.amount = sequencerState.amount - uint256(amount * -1);
             }
 
             if (lockerCount > 0) {
-                sequencerState.lockerCount = sequencerState.lockerCount.add(uint256(lockerCount));
+                sequencerState.lockerCount = sequencerState.lockerCount + uint256(lockerCount);
             } else if (lockerCount < 0) {
-                sequencerState.lockerCount = sequencerState.lockerCount.sub(uint256(lockerCount * -1));
+                sequencerState.lockerCount = sequencerState.lockerCount - uint256(lockerCount * -1);
             }
         } else {
             sequencerStateChanges[targetBatch].amount += amount;
@@ -673,7 +671,7 @@ contract LockingPool is
         uint256 blockInterval
     ) internal view returns (uint256) {
         // rewards are based on BlockInterval multiplied on `BLOCK_REWARD`
-        return blockInterval.mul(BLOCK_REWARD);
+        return blockInterval * BLOCK_REWARD;
     }
 
     function _increaseReward(
@@ -684,7 +682,7 @@ contract LockingPool is
         Sequencer memory sequencerInfo = sequencers[sequencerId];
 
         // rewardPerLock update
-        uint256 newRewardPerLock = sequencerInfo.initialRewardPerLock.add(reward.mul(REWARD_PRECISION).div(sequencerInfo.amount));
+        uint256 newRewardPerLock = sequencerInfo.initialRewardPerLock + reward * REWARD_PRECISION / sequencerInfo.amount;
         sequencers[sequencerId].initialRewardPerLock = newRewardPerLock;
       
         // update reward
@@ -696,7 +694,7 @@ contract LockingPool is
 
     function _increaseSequencerReward(uint256 sequencerId, uint256 reward) private {
         if (reward > 0) {
-            sequencers[sequencerId].reward = sequencers[sequencerId].reward.add(reward);
+            sequencers[sequencerId].reward = sequencers[sequencerId].reward + reward;
         }
     }
 
@@ -712,7 +710,7 @@ contract LockingPool is
         uint256 _currentBatch = currentBatch;
         uint256 sequencerId = NFTCounter;
 
-        uint256 newTotalLocked = totalLocked.add(amount);
+        uint256 newTotalLocked = totalLocked + amount;
         totalLocked = newTotalLocked;
 
         sequencers[sequencerId] = Sequencer({
@@ -734,7 +732,7 @@ contract LockingPool is
         updateTimeline(int256(amount), 1, 0);
 
         logger.logLocked(signer, signerPubkey, sequencerId, _currentBatch, amount, newTotalLocked);
-        NFTCounter = sequencerId.add(1);
+        NFTCounter = sequencerId + 1;
 
         _insertSigner(signer);
         return sequencerId;
@@ -776,7 +774,7 @@ contract LockingPool is
     }
 
     function _finalizeCommit() internal {
-        uint256 nextBatch = currentBatch.add(1);
+        uint256 nextBatch = currentBatch + 1;
         batchSubmitHistory[nextBatch]=true;
 
         StateChange memory changes = sequencerStateChanges[nextBatch];
@@ -788,8 +786,8 @@ contract LockingPool is
     }
 
     function _liquidateRewards(uint256 sequencerId, address sequencerUser, bool withdrawRewardToL2) private {
-        uint256 reward = sequencers[sequencerId].reward.sub(INITIALIZED_AMOUNT);
-        totalRewardsLiquidated = totalRewardsLiquidated.add(reward);
+        uint256 reward = sequencers[sequencerId].reward - INITIALIZED_AMOUNT;
+        totalRewardsLiquidated = totalRewardsLiquidated + reward;
         sequencers[sequencerId].reward = INITIALIZED_AMOUNT;
 
         if (!withdrawRewardToL2){
