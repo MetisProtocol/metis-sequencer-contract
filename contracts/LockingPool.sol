@@ -20,6 +20,11 @@ contract LockingPool is
 
     enum Status {Inactive, Active, Unlocked}  // Unlocked means sequencer exist
 
+    struct MpcHistoryItem {
+        uint256 startBlock;
+        address newMpcAddress;
+    }
+
     struct State {
         uint256 amount;
         uint256 lockerCount;
@@ -81,10 +86,6 @@ contract LockingPool is
     mapping(uint256 => uint256) public latestSignerUpdateBatch;
 
     // mpc history
-    struct MpcHistoryItem {
-        uint256 startBlock;
-        address newMpcAddress;
-    }
     MpcHistoryItem[] public mpcHistory; // recent mpc
 
     modifier onlySequencer(uint256 sequencerId) {
@@ -92,20 +93,9 @@ contract LockingPool is
         _;
     }
 
-    function _assertSequencer(uint256 sequencerId) private view {
-        require(NFTContract.ownerOf(sequencerId) == msg.sender,"not nft owner");
-    }
-
     modifier onlyMpc() {
         _assertMpc();
         _;
-    }
-
-    function _assertMpc() private view {
-        require(
-            msg.sender == address(mpcAddress),
-            "Only mpc address is authorized"
-        );
     }
 
     /**
@@ -376,11 +366,8 @@ contract LockingPool is
         emit UpdateMpc(_newMpc);
     }
 
-    /**
-        Public Methods
-     */
 
-     /**
+    /**
       * @dev fetchMpcAddress query mpc address by L1 block height, used by batch-submitter
       * @param blockHeight the L1 block height
       */
@@ -802,6 +789,19 @@ contract LockingPool is
         }
         logger.logClaimRewards(sequencerId, reward, totalRewardsLiquidated);
     }
+
+    function _assertSequencer(uint256 sequencerId) private view {
+        require(NFTContract.ownerOf(sequencerId) == msg.sender,"not nft owner");
+    }
+
+
+    function _assertMpc() private view {
+        require(
+            msg.sender == address(mpcAddress),
+            "Only mpc address is authorized"
+        );
+    }
+
 
     function _transferToken(address destination, uint256 amount) private {
         token.safeTransfer(destination, amount);

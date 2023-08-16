@@ -138,6 +138,10 @@ describe('LockingPoolTest', async () => {
         let seqLockAmount =  await lockingPool.sequencerLock(nftCounter-1);
         expect(seqLockAmount).to.eq(lockAmount);
 
+        // getSequencerId
+        let sequencerId = await lockingPool.getSequencerId(testUserAddress);
+        expect(sequencerId).to.eq(1);
+
         // sequencer currentSequencerSetSize
         let currentSequencerSetSize = await lockingPool.currentSequencerSetSize();
         expect(currentSequencerSetSize).to.eq(1);
@@ -212,7 +216,10 @@ describe('LockingPoolTest', async () => {
             signer: admin
         }
         let signature = await calcSignature(params);
-        await lockingPool.connect(admin).batchSubmitRewards(params.batchId, params.payeer,params.startEpoch, params.endEpoch, params.sequencers, params.finishedBlocks, signature);
+        params.signature = signature;
+
+        await updateRewardByGov(gov, params);
+        // await lockingPool.connect(admin).batchSubmitRewards(params.batchId, params.payeer,params.startEpoch, params.endEpoch, params.sequencers, params.finishedBlocks, signature);
 
         // check withdrawable reward
         let withdrawableReward = await calcWithdrawableRewards(lockingPool, sequencerId);
@@ -279,14 +286,21 @@ describe('LockingPoolTest', async () => {
             signer: admin
         }
         let signature = await calcSignature(params);
+        params.signature = signature;
+
+        // update rewards by gov
+        await updateRewardByGov(gov,params);
         // console.log("params.batchId:", params.batchId);
-        await lockingPool.connect(admin).batchSubmitRewards(params.batchId, params.payeer, params.startEpoch,params.endEpoch, params.sequencers, params.finishedBlocks, signature);
+        // await lockingPool.connect(admin).batchSubmitRewards(params.batchId, params.payeer, params.startEpoch,params.endEpoch, params.sequencers, params.finishedBlocks, signature);
 
         // check withdrawable reward
         let withdrawableReward = await calcWithdrawableRewards(lockingPool, sequencerId);
         // console.log("sequencer withdrawable:", withdrawableReward);
         expect(withdrawableReward).to.eq(2 * 10 * 1e18);
         let withdrawable = ethers.BigNumber.from(withdrawableReward.toString());
+
+        let seqReward = await lockingPool.sequencerReward(sequencerId);
+        expect(seqReward.toString()).to.eq(withdrawableReward.toString());
 
         // withdraw
         let beforeWithdrawReward = await testERC20.balanceOf(testUserAddress);
@@ -454,6 +468,31 @@ async function forceUnlock(govObj, sequencerId, lockingPoolAddress) {
     return govObj.update(
         lockingPoolAddress,
         forceUnlockEncodeData
+    )
+}
+
+async function updateRewardByGov(govObj, params) {
+    let signature = await calcSignature(params);
+    // console.log("signature:", signature);
+
+    let ABI = [
+        "function batchSubmitRewards(uint256 batchId,address payeer,uint256 startEpoch,uint256 endEpoch,address[] memory sequencers,uint256[] memory finishedBlocks,bytes memory signature)"
+    ];
+    let iface = new ethers.utils.Interface(ABI);
+    let updateRewardData = iface.encodeFunctionData("batchSubmitRewards", [
+        params.batchId,
+        params.signer.address,
+        params.startEpoch,
+        params.endEpoch,
+        params.sequencers,
+        params.finishedBlocks,
+        signature,
+    ])
+    // console.log("updateRewardByGov: ", updateRewardData)
+
+    return govObj.update(
+        params.lockingPool,
+        updateRewardData
     )
 }
 

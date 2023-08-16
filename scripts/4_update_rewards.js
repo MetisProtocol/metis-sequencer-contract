@@ -57,7 +57,7 @@ async function updateRewardByGov(govObj, params) {
     console.log("signature:", signature);
 
     let ABI = [
-        "function batchSubmitRewards(uin256 batchId,address payeer,uin256 startEpoch,uin256 endEpoch,address[] memory sequencers,uint256[] memory finishedBlocks,bytes memory signature)"
+        "function batchSubmitRewards(uint256 batchId,address payeer,uint256 startEpoch,uint256 endEpoch,address[] memory sequencers,uint256[] memory finishedBlocks,bytes memory signature)"
     ];
     let iface = new ethers.utils.Interface(ABI);
     let updateRewardData = iface.encodeFunctionData("batchSubmitRewards", [
@@ -72,7 +72,7 @@ async function updateRewardByGov(govObj, params) {
     console.log("updateRewardByGov: ", updateRewardData)
 
     return govObj.update(
-        lockingPool,
+        params.lockingPool,
         updateRewardData
     )
 }

@@ -20,6 +20,11 @@ contract LockingPoolTest is
 
     enum Status {Inactive, Active, Unlocked}  // Unlocked means sequencer exist
 
+    struct MpcHistoryItem {
+        uint256 startBlock;
+        address newMpcAddress;
+    }
+
     struct State {
         uint256 amount;
         uint256 lockerCount;
@@ -60,6 +65,7 @@ contract LockingPoolTest is
     uint256 public totalRewardsLiquidated; // total rewards had been liquidated
     address[] public signers; // all signers
     uint256 public currentUnlockedInit; // sequencer unlock queue count, need have a limit
+    uint256 lastRewardEpochId; // the last epochId for update reward
 
     // genesis/governance variables
     uint256 public BLOCK_REWARD; // update via governance
@@ -80,10 +86,6 @@ contract LockingPoolTest is
     mapping(uint256 => uint256) public latestSignerUpdateBatch;
 
     // mpc history
-    struct MpcHistoryItem {
-        uint256 startBlock;
-        address newMpcAddress;
-    }
     MpcHistoryItem[] public mpcHistory; // recent mpc
 
     modifier onlySequencer(uint256 sequencerId) {
@@ -91,20 +93,9 @@ contract LockingPoolTest is
         _;
     }
 
-    function _assertSequencer(uint256 sequencerId) private view {
-        require(NFTContract.ownerOf(sequencerId) == msg.sender,"not nft owner");
-    }
-
     modifier onlyMpc() {
         _assertMpc();
         _;
-    }
-
-    function _assertMpc() private view {
-        require(
-            msg.sender == address(mpcAddress),
-            "Only mpc address is authorized"
-        );
     }
 
     /**
@@ -154,7 +145,8 @@ contract LockingPoolTest is
      */
     event UpdateMpc(address _newMpc);
 
-    constructor(
+
+     constructor(
         address _governance,
         address _l1Token,
         address _NFTContract,
@@ -285,8 +277,8 @@ contract LockingPoolTest is
      */
     function updateSequencerThreshold(uint256 newThreshold) external onlyGovernance {
         require(newThreshold != 0,"invalid newThreshold");
-        logger.logThresholdChange(newThreshold, sequencerThreshold);
         sequencerThreshold = newThreshold;
+        logger.logThresholdChange(newThreshold, sequencerThreshold);
     }
 
      /**
@@ -295,8 +287,8 @@ contract LockingPoolTest is
      */
     function updateBlockReward(uint256 newReward) external onlyGovernance {
         require(newReward != 0,"invalid newReward");
-        logger.logRewardUpdate(newReward, BLOCK_REWARD);
         BLOCK_REWARD = newReward;
+        logger.logRewardUpdate(newReward, BLOCK_REWARD);
     }
 
      /**
@@ -314,8 +306,8 @@ contract LockingPoolTest is
     */
     function updateWithdrawDelayTimeValue(uint256 newWithdrawDelayTime) external onlyGovernance {
         require(newWithdrawDelayTime > 0,"invlaid newWithdrawDelayTime");
-        logger.logWithrawDelayTimeChange(newWithdrawDelayTime, WITHDRAWAL_DELAY);
         WITHDRAWAL_DELAY = newWithdrawDelayTime;
+        logger.logWithrawDelayTimeChange(newWithdrawDelayTime, WITHDRAWAL_DELAY);
     }
 
     /**
@@ -356,11 +348,8 @@ contract LockingPoolTest is
         emit UpdateMpc(_newMpc);
     }
 
-    /**
-        Public Methods
-     */
 
-     /**
+    /**
       * @dev fetchMpcAddress query mpc address by L1 block height, used by batch-submitter
       * @param blockHeight the L1 block height
       */
@@ -401,8 +390,8 @@ contract LockingPoolTest is
         require(currentSequencerSetSize() < sequencerThreshold, "no more slots");
         require(amount >= minLock, "not enough deposit");
 
-        _transferTokenFrom(msg.sender, address(this), amount);
         _lockFor(user, amount, signerPubkey);
+        _transferTokenFrom(msg.sender, address(this), amount);
     }
 
 
@@ -463,7 +452,7 @@ contract LockingPoolTest is
         if (!withdrawToL2){
             _transferToken(msg.sender, amount);
         }else{
-            IERC20(l1Token).safeApprove(bridge, amount);
+            IERC20(l1Token).safeIncreaseAllowance(bridge, amount);
             IL1ERC20Bridge(bridge).depositERC20ToByChainId(getL2ChainId(), l1Token, l2Token, msg.sender, amount, l2Gas, "0x0");
         }
 
@@ -484,9 +473,7 @@ contract LockingPoolTest is
         require(amount >= minLock, "not enough deposit");
         require(sequencers[sequencerId].deactivationBatch == 0, "No restaking");
 
-        if (amount > 0) {
-            _transferTokenFrom(msg.sender, address(this), amount);
-        }
+        uint256 relockAmount = amount;
 
         if (lockRewards) {
             amount = amount + sequencers[sequencerId].reward - INITIALIZED_AMOUNT;
@@ -498,6 +485,10 @@ contract LockingPoolTest is
         sequencers[sequencerId].amount = sequencers[sequencerId].amount + amount;
 
         updateTimeline(int256(amount), 0, 0);
+
+        if (relockAmount > 0) {
+            _transferTokenFrom(msg.sender, address(this), relockAmount);
+        }
 
         logger.logLockUpdate(sequencerId,sequencers[sequencerId].amount);
         logger.logRelockd(sequencerId, sequencers[sequencerId].amount, newTotalLocked);
@@ -514,7 +505,7 @@ contract LockingPoolTest is
     }
 
     /**
-     * @dev updateSigner Allow sqeuencer to update new signers to replace old signer addresses
+     * @dev updateSigner Allow sqeuencer to update new signers to replace old signer addresses，and NFT holder will be transfer driectly
      * @param sequencerId unique integer to identify a sequencer.
      * @param signerPubkey the new signer pubkey address
      */
@@ -539,6 +530,9 @@ contract LockingPoolTest is
 
         // reset update time to current time
         latestSignerUpdateBatch[sequencerId] = _currentBatch;
+
+        // transfer NFT driectly
+        NFTContract.transferFrom(msg.sender, signer, sequencerId);
     }
 
     /**
@@ -559,12 +553,16 @@ contract LockingPoolTest is
         address[] memory _sequencers,
         uint256[] memory finishedBlocks,
         bytes memory signature
-    )  external returns (uint256) {
+    )  external onlyGovernance returns (uint256) {
         uint256 nextBatch = currentBatch + 1;
         require(nextBatch == batchId,"invalid batch id");
         require(!batchSubmitHistory[nextBatch], "already submited");
         require(_sequencers.length == finishedBlocks.length, "mismatch length");
+        require(lastRewardEpochId <= startEpoch,"invalid startEpoch");
+        require(startEpoch < endEpoch,"invalid endEpoch");
 
+
+        lastRewardEpochId = endEpoch;
         // check mpc signature
         bytes32 operationHash = keccak256(abi.encodePacked(batchId, startEpoch,endEpoch,_sequencers, finishedBlocks, address(this)));
         operationHash = ECDSA.toEthSignedMessageHash(operationHash);
@@ -706,11 +704,10 @@ contract LockingPoolTest is
 
         signerToSequencer[signer] = sequencerId;
         updateTimeline(int256(amount), 1, 0);
+        NFTCounter = sequencerId + 1;
+        _insertSigner(signer);
 
         logger.logLocked(signer, signerPubkey, sequencerId, _currentBatch, amount, newTotalLocked);
-        NFTCounter = sequencerId + 1;
-
-        _insertSigner(signer);
         return sequencerId;
     }
 
@@ -731,13 +728,13 @@ contract LockingPoolTest is
         sequencers[sequencerId].deactivationTime = block.timestamp;
         sequencers[sequencerId].unlockClaimTime = block.timestamp + WITHDRAWAL_DELAY;
 
-        _removeSigner(sequencers[sequencerId].signer);
-        _liquidateRewards(sequencerId, sequencer, withdrawRewardToL2);
-
         uint256 targetBatch = exitBatch <= currentBatch ? 0 : exitBatch;
         updateTimeline(-(int256(amount)), -1, targetBatch);
 
         currentUnlockedInit++;
+
+        _removeSigner(sequencers[sequencerId].signer);
+        _liquidateRewards(sequencerId, sequencer, withdrawRewardToL2);
 
         logger.logUnlockInit(
             sequencer,
@@ -769,11 +766,24 @@ contract LockingPoolTest is
         if (!withdrawRewardToL2){
            _transferToken(sequencerUser, reward);
         }else{
-            IERC20(l1Token).safeApprove(bridge, reward);
+            IERC20(l1Token).safeIncreaseAllowance(bridge, reward);
             IL1ERC20Bridge(bridge).depositERC20ToByChainId(getL2ChainId(), l1Token, l2Token, sequencerUser, reward, l2Gas, "0x0");
         }
         logger.logClaimRewards(sequencerId, reward, totalRewardsLiquidated);
     }
+
+    function _assertSequencer(uint256 sequencerId) private view {
+        require(NFTContract.ownerOf(sequencerId) == msg.sender,"not nft owner");
+    }
+
+
+    function _assertMpc() private view {
+        require(
+            msg.sender == address(mpcAddress),
+            "Only mpc address is authorized"
+        );
+    }
+
 
     function _transferToken(address destination, uint256 amount) private {
         token.safeTransfer(destination, amount);
@@ -807,16 +817,12 @@ contract LockingPoolTest is
 
     function _removeSigner(address signerToDelete) internal {
         uint256 totalSigners = signers.length;
-        address swapSigner = signers[totalSigners - 1];
-        delete signers[totalSigners - 1];
-
-        // bubble last element to the beginning until target signer is met
-        for (uint256 i = totalSigners - 1; i > 0; --i) {
-            if (swapSigner == signerToDelete) {
+        for (uint256 i = 0; i < totalSigners; i++) {
+            if (signers[i] == signerToDelete) {
+                signers[i] = signers[totalSigners - 1];
+                signers.pop();
                 break;
-            }
-
-            (swapSigner, signers[i - 1]) = (signers[i - 1], swapSigner);
+            } 
         }
     }
 
