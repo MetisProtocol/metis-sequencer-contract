@@ -832,16 +832,12 @@ contract LockingPool is
 
     function _removeSigner(address signerToDelete) internal {
         uint256 totalSigners = signers.length;
-        address swapSigner = signers[totalSigners - 1];
-        delete signers[totalSigners - 1];
-
-        // bubble last element to the beginning until target signer is met
-        for (uint256 i = totalSigners - 1; i > 0; --i) {
-            if (swapSigner == signerToDelete) {
+        for (uint256 i = 0; i < totalSigners; i++) {
+            if (signers[i] == signerToDelete) {
+                signers[i] = signers[totalSigners - 1];
+                signers.pop();
                 break;
-            }
-
-            (swapSigner, signers[i - 1]) = (signers[i - 1], swapSigner);
+            } 
         }
     }
 
