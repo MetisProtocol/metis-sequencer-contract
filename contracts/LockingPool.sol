@@ -62,6 +62,7 @@ contract LockingPool is
     uint256 public totalRewardsLiquidated; // total rewards had been liquidated
     address[] public signers; // all signers
     uint256 public currentUnlockedInit; // sequencer unlock queue count, need have a limit
+    uint256 lastRewardEpochId; // the last epochId for update reward
 
     // genesis/governance variables
     uint256 public BLOCK_REWARD; // update via governance
@@ -484,7 +485,7 @@ contract LockingPool is
         if (!withdrawToL2){
             _transferToken(msg.sender, amount);
         }else{
-            IERC20(l1Token).safeApprove(bridge, amount);
+            IERC20(l1Token).safeIncreaseAllowance(bridge, amount);
             IL1ERC20Bridge(bridge).depositERC20ToByChainId(getL2ChainId(), l1Token, l2Token, msg.sender, amount, l2Gas, "0x0");
         }
 
@@ -580,12 +581,16 @@ contract LockingPool is
         address[] memory _sequencers,
         uint256[] memory finishedBlocks,
         bytes memory signature
-    )  external returns (uint256) {
+    )  external onlyGovernance returns (uint256) {
         uint256 nextBatch = currentBatch.add(1);
         require(nextBatch == batchId,"invalid batch id");
         require(!batchSubmitHistory[nextBatch], "already submited");
         require(_sequencers.length == finishedBlocks.length, "mismatch length");
+        require(lastRewardEpochId <= startEpoch,"invalid startEpoch");
+        require(startEpoch < endEpoch,"invalid endEpoch");
 
+
+        lastRewardEpochId = endEpoch;
         // check mpc signature
         bytes32 operationHash = keccak256(abi.encodePacked(batchId, startEpoch,endEpoch,_sequencers, finishedBlocks, address(this)));
         operationHash = ECDSA.toEthSignedMessageHash(operationHash);
@@ -790,7 +795,7 @@ contract LockingPool is
         if (!withdrawRewardToL2){
            _transferToken(sequencerUser, reward);
         }else{
-            IERC20(l1Token).safeApprove(bridge, reward);
+            IERC20(l1Token).safeIncreaseAllowance(bridge, reward);
             IL1ERC20Bridge(bridge).depositERC20ToByChainId(getL2ChainId(), l1Token, l2Token, sequencerUser, reward, l2Gas, "0x0");
         }
         logger.logClaimRewards(sequencerId, reward, totalRewardsLiquidated);
