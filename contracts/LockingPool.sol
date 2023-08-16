@@ -305,8 +305,8 @@ contract LockingPool is
      */
     function updateSequencerThreshold(uint256 newThreshold) external onlyGovernance {
         require(newThreshold != 0,"invalid newThreshold");
-        logger.logThresholdChange(newThreshold, sequencerThreshold);
         sequencerThreshold = newThreshold;
+        logger.logThresholdChange(newThreshold, sequencerThreshold);
     }
 
      /**
@@ -315,8 +315,8 @@ contract LockingPool is
      */
     function updateBlockReward(uint256 newReward) external onlyGovernance {
         require(newReward != 0,"invalid newReward");
-        logger.logRewardUpdate(newReward, BLOCK_REWARD);
         BLOCK_REWARD = newReward;
+        logger.logRewardUpdate(newReward, BLOCK_REWARD);
     }
 
      /**
@@ -334,8 +334,8 @@ contract LockingPool is
     */
     function updateWithdrawDelayTimeValue(uint256 newWithdrawDelayTime) external onlyGovernance {
         require(newWithdrawDelayTime > 0,"invlaid newWithdrawDelayTime");
-        logger.logWithrawDelayTimeChange(newWithdrawDelayTime, WITHDRAWAL_DELAY);
         WITHDRAWAL_DELAY = newWithdrawDelayTime;
+        logger.logWithrawDelayTimeChange(newWithdrawDelayTime, WITHDRAWAL_DELAY);
     }
 
     /**
@@ -421,8 +421,8 @@ contract LockingPool is
         require(currentSequencerSetSize() < sequencerThreshold, "no more slots");
         require(amount >= minLock, "not enough deposit");
 
-        _transferTokenFrom(msg.sender, address(this), amount);
         _lockFor(user, amount, signerPubkey);
+        _transferTokenFrom(msg.sender, address(this), amount);
     }
 
 
@@ -504,9 +504,7 @@ contract LockingPool is
         require(amount >= minLock, "not enough deposit");
         require(sequencers[sequencerId].deactivationBatch == 0, "No restaking");
 
-        if (amount > 0) {
-            _transferTokenFrom(msg.sender, address(this), amount);
-        }
+        uint256 relockAmount = amount;
 
         if (lockRewards) {
             amount = amount + sequencers[sequencerId].reward - INITIALIZED_AMOUNT;
@@ -518,6 +516,10 @@ contract LockingPool is
         sequencers[sequencerId].amount = sequencers[sequencerId].amount + amount;
 
         updateTimeline(int256(amount), 0, 0);
+
+        if (relockAmount > 0) {
+            _transferTokenFrom(msg.sender, address(this), relockAmount);
+        }
 
         logger.logLockUpdate(sequencerId,sequencers[sequencerId].amount);
         logger.logRelockd(sequencerId, sequencers[sequencerId].amount, newTotalLocked);
@@ -730,11 +732,10 @@ contract LockingPool is
 
         signerToSequencer[signer] = sequencerId;
         updateTimeline(int256(amount), 1, 0);
+        NFTCounter = sequencerId + 1;
+        _insertSigner(signer);
 
         logger.logLocked(signer, signerPubkey, sequencerId, _currentBatch, amount, newTotalLocked);
-        NFTCounter = sequencerId + 1;
-
-        _insertSigner(signer);
         return sequencerId;
     }
 
@@ -755,13 +756,13 @@ contract LockingPool is
         sequencers[sequencerId].deactivationTime = block.timestamp;
         sequencers[sequencerId].unlockClaimTime = block.timestamp + WITHDRAWAL_DELAY;
 
-        _removeSigner(sequencers[sequencerId].signer);
-        _liquidateRewards(sequencerId, sequencer, withdrawRewardToL2);
-
         uint256 targetBatch = exitBatch <= currentBatch ? 0 : exitBatch;
         updateTimeline(-(int256(amount)), -1, targetBatch);
 
         currentUnlockedInit++;
+
+        _removeSigner(sequencers[sequencerId].signer);
+        _liquidateRewards(sequencerId, sequencer, withdrawRewardToL2);
 
         logger.logUnlockInit(
             sequencer,
