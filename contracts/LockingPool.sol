@@ -51,7 +51,6 @@ contract LockingPool is
     uint256 internal constant INCORRECT_SEQUENCER_ID = 2**256 - 1;
     uint256 internal constant INITIALIZED_AMOUNT = 1;
 
-    IERC20 public token;       // lock token address
     address public bridge;     // L1 metis bridge address
     address public l1Token;    // L1 metis token address
     address public l2Token;    // L2 metis token address
@@ -70,7 +69,7 @@ contract LockingPool is
     // genesis/governance variables
     uint256 public BLOCK_REWARD; // update via governance
     uint256 public minLock; // min lock Metis token 
-    uint256 public signerUpdateLimit; // sequencer signer need have a update limit
+    uint256 public signerUpdateLimit; // sequencer signer need have a update limit,how many batches are not allowed to update the signer
     address public mpcAddress; // current mpc address for batch submit reward 
     uint256 public sequencerThreshold; // maximum sequencer limit
  
@@ -93,11 +92,6 @@ contract LockingPool is
         _;
     }
 
-    modifier onlyMpc() {
-        _assertMpc();
-        _;
-    }
-
     /**
      * @dev Emitted when nft contract update in 'UpdateLockingInfo'
      * @param _newLockingInfo new contract address.
@@ -115,17 +109,6 @@ contract LockingPool is
      */
     event SetCurrentBatch(uint256 _newCurrentBatch);
 
-    /**
-     * @dev Emitted when locking token update in 'SetLockingToken'
-     * @param _newLockingToken new contract address.
-     */
-    event SetLockingToken(address _newLockingToken);
-
-    /**
-     * @dev Emitted when signers update in 'InsertSigners'
-     * @param _newSigners new contract address.
-     */
-    event InsertSigners(address[] _newSigners);
 
     /**
      * @dev Emitted when signer update limit update in 'UpdateSignerUpdateLimit'
@@ -172,7 +155,6 @@ contract LockingPool is
         l1Token = _l1Token;
         l2Token = _l2Token;
         l2Gas = _l2Gas;
-        token = IERC20(_l1Token);  
         NFTContract = LockingNFT(_NFTContract); 
 
         require(!isContract(_mpc),"_mpc is a contract");
@@ -187,7 +169,7 @@ contract LockingPool is
         currentBatch = 1;  // default start from batch 1
         BLOCK_REWARD = 2 * (10**18); // per block reward, update via governance
         minLock = 20000* (10**18);  // min lock amount
-        signerUpdateLimit = 100; // allow max signer update
+        signerUpdateLimit = 100; // how many batches are not allowed to update the signer
         sequencerThreshold = 10; // allow max sequencers
         NFTCounter = 1; // sequencer id
     }
@@ -280,16 +262,6 @@ contract LockingPool is
     }
 
     /**
-     * @dev setCurrentBatch  Allow gov to set locking token
-     * @param _token the token address
-     */
-    function setLockingToken(address _token) external onlyGovernance {
-        require(_token != address(0),"invalid _token");
-        token = IERC20(_token);
-        emit SetLockingToken(_token);
-    }
-
-    /**
      * @dev updateSequencerThreshold  Allow gov to set max sequencer threshold
      * @param newThreshold the new threshold
      */
@@ -309,14 +281,6 @@ contract LockingPool is
         logger.logRewardUpdate(newReward, BLOCK_REWARD);
     }
 
-     /**
-     * @dev insertSigners  Allow gov to update signers
-     * @param _signers the new signers
-     */
-    function insertSigners(address[] memory _signers) external onlyGovernance {
-        signers = _signers;
-        emit InsertSigners(_signers);
-    }
 
     /**
     *  @dev updateWithdrawDelayTimeValue Allow gov to set withdraw delay time.
@@ -488,7 +452,7 @@ contract LockingPool is
         uint256 amount,
         bool lockRewards
     ) override external whenNotPaused onlySequencer(sequencerId) {
-        require(amount >= minLock, "not enough deposit");
+        require(amount >= 0, "invalid amount");
         require(sequencers[sequencerId].deactivationBatch == 0, "No restaking");
 
         uint256 relockAmount = amount;
@@ -604,7 +568,7 @@ contract LockingPool is
         _finalizeCommit();
 
         // reward income
-        token.safeTransferFrom(payeer, address(this), totalReward);
+        IERC20(l1Token).safeTransferFrom(payeer, address(this), totalReward);
         return totalReward;
     }
 
@@ -795,16 +759,8 @@ contract LockingPool is
     }
 
 
-    function _assertMpc() private view {
-        require(
-            msg.sender == address(mpcAddress),
-            "Only mpc address is authorized"
-        );
-    }
-
-
     function _transferToken(address destination, uint256 amount) private {
-        token.safeTransfer(destination, amount);
+        IERC20(l1Token).safeTransfer(destination, amount);
     }
 
     function _transferTokenFrom(
@@ -812,7 +768,7 @@ contract LockingPool is
         address destination,
         uint256 amount
     ) private {
-        token.safeTransferFrom(from, destination, amount);
+        IERC20(l1Token).safeTransferFrom(from, destination, amount);
     }
 
     function _insertSigner(address newSigner) internal {

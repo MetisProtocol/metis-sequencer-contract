@@ -7,6 +7,9 @@ describe('LockingNFTTest', async () => {
 
     before('get wallets', async () => {
         wallets = await ethers.getSigners();
+
+        const balance = await wallets[0].getBalance();
+        console.log("admin balance:", ethers.utils.formatEther(balance));
     })
 
     beforeEach('create locking NFT', async () => {

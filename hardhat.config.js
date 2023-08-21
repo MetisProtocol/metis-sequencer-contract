@@ -7,6 +7,7 @@ require("@nomiclabs/hardhat-etherscan");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
 require("@openzeppelin/hardhat-upgrades");
+require('solidity-coverage');
 
 module.exports = {
   solidity: {
