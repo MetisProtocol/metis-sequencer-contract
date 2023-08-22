@@ -95,17 +95,28 @@ describe('LockingPoolTest', async () => {
 
         // console.log("mpc:", mpc);
         // deploy Locking Pool
-        const LockingPool = await ethers.getContractFactory('LockingPoolTest');
-        lockingPool = await LockingPool.connect(admin).deploy(
+        const LockingPool = await ethers.getContractFactory('LockingPool');
+        const lockingPoolProxy = await upgrades.deployProxy(LockingPool,
+            [
                 govProxy.address,
+                "0xCF7257A86A5dBba34bAbcd2680f209eb9a05b2d2",
                 l1MetisToken,
+                "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
+                200000,
                 lockingNFT.address,
                 mpc
-            );
-        // console.log("lockingPool:", lockingPool.address);
+            ], {
+                initializer: 'initialize(address,address,address,address,uint32,address,address)'
+            });
+         await lockingPoolProxy.deployed();
+        lockingPool = await ethers.getContractAt('LockingPool', lockingPoolProxy.address);
+        // console.log("lockingPoolProxy:", lockingPoolProxy.address);
 
         // transfer NFT owner
-        await lockingNFT.connect(admin).transferOwnership(lockingPool.address);
+        await lockingNFT.connect(admin).transferOwnership(lockingPoolProxy.address);
+
+        // update min lock
+        await updateMinAmount(gov, ethers.utils.parseEther("2.0"), lockingPool.address);
 
         // deploy Locking info
         const LockingInfoTest = await ethers.getContractFactory('LockingInfoTest');
@@ -145,8 +156,8 @@ describe('LockingPoolTest', async () => {
          // testUser5 approve
          const testUser5 = new ethers.Wallet(testUser5Pri, ethers.provider);
         // console.log("user5 balance:", ethers.utils.formatEther(await testUser5.getBalance()));
-         await testERC20.connect(admin).transfer(testUser5Address, ethers.utils.parseEther('100000'));
-         await testERC20.connect(testUser5).approve(lockingPool.address, ethers.constants.MaxUint256);
+        await testERC20.connect(admin).transfer(testUser5Address, ethers.utils.parseEther('100000'));
+        await testERC20.connect(testUser5).approve(lockingPool.address, ethers.constants.MaxUint256);
     })
 
     it('l2 chainId', async () => {
@@ -284,6 +295,9 @@ describe('LockingPoolTest', async () => {
         // lock token
         let lockToken = await lockingPool.l1Token();
         expect(lockToken).to.eq(l1MetisToken);
+
+        // update sequencer threshold
+        await updateSequencerThreshold(gov,4,lockingPool.address);
 
         // lock for
         await lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, testUserPub);
