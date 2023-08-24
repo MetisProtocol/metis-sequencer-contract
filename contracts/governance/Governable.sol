@@ -1,19 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {IGovernance} from "./IGovernance.sol";
+import {IGovernance} from "../interfaces/IGovernance.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-
 
 contract Governable is Initializable {
     IGovernance public governance;
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
-
-    function initialize(address _governance) external virtual initializer {
+    function __Governable_init(address _governance) internal onlyInitializing {
         require(_governance != address(0), "invlaid _governance");
         governance = IGovernance(_governance);
     }

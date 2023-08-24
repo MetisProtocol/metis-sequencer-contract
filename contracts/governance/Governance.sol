@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {IGovernance} from "./IGovernance.sol";
+import {IGovernance} from "../interfaces/IGovernance.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract Governance is IGovernance, OwnableUpgradeable {

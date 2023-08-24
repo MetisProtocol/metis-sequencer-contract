@@ -95,10 +95,11 @@ describe('LockingPoolTest', async () => {
 
         // console.log("mpc:", mpc);
         // deploy Locking Pool
-        const LockingPool = await ethers.getContractFactory('LockingPool');
-        const lockingPoolProxy = await upgrades.deployProxy(LockingPool,
+        const LockingPoolTest = await ethers.getContractFactory('LockingPoolTest');
+        const lockingPoolProxy = await upgrades.deployProxy(LockingPoolTest,
             [
-                govProxy.address,
+                // govProxy.address,
+                admin.address, // for test
                 "0xCF7257A86A5dBba34bAbcd2680f209eb9a05b2d2",
                 l1MetisToken,
                 "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
@@ -116,7 +117,8 @@ describe('LockingPoolTest', async () => {
         await lockingNFT.connect(admin).transferOwnership(lockingPoolProxy.address);
 
         // update min lock
-        await updateMinAmount(gov, ethers.utils.parseEther("2.0"), lockingPool.address);
+        // await updateMinAmounts(gov, ethers.utils.parseEther("2.0"), lockingPool.address);
+        await lockingPool.connect(admin).updateMinAmounts(ethers.utils.parseEther("2.0"));
 
         // deploy Locking info
         const LockingInfoTest = await ethers.getContractFactory('LockingInfoTest');
@@ -124,7 +126,8 @@ describe('LockingPoolTest', async () => {
         // console.log("lockingPool:", lockingPool.address);
 
         // set logger address
-        await updateLockingPoolLoggerAddress(gov, lockingInfo.address, lockingPool.address);
+        // await updateLockingPoolLoggerAddress(gov, lockingInfo.address, lockingPool.address);
+        await lockingPool.connect(admin).updateLockingInfo(lockingInfo.address);
 
         // token approve
         await testERC20.connect(admin).approve(lockingPool.address, ethers.constants.MaxUint256);
@@ -164,6 +167,22 @@ describe('LockingPoolTest', async () => {
          // get l2 chain id
          const l2ChainId = await lockingPool.getL2ChainId();
          expect(l2ChainId).to.eq(ethers.BigNumber.from('0'));
+    })
+
+    
+    it('lock when pause', async () => {
+        // pause
+        // await setPause(gov,lockingPool.address);
+        await lockingPool.setPause();
+
+        // lock for
+        const lockAmount = ethers.utils.parseEther('2');
+        await expect(lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, testUserPub)).to.be.reverted;
+
+        // unpause
+        // await setUnpause(gov, lockingPool.address);
+        await lockingPool.setUnpause();
+        await lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, testUserPub);
     })
 
     it('lock', async () => {
@@ -268,7 +287,14 @@ describe('LockingPoolTest', async () => {
         let signature = await calcSignature(params);
         params.signature = signature;
 
-        await updateRewardByGov(gov, params);
+        // await updateRewardByGov(gov, params);
+        await lockingPool.batchSubmitRewards(params.batchId,
+            params.signer.address,
+            params.startEpoch,
+            params.endEpoch,
+            params.sequencers,
+            params.finishedBlocks,
+            signature)
 
         // check withdrawable reward
         let withdrawableReward = await calcWithdrawableRewards(lockingPool, sequencerId);
@@ -297,7 +323,8 @@ describe('LockingPoolTest', async () => {
         expect(lockToken).to.eq(l1MetisToken);
 
         // update sequencer threshold
-        await updateSequencerThreshold(gov,4,lockingPool.address);
+        // await updateSequencerThreshold(gov,4,lockingPool.address);
+        await lockingPool.updateSequencerThreshold(4);
 
         // lock for
         await lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, testUserPub);
@@ -341,7 +368,14 @@ describe('LockingPoolTest', async () => {
         params.signature = signature;
 
         // update rewards by gov
-        await updateRewardByGov(gov,params);
+        // await updateRewardByGov(gov,params);
+        await lockingPool.batchSubmitRewards(params.batchId,
+            params.signer.address,
+            params.startEpoch,
+            params.endEpoch,
+            params.sequencers,
+            params.finishedBlocks,
+            signature)
 
         // check withdrawable reward
         let withdrawableReward = await calcWithdrawableRewards(lockingPool, sequencerId);
@@ -433,7 +467,8 @@ describe('LockingPoolTest', async () => {
         await lockingPool.connect(admin).lockFor(testUser4Address, lockAmount, testUser4Pub);
 
         // set withdraw delay time
-        await updateWithdrawDelayTimeValue(gov, 10, lockingPool.address);
+        // await updateWithdrawDelayTimeValue(gov, 10, lockingPool.address);
+        await lockingPool.updateWithdrawDelayTimeValue(10);
 
         // unlock
         const testUser = new ethers.Wallet(testUserPri, ethers.provider);
@@ -466,7 +501,8 @@ describe('LockingPoolTest', async () => {
         const testUser4 = new ethers.Wallet(testUser4Pri, ethers.provider);
 
         // update withdraw relay time
-        await updateWithdrawDelayTimeValue(gov, 10, lockingPool.address);
+        // await updateWithdrawDelayTimeValue(gov, 10, lockingPool.address);
+        await lockingPool.updateWithdrawDelayTimeValue(10);
 
         // unlock
         await lockingPool.connect(testUser).unlock(1, false);
@@ -475,9 +511,12 @@ describe('LockingPoolTest', async () => {
         await expect(lockingPool.connect(testUser2).unlock(2, false)).to.be.revertedWith("not allowed");
 
         // use force unlock
-        await forceUnlock(gov, 2, lockingPool.address);
-        await forceUnlock(gov, 3, lockingPool.address);
-        await forceUnlock(gov, 4, lockingPool.address);
+        // await forceUnlock(gov, 2, lockingPool.address);
+        // await forceUnlock(gov, 3, lockingPool.address);
+        // await forceUnlock(gov, 4, lockingPool.address);
+        await lockingPool.forceUnlock(2,false);
+        await lockingPool.forceUnlock(3,false);
+        await lockingPool.forceUnlock(4,false);
 
         // time increase for withdraw delay time
         time.increase(10);
@@ -521,7 +560,8 @@ describe('LockingPoolTest', async () => {
         await expect(lockingPool.connect(testUser).updateSigner(sequencerId, testUser2Pub)).to.be.revertedWith("Not allowed");
 
         // update batch
-        await setCurrentBatch(gov, signerUpdateLimit + latestSignerUpdateBatch, lockingPool.address);
+        // await setCurrentBatch(gov, signerUpdateLimit + latestSignerUpdateBatch, lockingPool.address);
+        await lockingPool.setCurrentBatch(signerUpdateLimit + latestSignerUpdateBatch);
         // currentBatch = await lockingPool.currentBatch();
         // console.log("currentBatch:", currentBatch);
 
@@ -547,39 +587,47 @@ describe('LockingPoolTest', async () => {
           const LockingNFT = await ethers.getContractFactory('LockingNFTTest');
           lockingNFT = await LockingNFT.deploy();
 
-          await updateNFTContract(gov, lockingNFT.address,lockingPool.address)
+        //   await updateNFTContract(gov, lockingNFT.address,lockingPool.address);
+          await lockingPool.updateNFTContract(lockingNFT.address);
 
           let newNftAddress = await lockingPool.NFTContract();
           expect(newNftAddress).to.eq(lockingNFT.address);
      })
 
      it('set current batch', async () => {
-         await setCurrentBatch(gov, 5, lockingPool.address)
+        //  await setCurrentBatch(gov, 5, lockingPool.address);
+        await lockingPool.setCurrentBatch(5);
+
          let currentBatch = await lockingPool.currentBatch();
          expect(currentBatch).to.eq(5);
      })
 
     it('updateSequencerThreshold', async () => {
-        await updateSequencerThreshold(gov, 5, lockingPool.address)
+        // await updateSequencerThreshold(gov, 5, lockingPool.address)
+        await lockingPool.updateSequencerThreshold(5);
         let newThreshold = await lockingPool.sequencerThreshold();
         expect(newThreshold).to.eq(5);
     })
 
     it('updateBlockReward', async () => {
         const newReward = ethers.utils.parseEther('10');
-        await updateBlockReward(gov, newReward, lockingPool.address)
+        // await updateBlockReward(gov, newReward, lockingPool.address)
+        await lockingPool.updateBlockReward(newReward);
         let reward = await lockingPool.BLOCK_REWARD();
         expect(reward).to.eq(newReward);
     })
 
     it('updateWithdrawDelayTimeValue', async () => {
-        await updateWithdrawDelayTimeValue(gov, 1000, lockingPool.address)
+        // await updateWithdrawDelayTimeValue(gov, 1000, lockingPool.address);
+        await lockingPool.updateWithdrawDelayTimeValue(1000);
         let newDelay = await lockingPool.WITHDRAWAL_DELAY();
         expect(newDelay).to.eq(1000);
     })
 
     it('updateSignerUpdateLimit', async () => {
-        await updateSignerUpdateLimit(gov, 10, lockingPool.address)
+        // await updateSignerUpdateLimit(gov, 10, lockingPool.address)
+
+        await lockingPool.updateSignerUpdateLimit(10);
         let newLimit = await lockingPool.signerUpdateLimit();
         expect(newLimit).to.eq(10);
     })
@@ -588,7 +636,8 @@ describe('LockingPoolTest', async () => {
     it('update min amount', async () => {
         const lockAmount = ethers.utils.parseEther('20');
 
-        await updateMinAmount(gov, lockAmount, lockingPool.address)
+        // await updateMinAmounts(gov, lockAmount, lockingPool.address);
+        await lockingPool.updateMinAmounts(lockAmount);
         let minLock = await lockingPool.minLock();
         expect(minLock).to.eq(lockAmount);
     })
@@ -604,7 +653,8 @@ describe('LockingPoolTest', async () => {
         expect(fetchedMpcAddress).to.eq(admin.address);
 
         await mineUpTo(1000);
-        await updateMpc(gov, testUserAddress, lockingPool.address)
+        // await updateMpc(gov, testUserAddress, lockingPool.address)
+        await lockingPool.updateMpc(testUserAddress);
 
         let newMpcAddress = await lockingPool.mpcAddress();
         expect(newMpcAddress).to.eq(testUserAddress);
@@ -614,6 +664,34 @@ describe('LockingPoolTest', async () => {
         expect(fetchedMpcAddress).to.eq(testUserAddress);
     })
 })
+
+
+/*
+async function setPause(govObj, lockingPoolAddress) {
+    let ABI = [
+        "function setPause()"
+    ];
+    let iface = new ethers.utils.Interface(ABI);
+    let setPauseEncodeData = iface.encodeFunctionData("setPause", [])
+
+    return govObj.update(
+        lockingPoolAddress,
+        setPauseEncodeData
+    )
+}
+
+async function setUnpause(govObj, lockingPoolAddress) {
+    let ABI = [
+        "function setUnpause()"
+    ];
+    let iface = new ethers.utils.Interface(ABI);
+    let setUnpauseEncodeData = iface.encodeFunctionData("setUnpause", [])
+
+    return govObj.update(
+        lockingPoolAddress,
+        setUnpauseEncodeData
+    )
+}
 
 async function updateLockingPoolLoggerAddress(govObj,loggerAddress,lockingPoolAddress) {
     let ABI = [
@@ -738,7 +816,7 @@ async function updateSignerUpdateLimit(govObj, limit, lockingPoolAddress) {
     )
 }
 
-async function updateMinAmount(govObj, minAmount, lockingPoolAddress) {
+async function updateMinAmounts(govObj, minAmount, lockingPoolAddress) {
     let ABI = [
         "function updateMinAmounts(uint256 _minLock)"
     ];
@@ -786,7 +864,7 @@ async function forceUnlock(govObj, sequencerId, lockingPoolAddress) {
 }
 
 async function updateRewardByGov(govObj, params) {
-    let signature = await calcSignature(params);
+    // let signature = await calcSignature(params);
     // console.log("signature:", signature);
 
     let ABI = [
@@ -809,6 +887,7 @@ async function updateRewardByGov(govObj, params) {
         updateRewardData
     )
 }
+*/
 
 async function calcSignature(params) {
     let message = ethers.utils.solidityPack(["uint256", "uint256", "uint256", "address[]", "uint256[]", "address"], [

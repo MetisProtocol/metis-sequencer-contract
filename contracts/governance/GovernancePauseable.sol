@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Governable} from "./Governable.sol";
-import {IGovernance} from "./IGovernance.sol";
+import {IGovernance} from "../interfaces/IGovernance.sol";
 import {Pausable} from "./Pausable.sol";
 
 contract GovernancePauseable is Pausable, Governable {
@@ -11,9 +11,9 @@ contract GovernancePauseable is Pausable, Governable {
         _disableInitializers();
     }
 
-    function initialize(address _governance) override external initializer {
-        require(_governance != address(0),"invalid _governance");
-        governance = IGovernance(_governance);
+    function __GovernancePauseable_init(address _governance) internal onlyInitializing {
+        __Pauseable_init();
+        __Governable_init(_governance);
     }
 
     /**

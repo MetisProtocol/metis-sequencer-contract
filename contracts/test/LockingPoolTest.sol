@@ -4,15 +4,17 @@ pragma solidity ^0.8.0;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import {GovernancePauseable} from "./governance/GovernancePauseable.sol";
-import {IGovernance} from "./interfaces/IGovernance.sol";
-import {ILockingPool} from "./interfaces/ILockingPool.sol";
-import {LockingInfo} from "./LockingInfo.sol";
-import {LockingNFT} from "./LockingNFT.sol";
-import { IL1ERC20Bridge } from "./interfaces/IL1ERC20Bridge.sol";
 
-contract LockingPool is
+import {GovernancePauseable} from "../governance/GovernancePauseable.sol";
+import {IGovernance} from "../interfaces/IGovernance.sol";
+import {ILockingPool} from "../interfaces/ILockingPool.sol";
+import {LockingInfo} from "../LockingInfo.sol";
+import {LockingNFT} from "../LockingNFT.sol";
+import { IL1ERC20Bridge } from "../interfaces/IL1ERC20Bridge.sol";
+
+contract LockingPoolTest is
     ILockingPool,
     GovernancePauseable
 {
