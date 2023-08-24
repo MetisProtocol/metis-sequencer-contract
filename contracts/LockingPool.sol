@@ -64,7 +64,7 @@ contract LockingPool is
     uint256 public totalRewardsLiquidated; // total rewards had been liquidated
     address[] public signers; // all signers
     uint256 public currentUnlockedInit; // sequencer unlock queue count, need have a limit
-    uint256 lastRewardEpochId; // the last epochId for update reward
+    uint256 public lastRewardEpochId; // the last epochId for update reward
 
     // genesis/governance variables
     uint256 public BLOCK_REWARD; // update via governance
@@ -453,7 +453,7 @@ contract LockingPool is
         uint256 amount,
         bool lockRewards
     ) override external whenNotPaused onlySequencer(sequencerId) {
-        require(amount >= 0, "invalid amount");
+        require(amount > 0, "invalid amount");
         require(sequencers[sequencerId].deactivationBatch == 0, "No restaking");
 
         uint256 relockAmount = amount;
