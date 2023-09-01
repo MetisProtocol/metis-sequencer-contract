@@ -643,15 +643,8 @@ contract LockingPool is
         sequencers[sequencerId].initialRewardPerLock = newRewardPerLock;
       
         // update reward
-        if (sequencerInfo.deactivationBatch != 0 && currentBatch >= sequencerInfo.deactivationBatch) {
-            return;
-        }
-        _increaseSequencerReward(sequencerId,reward);
-    }
-
-    function _increaseSequencerReward(uint256 sequencerId, uint256 reward) private {
-        if (reward > 0) {
-            sequencers[sequencerId].reward = sequencers[sequencerId].reward + reward;
+        if (sequencerInfo.deactivationBatch == 0 || currentBatch < sequencerInfo.deactivationBatch){
+            sequencers[sequencerId].reward +=  reward;
         }
     }
 

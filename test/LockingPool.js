@@ -592,6 +592,8 @@ describe('LockingPool', async () => {
 
         const testUser = new ethers.Wallet(testUserPri, ethers.provider);
         await lockingPool.connect(testUser).unlock(sequencerId, false);
+        await expect(lockingPool.connect(testUser).unlock(sequencerId, false)).to.be.revertedWith("invalid sequencer status");
+
 
         await expect(lockingPool.connect(testUser).relock(sequencerId, lockAmount, false)).to.be.revertedWith("No restaking");
         await expect(lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, testUserPub)).to.be.revertedWith('Invalid signer');
@@ -618,6 +620,10 @@ describe('LockingPool', async () => {
 
         // set withdraw delay time
         await updateWithdrawDelayTimeValue(gov,wallets[0], 10, lockingPool.address);
+
+
+        const testUser2 = new ethers.Wallet(testUser2Pri, ethers.provider);
+        await expect(lockingPool.connect(testUser2).unlockClaim(sequencerId + 1, false)).to.be.revertedWith("claim not allowed");
 
         // unlock
         const testUser = new ethers.Wallet(testUserPri, ethers.provider);
@@ -676,6 +682,22 @@ describe('LockingPool', async () => {
         // check pool balance
         let lockingPoolBalance = await testERC20.balanceOf(lockingPool.address);
         expect(lockingPoolBalance).to.eq(0);
+
+        // invalid sequencer
+        let curBatchId = await lockingPool.currentBatch();
+        const params = {
+            batchId: ethers.BigNumber.from(curBatchId.toString()).add(1),
+            payeer: admin.address,
+            startEpoch: 1,
+            endEpoch: 2,
+            sequencers: [testUserAddress],
+            finishedBlocks: [10],
+            lockingPool: lockingPool.address,
+            signer: admin
+        }
+        params.startEpoch = 2;
+        params.endEpoch = 3;
+        await expect(updateRewardByGov(gov, wallets[0], params)).to.be.revertedWith("Update failed");
     })
 
     it('update signer',async () =>{
@@ -862,13 +884,20 @@ describe('LockingPool', async () => {
         params.endEpoch = 8;
         await expect(updateRewardByGov(gov, wallets[0], params)).to.be.revertedWith("Update failed");
 
-        // invalid mpc
+        // invalid mpc signature
         params.batchId = ethers.BigNumber.from(curBatchId.toString()).add(1);
         const testUser = new ethers.Wallet(testUserPri, ethers.provider);
         params.signer = testUser
         params.signature = await calcSignature(params);
          params.startEpoch = 2;
          params.endEpoch = 3;
+        await expect(updateRewardByGov(gov, wallets[0], params)).to.be.revertedWith("Update failed");
+
+        // sequencer not exist
+        params.batchId = ethers.BigNumber.from(curBatchId.toString()).add(1);
+        params.sequencers = [testUser2Address];
+        params.startEpoch = 2;
+        params.endEpoch = 3;
         await expect(updateRewardByGov(gov, wallets[0], params)).to.be.revertedWith("Update failed");
     })
 })
