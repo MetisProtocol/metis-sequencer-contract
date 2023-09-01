@@ -1,7 +1,7 @@
 const {ethers} = require("hardhat");
 const {expect} = require('chai');
 
-describe('LockingNFTTest', async () => {
+describe('LockingNFT', async () => {
     let wallets;
     let lockingNFT;
 
@@ -13,8 +13,11 @@ describe('LockingNFTTest', async () => {
     })
 
     beforeEach('create locking NFT', async () => {
-        const LockingNFTTest = await ethers.getContractFactory('LockingNFTTest');
-        lockingNFT = await LockingNFTTest.deploy();
+        const LockingNFT = await ethers.getContractFactory('LockingNFT');
+        await expect(LockingNFT.deploy("","SYMBOL")).to.be.revertedWith("invalid name");
+        await expect(LockingNFT.deploy("NAME", "")).to.be.revertedWith("invalid symbol");
+
+        lockingNFT = await LockingNFT.deploy("Metis Sequencer", "MS");
     })
 
     it('mint NFT', async () => {
@@ -22,6 +25,8 @@ describe('LockingNFTTest', async () => {
         await lockingNFT.mint(wallets[0].address,1);
         let ownerOfTokenId1 = await lockingNFT.ownerOf(1);
         expect(ownerOfTokenId1).to.eq(wallets[0].address);
+
+        await expect(lockingNFT.mint(wallets[0].address, 2)).to.be.revertedWith("Sequencers MUST NOT own multiple lock position");
     })
 
     it('burn NFT', async () => {
@@ -42,5 +47,13 @@ describe('LockingNFTTest', async () => {
 
         let ownerOfTokenId3 = await lockingNFT.ownerOf(3);
         expect(ownerOfTokenId3).to.eq(wallets[1].address);
+
+        await lockingNFT.connect(wallets[1]).approve(wallets[2].address, 3);
+        await expect(lockingNFT.connect(wallets[1]).transferFrom(wallets[1].address, wallets[2].address, 3)).to.be.revertedWith("Ownable: caller is not the owner");
+
+        await lockingNFT.mint(wallets[3].address, 4);
+        await lockingNFT.transferOwnership(wallets[1].address);
+        await lockingNFT.connect(wallets[1]).approve(wallets[3].address, 3);
+        await expect(lockingNFT.connect(wallets[1]).transferFrom(wallets[1].address, wallets[3].address, 3)).to.be.revertedWith("Sequencers MUST NOT own multiple lock position");
     })
 })

@@ -290,7 +290,7 @@ contract LockingPoolTest is
     *  @param newWithdrawDelayTime new withdraw delay time
     */
     function updateWithdrawDelayTimeValue(uint256 newWithdrawDelayTime) external onlyGovernance {
-        require(newWithdrawDelayTime > 0,"invlaid newWithdrawDelayTime");
+        require(newWithdrawDelayTime > 0,"invalid newWithdrawDelayTime");
         WITHDRAWAL_DELAY = newWithdrawDelayTime;
         logger.logWithrawDelayTimeChange(newWithdrawDelayTime, WITHDRAWAL_DELAY);
     }
@@ -300,7 +300,7 @@ contract LockingPoolTest is
      * @param _limit new limit
      */
     function updateSignerUpdateLimit(uint256 _limit) external onlyGovernance {
-        require(_limit > 0,"invlaid _limit");
+        require(_limit > 0,"invalid _limit");
         signerUpdateLimit = _limit;
         emit UpdateSignerUpdateLimit(_limit);
     }
@@ -311,7 +311,7 @@ contract LockingPoolTest is
      * @param _minLock new min lock amount
      */
     function updateMinAmounts(uint256 _minLock) external onlyGovernance {
-        require(_minLock > 0,"invlaid _minLock");
+        require(_minLock > 0,"invalid _minLock");
         minLock = _minLock;
         emit UpdateMinAmounts(_minLock);
     }
@@ -392,7 +392,7 @@ contract LockingPoolTest is
             sequencers[sequencerId].activationBatch > 0 &&
                 sequencers[sequencerId].deactivationBatch == 0 &&
                 status == Status.Active,
-                "invlaid sequencer status"
+                "invalid sequencer status"
         );
 
         uint256 exitBatch = currentBatch + 1; // notice period

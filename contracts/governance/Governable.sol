@@ -8,7 +8,7 @@ contract Governable is Initializable {
     IGovernance public governance;
 
     function __Governable_init(address _governance) internal onlyInitializing {
-        require(_governance != address(0), "invlaid _governance");
+        require(_governance != address(0), "invalid _governance");
         governance = IGovernance(_governance);
     }
 

@@ -288,7 +288,7 @@ contract LockingPool is
     *  @param newWithdrawDelayTime new withdraw delay time
     */
     function updateWithdrawDelayTimeValue(uint256 newWithdrawDelayTime) external onlyGovernance {
-        require(newWithdrawDelayTime > 0,"invlaid newWithdrawDelayTime");
+        require(newWithdrawDelayTime > 0,"invalid newWithdrawDelayTime");
         WITHDRAWAL_DELAY = newWithdrawDelayTime;
         logger.logWithrawDelayTimeChange(newWithdrawDelayTime, WITHDRAWAL_DELAY);
     }
@@ -298,7 +298,7 @@ contract LockingPool is
      * @param _limit new limit
      */
     function updateSignerUpdateLimit(uint256 _limit) external onlyGovernance {
-        require(_limit > 0,"invlaid _limit");
+        require(_limit > 0,"invalid _limit");
         signerUpdateLimit = _limit;
         emit UpdateSignerUpdateLimit(_limit);
     }
@@ -309,7 +309,7 @@ contract LockingPool is
      * @param _minLock new min lock amount
      */
     function updateMinAmounts(uint256 _minLock) external onlyGovernance {
-        require(_minLock > 0,"invlaid _minLock");
+        require(_minLock > 0,"invalid _minLock");
         minLock = _minLock;
         emit UpdateMinAmounts(_minLock);
     }
@@ -390,7 +390,7 @@ contract LockingPool is
             sequencers[sequencerId].activationBatch > 0 &&
                 sequencers[sequencerId].deactivationBatch == 0 &&
                 status == Status.Active,
-                "invlaid sequencer status"
+                "invalid sequencer status"
         );
 
         uint256 exitBatch = currentBatch + 1; // notice period
@@ -539,7 +539,7 @@ contract LockingPool is
     )  external onlyGovernance returns (uint256) {
         uint256 nextBatch = currentBatch + 1;
         require(nextBatch == batchId,"invalid batch id");
-        require(!batchSubmitHistory[nextBatch], "already submited");
+        // require(!batchSubmitHistory[nextBatch], "already submited");
         require(_sequencers.length == finishedBlocks.length, "mismatch length");
         require(lastRewardEpochId <= startEpoch,"invalid startEpoch");
         require(startEpoch < endEpoch,"invalid endEpoch");

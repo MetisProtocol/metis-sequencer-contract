@@ -20,7 +20,7 @@ contract LockingNFT is ERC721Enumerable, Ownable {
     function mint(address to, uint256 tokenId) external onlyOwner {
         require(
             balanceOf(to) == 0,
-            "Sequencers MUST NOT own multiple stake position"
+            "Sequencers MUST NOT own multiple lock position"
         );
         _safeMint(to, tokenId);
     }
@@ -36,7 +36,7 @@ contract LockingNFT is ERC721Enumerable, Ownable {
      function _transfer(address from, address to, uint256 tokenId) override internal onlyOwner {
          require(
             balanceOf(to) == 0,
-            "Sequencers MUST NOT own multiple stake position"
+            "Sequencers MUST NOT own multiple lock position"
         );
         super._transfer(from, to, tokenId);
     }

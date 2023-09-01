@@ -12,9 +12,9 @@ const l2Gas = 200000;
 let lockingNftName = "Metis Sequencer";
 let lockingNftSymbol = "MS";
 
-let govProxyAddress = "";
+let govProxyAddress = "0xe1239449CD8b9F38c31d06DAB329c46b2B57B8fe";
 let lockingNftAddress = "";
-let lockingPoolProxyAddress = "";
+let lockingPoolProxyAddress = "0x44ba81BFf5c2f7C495Ac5256b221f85f8004Ade4";
 let lockingInfoAddress = "";
 
 const main = async () => {
@@ -34,11 +34,11 @@ const main = async () => {
   // return
 
   // updateMinLock
-  //  const govProxyObj = await gov.attach(govProxyAddress);
-  //  let updateMinLockTx = await updateMinLock(govProxyObj);
-  //  console.log("updateMinLock:", updateMinLockTx.hash);
-  //  await delay(3000);
-  //  return
+   const govProxyObj = await gov.attach(govProxyAddress);
+   let updateMinLockTx = await updateMinLock(govProxyObj);
+   console.log("updateMinLock:", updateMinLockTx.hash);
+   await delay(3000);
+   return
 
    // updateMinLock
     // const govProxyObj = await gov.attach(govProxyAddress);

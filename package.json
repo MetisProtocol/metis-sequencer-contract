@@ -36,7 +36,8 @@
     "lock": "hardhat run scripts/3_lock.js --network goerli",
     "rewards": "hardhat run scripts/4_update_rewards.js --network goerli",
     "claim": "hardhat run scripts/5_claim_reward.js --network goerli",
-    "unlock": "hardhat run scripts/6_unlock.js --network goerli"
+    "unlock": "hardhat run scripts/6_unlock.js --network goerli",
+    "update_signer": "hardhat run scripts/update_signer.js --network goerli"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.6",

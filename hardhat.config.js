@@ -30,6 +30,9 @@ module.exports = {
   networks: {
     hardhat: {
       allowUnlimitedContractSize: true,
+      chainId: 5,
+      gas: 5000000,
+      // loggingEnabled:true,
     },
     localhost: {
       url: "http://127.0.0.1:8545",

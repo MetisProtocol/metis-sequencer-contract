@@ -17,6 +17,10 @@ let testPri2 = "0x87f4f773ff72685f05494c4d2f4b484d9ac958f9d010b9abda174e9ce1266e
 let testPub2 = "0xde61a8a5e89510a7dcbcf9ec79aa4ae502341f001b53c0fdb08f4d16adff9c1848b7301f8f616a45a3aad950a68235e41a122fd8f213b1b7f98f661c91acefc2"
 let addr2 = "0x57114948f79fa1c2be29b814ff19957c1fe8f64a"
 
+let testPri4 = "0x35adc09de5c4ba56e824695ab03be7d5d91cead985a685d3ca44920e69d391ca"
+let testPub4 = "0x51b5cfe5551bafd4039d7804bb660194f386ae6e171f90ce96be77870fc8f3dcca5a7ddfd9fd897f27999a443d2066e90281eb1f6915b41478103527884a4be7"
+let addr4 = "0x1cc73d42a0a081F442daDf40B89A8A86ECc69b55"
+
 let signerPubkey = "0x2d905ff3831bb3e3bec873544cd8da2796b5a3a699f0e8dbe86e811322e77cfbaa8ea790e0af28a640f9efb5ba72afab13bbae9b5767d99e3d28a62ec02491bd"
 
 const main = async () => {
@@ -45,8 +49,8 @@ const main = async () => {
   // const sequencerSigner = signer;
   // const pubkey = signerPubkey;
 
-   const sequencerSigner = addr1;
-   const pubkey = testPub1;
+   const sequencerSigner = addr4;
+   const pubkey = testPub4;
 
   const lockAmount = web3.utils.toWei('2');
   console.log(`Locking ${lockAmount} for ${sequencerSigner}...`);
