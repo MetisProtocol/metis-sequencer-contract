@@ -559,6 +559,9 @@ describe('LockingPool', async () => {
         let isSequencer = await lockingPool.isSequencer(sequencerId);
         expect(isSequencer).to.eq(true);
 
+
+        const testUser2 = new ethers.Wallet(testUser2Pri, ethers.provider);
+        await expect(lockingPool.connect(testUser2).unlock(sequencerId, false)).to.be.revertedWith("not nft owner");
         const testUser = new ethers.Wallet(testUserPri, ethers.provider);
         await expect(lockingPool.connect(testUser).unlock(sequencerId, false)).to.be.revertedWith("not allowed");
     })
@@ -594,6 +597,7 @@ describe('LockingPool', async () => {
         await lockingPool.connect(testUser).unlock(sequencerId, false);
         await expect(lockingPool.connect(testUser).unlock(sequencerId, false)).to.be.revertedWith("invalid sequencer status");
 
+        // await lockingPool.connect(testUser).updateSigner(sequencerId, testUser2Pub);
 
         await expect(lockingPool.connect(testUser).relock(sequencerId, lockAmount, false)).to.be.revertedWith("No restaking");
         await expect(lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, testUserPub)).to.be.revertedWith('Invalid signer');
@@ -827,11 +831,14 @@ describe('LockingPool', async () => {
         await mineUpTo(1000);
         await updateMpc(gov, wallets[0], testUserAddress, lockingPool.address);
 
+        fetchedMpcAddress = await lockingPool.fetchMpcAddress(999);
+        expect(fetchedMpcAddress).to.eq(admin.address);
+
         let newMpcAddress = await lockingPool.mpcAddress();
         expect(newMpcAddress).to.eq(testUserAddress);
 
         await mineUpTo(2000);
-        fetchedMpcAddress = await lockingPool.fetchMpcAddress(1001);
+        fetchedMpcAddress = await lockingPool.fetchMpcAddress(2001);
         expect(fetchedMpcAddress).to.eq(testUserAddress);
     })
 

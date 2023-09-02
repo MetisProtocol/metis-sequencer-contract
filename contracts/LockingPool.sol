@@ -337,13 +337,15 @@ contract LockingPool is
       * @param blockHeight the L1 block height
       */
     function fetchMpcAddress(uint256 blockHeight) override external view returns(address){
+        address result;
         for (uint i = mpcHistory.length-1; i>=0; i--) {
             if (blockHeight>= mpcHistory[i].startBlock){
-                return mpcHistory[i].newMpcAddress;
+                result =  mpcHistory[i].newMpcAddress;
+                break;
             }
         }
 
-        return address(0);
+        return result;
     }
 
     /**
@@ -469,9 +471,7 @@ contract LockingPool is
 
         updateTimeline(int256(amount), 0, 0);
 
-        if (relockAmount > 0) {
-            _transferTokenFrom(msg.sender, address(this), relockAmount);
-        }
+        _transferTokenFrom(msg.sender, address(this), relockAmount);
 
         logger.logLockUpdate(sequencerId,sequencers[sequencerId].amount);
         logger.logRelockd(sequencerId, sequencers[sequencerId].amount, newTotalLocked);
