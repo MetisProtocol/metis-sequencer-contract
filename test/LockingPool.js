@@ -315,7 +315,7 @@ describe('LockingPool', async () => {
         pausedStatus = await lockingPool.paused();
         expect(pausedStatus).to.eq(true);
 
-        await expect(lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, testUserPub)).to.be.revertedWith("EnforcedPause");
+        await expect(lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, testUserPub)).to.be.revertedWith("Pausable: paused");
 
         await expect(setUnpause(gov, wallets[1], lockingPool.address)).to.be.revertedWith("Ownable: caller is not the owner");
         await setUnpause(gov, wallets[0], lockingPool.address);
@@ -432,8 +432,11 @@ describe('LockingPool', async () => {
          expect(isSequencer).to.eq(true);
 
         let curBatchId = await lockingPool.currentBatch();
+
+        let l1ChainID = await getChainId();
          // submit reward
         const params = {
+            chainId: l1ChainID,
             batchId: ethers.BigNumber.from(curBatchId.toString()).add(1),
             payeer: admin.address,
             startEpoch: 1,
@@ -507,8 +510,10 @@ describe('LockingPool', async () => {
         let curBatchId = await lockingPool.currentBatch();
         // console.log("curBatchId:", curBatchId);
 
+        let l1ChainID = await getChainId();
         // submit reward
         const params = {
+            chainId: l1ChainID,
             batchId: ethers.BigNumber.from(curBatchId.toString()).add(1),
             payeer: admin.address,
             startEpoch: 1,
@@ -687,9 +692,11 @@ describe('LockingPool', async () => {
         let lockingPoolBalance = await testERC20.balanceOf(lockingPool.address);
         expect(lockingPoolBalance).to.eq(0);
 
+         let l1ChainID = await getChainId();
         // invalid sequencer
         let curBatchId = await lockingPool.currentBatch();
         const params = {
+            chainId: l1ChainID,
             batchId: ethers.BigNumber.from(curBatchId.toString()).add(1),
             payeer: admin.address,
             startEpoch: 1,
@@ -848,8 +855,10 @@ describe('LockingPool', async () => {
         await lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, testUserPub);
         
         let curBatchId = await lockingPool.currentBatch();
+        let l1ChainID = await getChainId();
         // submit reward
         const params = {
+            chainId: l1ChainID,
             batchId: ethers.BigNumber.from(curBatchId.toString()).add(1),
             payeer: admin.address,
             startEpoch: 1,
@@ -1132,7 +1141,8 @@ async function updateRewardByGov(govObj,signer, params) {
 }
 
 async function calcSignature(params) {
-    let message = ethers.utils.solidityPack(["uint256", "uint256", "uint256", "address[]", "uint256[]", "address"], [
+    let message = ethers.utils.solidityPack(["uint256","uint256", "uint256", "uint256", "address[]", "uint256[]", "address"], [
+        params.chainId,
         params.batchId,
         params.startEpoch,
         params.endEpoch,

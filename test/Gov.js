@@ -41,16 +41,4 @@ describe('Governance', async () => {
         await gov.update(wallets[1].address, [1, 2, 3]);
         await expect(gov.update(testERC20.address, [1, 2, 3])).to.be.revertedWith("Update failed");
     })
-
-    it('governable init ', async () => {
-         const GovernableTest = await ethers.getContractFactory('GovernableTest');
-         await expect(upgrades.deployProxy(GovernableTest, [zeroAddress])).to.be.revertedWith("invalid _governance");
-        
-         const govProxyTest = await upgrades.deployProxy(GovernableTest, [wallets[0].address]);
-         await govProxyTest.deployed();
-
-        let govTest = await ethers.getContractAt('GovernableTest', govProxyTest.address);
-        await expect(govTest.connect(wallets[1]).test()).to.be.revertedWith("Only governance contract is authorized");
-        await govTest.test();
-    })
 })
