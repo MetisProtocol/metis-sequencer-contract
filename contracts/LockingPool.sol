@@ -547,7 +547,7 @@ contract LockingPool is
 
         lastRewardEpochId = endEpoch;
         // check mpc signature
-        bytes32 operationHash = keccak256(abi.encodePacked(batchId, startEpoch,endEpoch,_sequencers, finishedBlocks, address(this)));
+        bytes32 operationHash = keccak256(abi.encodePacked(block.chainid, batchId, startEpoch,endEpoch,_sequencers, finishedBlocks, address(this)));
         operationHash = ECDSA.toEthSignedMessageHash(operationHash);
         address signer = ECDSA.recover(operationHash, signature);
         require(signer == mpcAddress, "invalid mpc signature");
