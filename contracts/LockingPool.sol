@@ -538,7 +538,6 @@ contract LockingPool is
     )  external onlyProxy returns (uint256) {
         uint256 nextBatch = currentBatch + 1;
         require(nextBatch == batchId,"invalid batch id");
-        // require(!batchSubmitHistory[nextBatch], "already submited");
         require(_sequencers.length == finishedBlocks.length, "mismatch length");
         require(lastRewardEpochId <= startEpoch,"invalid startEpoch");
         require(startEpoch < endEpoch,"invalid endEpoch");
