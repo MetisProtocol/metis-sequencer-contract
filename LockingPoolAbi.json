@@ -1,5 +1,10 @@
 [
   {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -10,6 +15,110 @@
       }
     ],
     "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Paused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_newCurrentBatch",
+        "type": "uint256"
+      }
+    ],
+    "name": "SetCurrentBatch",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unpaused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_newLockingInfo",
+        "type": "address"
+      }
+    ],
+    "name": "UpdateLockingInfo",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_newMinLock",
+        "type": "uint256"
+      }
+    ],
+    "name": "UpdateMinAmounts",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_newMpc",
+        "type": "address"
+      }
+    ],
+    "name": "UpdateMpc",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_newNftContract",
+        "type": "address"
+      }
+    ],
+    "name": "UpdateNFTContract",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_newLimit",
+        "type": "uint256"
+      }
+    ],
+    "name": "UpdateSignerUpdateLimit",
     "type": "event"
   },
   {
@@ -53,12 +162,44 @@
   },
   {
     "inputs": [],
+    "name": "Proxy",
+    "outputs": [
+      {
+        "internalType": "contract IProxy",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "WITHDRAWAL_DELAY",
     "outputs": [
       {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "batchSubmitHistory",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -88,7 +229,7 @@
       },
       {
         "internalType": "address[]",
-        "name": "sequencers",
+        "name": "_sequencers",
         "type": "address[]"
       },
       {
@@ -248,23 +389,10 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "governance",
-    "outputs": [
-      {
-        "internalType": "contract IGovernance",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
-        "name": "_governance",
+        "name": "_Proxy",
         "type": "address"
       },
       {
@@ -299,32 +427,6 @@
       }
     ],
     "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_governance",
-        "type": "address"
-      }
-    ],
-    "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address[]",
-        "name": "_signers",
-        "type": "address[]"
-      }
-    ],
-    "name": "insertSigners",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -382,6 +484,19 @@
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "lastRewardEpochId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -513,7 +628,7 @@
   },
   {
     "inputs": [],
-    "name": "pause",
+    "name": "paused",
     "outputs": [
       {
         "internalType": "bool",
@@ -686,7 +801,7 @@
         "type": "address"
       },
       {
-        "internalType": "enum ILockingPool.Status",
+        "internalType": "enum LockingPool.Status",
         "name": "status",
         "type": "uint8"
       },
@@ -708,19 +823,6 @@
       }
     ],
     "name": "setCurrentBatch",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_token",
-        "type": "address"
-      }
-    ],
-    "name": "setLockingToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -783,19 +885,6 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "token",
-    "outputs": [
-      {
-        "internalType": "contract IERC20",
         "name": "",
         "type": "address"
       }
@@ -978,11 +1067,11 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "newWithdrwDelayTime",
+        "name": "newWithdrawDelayTime",
         "type": "uint256"
       }
     ],
-    "name": "updateWithdrwDelayTimeValue",
+    "name": "updateWithdrawDelayTimeValue",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1003,19 +1092,6 @@
     "name": "withdrawRewards",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "withdrawalDelay",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   }
 ]

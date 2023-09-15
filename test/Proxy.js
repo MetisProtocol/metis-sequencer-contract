@@ -9,7 +9,7 @@ const {
 
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 
-describe('Governance', async () => {
+describe('Proxy', async () => {
     let wallets;
     let gov;
     let testERC20;
@@ -23,12 +23,12 @@ describe('Governance', async () => {
 
     beforeEach('create gov', async () => {
         // deploy gov
-        const Governance = await ethers.getContractFactory('Governance');
-        const govProxy = await upgrades.deployProxy(Governance, []);
+        const Proxy = await ethers.getContractFactory('Proxy');
+        const govProxy = await upgrades.deployProxy(Proxy, []);
         await govProxy.deployed();
         // console.log("gov:", govProxy.address);
 
-        gov = await ethers.getContractAt('Governance', govProxy.address);
+        gov = await ethers.getContractAt('Proxy', govProxy.address);
 
         const TestERC20 = await ethers.getContractFactory('TestERC20');
         const mintAmount = ethers.utils.parseEther('10000000');

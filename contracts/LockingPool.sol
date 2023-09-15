@@ -5,8 +5,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-import {GovernancePauseable} from "./governance/GovernancePauseable.sol";
-import {IGovernance} from "./interfaces/IGovernance.sol";
+import {ProxyPauseable} from "./proxy/ProxyPauseable.sol";
+import {IProxy} from "./interfaces/IProxy.sol";
 import {ILockingPool} from "./interfaces/ILockingPool.sol";
 import {LockingInfo} from "./LockingInfo.sol";
 import {LockingNFT} from "./LockingNFT.sol";
@@ -14,7 +14,7 @@ import { IL1ERC20Bridge } from "./interfaces/IL1ERC20Bridge.sol";
 
 contract LockingPool is
     ILockingPool,
-    GovernancePauseable
+    ProxyPauseable
 {
     using SafeERC20 for IERC20;
 
@@ -66,8 +66,8 @@ contract LockingPool is
     uint256 public currentUnlockedInit; // sequencer unlock queue count, need have a limit
     uint256 public lastRewardEpochId; // the last epochId for update reward
 
-    // genesis/governance variables
-    uint256 public BLOCK_REWARD; // update via governance
+    // genesis/Proxy variables
+    uint256 public BLOCK_REWARD; // update via Proxy
     uint256 public minLock; // min lock Metis token 
     uint256 public signerUpdateLimit; // sequencer signer need have a update limit,how many batches are not allowed to update the signer
     address public mpcAddress; // current mpc address for batch submit reward 
@@ -135,7 +135,7 @@ contract LockingPool is
     }
 
     function initialize(
-        address _governance,
+        address _Proxy,
         address _bridge,
         address _l1Token,
         address _l2Token,
@@ -143,14 +143,14 @@ contract LockingPool is
         address _NFTContract,
         address _mpc
     ) external initializer {
-        require(_governance != address(0),"invalid _governance");
+        require(_Proxy != address(0),"invalid _Proxy");
         require(_bridge != address(0),"invalid _bridge");
         require(_l1Token != address(0),"invalid _l1Token");
         require(_l2Token != address(0),"invalid _l2Token");
         require(_NFTContract != address(0),"invalid _NFTContract");
         require(_mpc != address(0),"_mpc is zero address");
         
-        __GovernancePauseable_init(_governance);
+        __ProxyPauseable_init(_Proxy);
         
         bridge = _bridge;
         l1Token = _l1Token;
@@ -168,7 +168,7 @@ contract LockingPool is
 
         WITHDRAWAL_DELAY = 21 days; // sequencer exit withdraw delay time
         currentBatch = 1;  // default start from batch 1
-        BLOCK_REWARD = 2 * (10**18); // per block reward, update via governance
+        BLOCK_REWARD = 2 * (10**18); // per block reward, update via Proxy
         minLock = 20000* (10**18);  // min lock amount
         signerUpdateLimit = 100; // how many batches are not allowed to update the signer
         sequencerThreshold = 10; // allow max sequencers
@@ -220,7 +220,7 @@ contract LockingPool is
     }
 
     /**
-        Governance Methods
+        Proxy Methods
      */
 
     /**
@@ -228,7 +228,7 @@ contract LockingPool is
      * @param sequencerId unique integer to identify a sequencer.
      * @param withdrawRewardToL2 Whether the current reward is withdrawn to L2
      */
-    function forceUnlock(uint256 sequencerId, bool withdrawRewardToL2) external onlyGovernance {
+    function forceUnlock(uint256 sequencerId, bool withdrawRewardToL2) external onlyProxy {
         _unlock(sequencerId, currentBatch, withdrawRewardToL2,true);
     }
 
@@ -236,7 +236,7 @@ contract LockingPool is
      * @dev updateNFTContract Allow gov update the NFT contract address
      * @param _nftContract new NFT contract address
      */
-    function updateNFTContract(address _nftContract) external onlyGovernance {
+    function updateNFTContract(address _nftContract) external onlyProxy {
         require(_nftContract != address(0),"invalid _nftContract");
         NFTContract = LockingNFT(_nftContract);
         emit UpdateNFTContract(_nftContract);
@@ -246,7 +246,7 @@ contract LockingPool is
      * @dev updateLockingInfo Allow gov update the locking info contract address
      * @param _lockingInfo new locking info contract address
      */
-    function updateLockingInfo(address _lockingInfo) external onlyGovernance {
+    function updateLockingInfo(address _lockingInfo) external onlyProxy {
         require(_lockingInfo != address(0),"invalid _lockingInfo");
         logger = LockingInfo(_lockingInfo); 
         emit UpdateLockingInfo(_lockingInfo);
@@ -256,7 +256,7 @@ contract LockingPool is
      * @dev setCurrentBatch  Allow gov to set current batch id
      * @param _currentBatch batch id to set
      */
-    function setCurrentBatch(uint256 _currentBatch) external onlyGovernance {
+    function setCurrentBatch(uint256 _currentBatch) external onlyProxy {
         require(_currentBatch != 0,"invalid _currentBatch");
         currentBatch = _currentBatch;
         emit SetCurrentBatch(_currentBatch);
@@ -266,7 +266,7 @@ contract LockingPool is
      * @dev updateSequencerThreshold  Allow gov to set max sequencer threshold
      * @param newThreshold the new threshold
      */
-    function updateSequencerThreshold(uint256 newThreshold) external onlyGovernance {
+    function updateSequencerThreshold(uint256 newThreshold) external onlyProxy {
         require(newThreshold != 0,"invalid newThreshold");
         sequencerThreshold = newThreshold;
         logger.logThresholdChange(newThreshold, sequencerThreshold);
@@ -276,7 +276,7 @@ contract LockingPool is
      * @dev updateBlockReward  Allow gov to set per block reward
      * @param newReward the block reward
      */
-    function updateBlockReward(uint256 newReward) external onlyGovernance {
+    function updateBlockReward(uint256 newReward) external onlyProxy {
         require(newReward != 0,"invalid newReward");
         BLOCK_REWARD = newReward;
         logger.logRewardUpdate(newReward, BLOCK_REWARD);
@@ -287,7 +287,7 @@ contract LockingPool is
     *  @dev updateWithdrawDelayTimeValue Allow gov to set withdraw delay time.
     *  @param newWithdrawDelayTime new withdraw delay time
     */
-    function updateWithdrawDelayTimeValue(uint256 newWithdrawDelayTime) external onlyGovernance {
+    function updateWithdrawDelayTimeValue(uint256 newWithdrawDelayTime) external onlyProxy {
         require(newWithdrawDelayTime > 0,"invalid newWithdrawDelayTime");
         WITHDRAWAL_DELAY = newWithdrawDelayTime;
         logger.logWithrawDelayTimeChange(newWithdrawDelayTime, WITHDRAWAL_DELAY);
@@ -297,7 +297,7 @@ contract LockingPool is
      * @dev updateSignerUpdateLimit Allow gov to set signer update max limit
      * @param _limit new limit
      */
-    function updateSignerUpdateLimit(uint256 _limit) external onlyGovernance {
+    function updateSignerUpdateLimit(uint256 _limit) external onlyProxy {
         require(_limit > 0,"invalid _limit");
         signerUpdateLimit = _limit;
         emit UpdateSignerUpdateLimit(_limit);
@@ -308,7 +308,7 @@ contract LockingPool is
      * @dev updateMinAmounts Allow gov to update min lock amount 
      * @param _minLock new min lock amount
      */
-    function updateMinAmounts(uint256 _minLock) external onlyGovernance {
+    function updateMinAmounts(uint256 _minLock) external onlyProxy {
         require(_minLock > 0,"invalid _minLock");
         minLock = _minLock;
         emit UpdateMinAmounts(_minLock);
@@ -319,7 +319,7 @@ contract LockingPool is
      * @dev updateMpc Allow gov to update new mpc address
      * @param _newMpc new mpc
      */
-    function updateMpc(address _newMpc) external onlyGovernance {
+    function updateMpc(address _newMpc) external onlyProxy {
         require(!isContract(_newMpc),"_newMpc is a contract");
         require(_newMpc != address(0),"_newMpc is zero address");
         mpcAddress = _newMpc;
@@ -535,7 +535,7 @@ contract LockingPool is
         address[] memory _sequencers,
         uint256[] memory finishedBlocks,
         bytes memory signature
-    )  external onlyGovernance returns (uint256) {
+    )  external onlyProxy returns (uint256) {
         uint256 nextBatch = currentBatch + 1;
         require(nextBatch == batchId,"invalid batch id");
         // require(!batchSubmitHistory[nextBatch], "already submited");

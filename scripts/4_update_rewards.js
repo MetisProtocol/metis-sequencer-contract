@@ -15,7 +15,7 @@ const main = async () => {
     const contractAddresses = utils.getContractAddresses();
     console.log("contractAddresses:", contractAddresses);
 
-    // const govObj = await hre.ethers.getContractAt("Governance", contractAddresses.contracts.GovernanceProxy);
+    // const govObj = await hre.ethers.getContractAt("Proxy", contractAddresses.contracts.ProxyProxy);
     // let updateRewardTx =  await updateReward(govObj, signer, contractAddresses.contracts.LockingPoolProxy);
     // console.log("updateRewardTx:", updateRewardTx.hash);
 

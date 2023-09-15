@@ -24,7 +24,7 @@ const main = async () => {
 
   console.log('deploying contracts...');
    // deploy gov and gov proxy
-   const gov = await hre.ethers.getContractFactory("Governance");
+   const gov = await hre.ethers.getContractFactory("Proxy");
 
    // updateMpc
   // const govProxyObj = await gov.attach(govProxyAddress);
@@ -121,7 +121,7 @@ const main = async () => {
   console.log('writing contract addresses to file...')
   const contractAddresses = {
     contracts: {
-      GovernanceProxy: govProxyAddress,
+      ProxyProxy: govProxyAddress,
       LockingPoolProxy: lockingPoolProxyAddress,
       LockingInfo: lockingInfoAddress,
       LockingNFT: lockingNftAddress,

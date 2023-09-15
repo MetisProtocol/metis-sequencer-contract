@@ -35,8 +35,8 @@ const main = async () => {
      // console.log("tokenId:", tokenId);
      await LockingNFTObj.connect(testUser).approve(contractAddresses.contracts.LockingPoolProxy, 1);
 
-    const gov = await hre.ethers.getContractFactory("Governance");
-    const govProxyObj = await gov.attach(contractAddresses.contracts.GovernanceProxy);
+    const gov = await hre.ethers.getContractFactory("Proxy");
+    const govProxyObj = await gov.attach(contractAddresses.contracts.ProxyProxy);
 
     // updateSignerUpdateLimit
     // let updateSignerUpdateLimitTx = await updateSignerUpdateLimit(govProxyObj, contractAddresses.contracts.LockingPoolProxy);

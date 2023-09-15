@@ -88,12 +88,12 @@ describe('LockingPool', async () => {
         // console.log("l1MetisToken:", l1MetisToken);
 
         // deploy gov
-        const Governance = await ethers.getContractFactory('Governance');
-        const govProxy = await upgrades.deployProxy(Governance, []);
+        const Proxy = await ethers.getContractFactory('Proxy');
+        const govProxy = await upgrades.deployProxy(Proxy, []);
         await govProxy.connect(admin).deployed();
         // console.log("gov:", govProxy.address);
 
-        gov = await ethers.getContractAt('Governance', govProxy.address);
+        gov = await ethers.getContractAt('Proxy', govProxy.address);
 
         // deploy NFT
         const LockingNFT = await ethers.getContractFactory('LockingNFT');
@@ -191,7 +191,7 @@ describe('LockingPool', async () => {
                 mpc
             ], {
                 initializer: 'initialize(address,address,address,address,uint32,address,address)'
-            })).to.be.revertedWith("invalid _governance");
+            })).to.be.revertedWith("invalid _Proxy");
 
         await expect(upgrades.deployProxy(LockingPool1,
             [
