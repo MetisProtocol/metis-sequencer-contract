@@ -5,8 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {LockingInfo} from "../LockingInfo.sol";
 import {LockingNFT} from "../LockingNFT.sol";
 
-
-abstract contract ILockingPool {
+interface ILockingPool {
      /**
      * @dev lockFor is used to lock Metis and participate in the sequencer block node application
      *
@@ -18,7 +17,7 @@ abstract contract ILockingPool {
         address signer,
         uint256 amount,
         bytes memory signerPubkey
-    ) virtual external;
+    ) external;
 
 
      /**
@@ -31,7 +30,7 @@ abstract contract ILockingPool {
         uint256 sequencerId,
         uint256 amount,
         bool lockRewards
-    ) virtual external;
+    ) external;
 
 
      /**
@@ -43,7 +42,7 @@ abstract contract ILockingPool {
     function withdrawRewards(
         uint256 sequencerId, 
         bool withdrawToL2
-    ) virtual external;
+    ) external;
     
     /**
      * @dev unlock is used to unlock Metis and exit the sequencer node
@@ -51,7 +50,7 @@ abstract contract ILockingPool {
      * @param sequencerId sequencer id
      * @param withdrawRewardToL2 Whether the current reward is withdrawn to L2
      */    
-    function unlock(uint256 sequencerId, bool withdrawRewardToL2) virtual external;
+    function unlock(uint256 sequencerId, bool withdrawRewardToL2) external;
 
     
      /**
@@ -60,7 +59,7 @@ abstract contract ILockingPool {
      * @param sequencerId sequencer id
      * @param withdrawToL2 Whether the current reward is withdrawn to L2
      */   
-     function unlockClaim(uint256 sequencerId, bool withdrawToL2) virtual external ;
+     function unlockClaim(uint256 sequencerId, bool withdrawToL2) external ;
 
 
     /**
@@ -68,47 +67,47 @@ abstract contract ILockingPool {
      *
      * @param tokenId NFT token id
      */    
-    function ownerOf(uint256 tokenId) virtual external view returns (address);
+    function ownerOf(uint256 tokenId) external view returns (address);
 
      /**
      * @dev getSequencerId query sequencer id by signer address
      *
      * @param user sequencer signer address
      */   
-    function getSequencerId(address user)  virtual external  view returns (uint256);
+    function getSequencerId(address user)  external  view returns (uint256);
 
     /**
      * @dev sequencerReward query sequencer current reward
      *
      * @param sequencerId sequencerid
      */   
-    function sequencerReward(uint256 sequencerId) virtual external view returns (uint256);
+    function sequencerReward(uint256 sequencerId) external view returns (uint256);
 
     /**
      * @dev sequencerLock return the total lock amount of sequencer
      *
      * @param sequencerId sequencer id
      */    
-    function sequencerLock(uint256 sequencerId) virtual external view returns (uint256);
+    function sequencerLock(uint256 sequencerId) external view returns (uint256);
 
      /**
      * @dev currentSequencerSetSize  get all sequencer count
      */    
-     function currentSequencerSetSize() virtual external view returns (uint256);
+     function currentSequencerSetSize() external view returns (uint256);
 
     /**
      * @dev currentSequencerSetTotalLock get total lock amount for all sequencers
      */  
-    function currentSequencerSetTotalLock() virtual external view returns (uint256);
+    function currentSequencerSetTotalLock() external view returns (uint256);
 
      /**
      * @dev getL2ChainId query current l2 chain id
      */  
-    function getL2ChainId() virtual external view returns(uint256);
+    function getL2ChainId() external view returns(uint256);
 
     /**
      * @dev fetchMpcAddress query mpc address by L1 block height, used by batch-submitter
      * @param blockHeight L1 block height
      */  
-    function fetchMpcAddress(uint256 blockHeight) virtual external view returns(address);
+    function fetchMpcAddress(uint256 blockHeight) external view returns(address);
 }
