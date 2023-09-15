@@ -425,8 +425,6 @@ contract LockingPool is
         // Check for unclaimed rewards
         _liquidateRewards(sequencerId, msg.sender, withdrawToL2);
 
-        NFTContract.burn(sequencerId);
-
         sequencers[sequencerId].amount = 0;
         sequencers[sequencerId].signer = address(0);
 
@@ -442,6 +440,7 @@ contract LockingPool is
         }
 
         logger.logUnlocked(msg.sender, sequencerId, amount, newTotalLocked);
+        NFTContract.burn(sequencerId);
     }
 
     /**
@@ -676,7 +675,6 @@ contract LockingPool is
         });
 
         latestSignerUpdateBatch[sequencerId] = _currentBatch;
-        NFTContract.mint(user, sequencerId);
 
         signerToSequencer[signer] = sequencerId;
         updateTimeline(int256(amount), 1, 0);
@@ -684,6 +682,7 @@ contract LockingPool is
         _insertSigner(signer);
 
         logger.logLocked(signer, signerPubkey, sequencerId, _currentBatch, amount, newTotalLocked);
+        NFTContract.mint(user, sequencerId);
         return sequencerId;
     }
 
