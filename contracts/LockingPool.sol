@@ -478,7 +478,7 @@ contract LockingPool is
 
         // calc reward
         uint256 totalReward;
-        for (uint256 i = 0; i < _sequencers.length; ++i) {
+        for (uint256 i = 0; i < _sequencers.length;) {
             require(signerToSequencer[_sequencers[i]] > 0,"sequencer not exist");
             require(isSequencer(signerToSequencer[_sequencers[i]]), "invalid sequencer");
 
@@ -487,6 +487,7 @@ contract LockingPool is
 
             unchecked{
                 totalReward += reward;
+                ++i;
             }
         }
 
