@@ -129,6 +129,12 @@ contract LockingInfo is Ownable {
         uint256 indexed amount,
         uint256 indexed totalAmount
     );
+
+    /**
+     * @dev Emitted when batch update in  'batchSubmitRewards'
+     * @param _newBatchId new batchId.
+     */
+    event BatchSubmitReward(uint256 _newBatchId);
    
     modifier onlyLockingPool() {
         require(lockingPool == msg.sender,
@@ -299,5 +305,14 @@ contract LockingInfo is Ownable {
         uint256 totalAmount
     ) external onlyLockingPool {
         emit ClaimRewards(sequencerId, amount, totalAmount);
+    }
+
+     /**
+     * @dev logBatchSubmitReward log event BatchSubmitReward
+     */
+    function logBatchSubmitReward(
+        uint256 newBatchId
+    ) external onlyLockingPool {
+        emit BatchSubmitReward(newBatchId);
     }
 }

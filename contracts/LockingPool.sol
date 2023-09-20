@@ -491,6 +491,7 @@ contract LockingPool is
         }
 
         _finalizeCommit();
+        logger.logBatchSubmitReward(batchId);
 
         // reward income
         IERC20(l1Token).safeTransferFrom(payeer, address(this), totalReward);
