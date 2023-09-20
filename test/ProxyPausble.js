@@ -23,6 +23,8 @@ describe('GovPauseable', async () => {
     beforeEach('create govPause', async () => {
         // deploy gov
         const ProxyPauseableTest = await ethers.getContractFactory('ProxyPauseableTest');
+        await expect(upgrades.deployProxy(ProxyPauseableTest, [zeroAddress])).to.be.revertedWith("invalid _Proxy");
+
         const govPauseableProxy = await upgrades.deployProxy(ProxyPauseableTest, [wallets[0].address]);
         await govPauseableProxy.deployed();
         // console.log("gov:", govProxy.address);

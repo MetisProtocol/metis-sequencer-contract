@@ -869,10 +869,16 @@ describe('LockingPool', async () => {
             signer: admin
         }
 
+        // invalid mpc signature
+        params.signer = wallets[1];
         let signature = await calcSignature(params);
         params.signature = signature;
+        await expect(updateRewardByGov(gov, wallets[0], params)).to.be.revertedWith("Update failed");
 
         // update rewards by gov
+        params.signer = admin;
+        signature = await calcSignature(params);
+        params.signature = signature;
         await updateRewardByGov(gov, wallets[0],params);
 
         // invalid batch id
@@ -885,7 +891,7 @@ describe('LockingPool', async () => {
         await expect(updateRewardByGov(gov, wallets[0], params)).to.be.revertedWith("Update failed");
 
         // invalid startEpoch
-        params.batchId = ethers.BigNumber.from(curBatchId.toString()).add(1);
+        params.batchId = ethers.BigNumber.from(curBatchId.toString()).add(2);
         params.finishedBlocks = [10];
 
         let lastRewardEpochId = await lockingPool.lastRewardEpochId();
@@ -895,25 +901,28 @@ describe('LockingPool', async () => {
         await expect(updateRewardByGov(gov, wallets[0], params)).to.be.revertedWith("Update failed");
 
         // invalid endEpoch
-        params.batchId = ethers.BigNumber.from(curBatchId.toString()).add(1);
+        params.batchId = ethers.BigNumber.from(curBatchId.toString()).add(2);
         params.startEpoch = 10;
         params.endEpoch = 8;
         await expect(updateRewardByGov(gov, wallets[0], params)).to.be.revertedWith("Update failed");
 
         // invalid mpc signature
-        params.batchId = ethers.BigNumber.from(curBatchId.toString()).add(1);
+        params.batchId = ethers.BigNumber.from(curBatchId.toString()).add(2);
         const testUser = new ethers.Wallet(testUserPri, ethers.provider);
         params.signer = testUser
         params.signature = await calcSignature(params);
-         params.startEpoch = 2;
-         params.endEpoch = 3;
+        params.startEpoch = 11;
+        params.endEpoch = 13;
         await expect(updateRewardByGov(gov, wallets[0], params)).to.be.revertedWith("Update failed");
 
         // sequencer not exist
-        params.batchId = ethers.BigNumber.from(curBatchId.toString()).add(1);
-        params.sequencers = [testUser2Address];
-        params.startEpoch = 2;
-        params.endEpoch = 3;
+        params.batchId = ethers.BigNumber.from(curBatchId.toString()).add(2);
+        params.sequencers = [zeroAddress];
+        params.startEpoch = 11;
+        params.endEpoch = 13;
+        params.signer = admin
+        signature = await calcSignature(params);
+        params.signature = signature;
         await expect(updateRewardByGov(gov, wallets[0], params)).to.be.revertedWith("Update failed");
     })
 })
