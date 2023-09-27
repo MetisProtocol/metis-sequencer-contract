@@ -17,6 +17,7 @@ const main = async () => {
     const LockingPoolObj = await LockingPool.attach(contractAddresses.contracts.LockingPoolProxy);
   
     let withdrawRewardsTx = await LockingPoolObj.withdrawRewards(1, true);
+    await withdrawRewardsTx.await();
     console.log("withdrawRewards tx ", withdrawRewardsTx.hash);
 }
 

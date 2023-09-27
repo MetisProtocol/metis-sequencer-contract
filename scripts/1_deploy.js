@@ -29,6 +29,7 @@ const main = async () => {
    // updateMpc
   // const govProxyObj = await gov.attach(govProxyAddress);
   // let updateMpcTx = await updateMpc(govProxyObj, "0x563870eA4f826f1460C8Ce2800ed275f07B234E4");
+  //  await updateMpcTx.wait();
   // console.log("updateMpcTx:", updateMpcTx.hash);
   // await delay(3000);
   // return
@@ -37,12 +38,13 @@ const main = async () => {
    const govProxyObj = await gov.attach(govProxyAddress);
    let updateMinLockTx = await updateMinLock(govProxyObj);
    console.log("updateMinLock:", updateMinLockTx.hash);
-   await delay(3000);
+   await updateMinLockTx.wait();
    return
 
    // updateMinLock
     // const govProxyObj = await gov.attach(govProxyAddress);
     // let updateWithdrawDelayTx = await updateWithdrawDelay(govProxyObj);
+  //  await updateWithdrawDelayTx.wait();
     // console.log("updateWithdrawDelay:", updateWithdrawDelayTx.hash);
     // await delay(3000);
     // return
@@ -108,6 +110,7 @@ const main = async () => {
   if (loggerAddress == zeroAddress()){
     const govProxyObj = await gov.attach(govProxyAddress);
     let setLockingInfoTx =  await updateLockingPoolLoggerAddress(govProxyObj);
+    await setLockingInfoTx.wait();
     console.log("updateLockingPoolLoggerAddress:", setLockingInfoTx.hash);
     await delay(3000);
   }
@@ -115,6 +118,7 @@ const main = async () => {
   // NFT transferOwnership
   const LockingNFTObj = await LockingNFT.attach(lockingNftAddress);
   let tx = await LockingNFTObj.transferOwnership(lockingPoolProxyAddress);
+  await tx.wait();
   console.log("LockingNFT transferOwnership tx:", tx.hash);
   await delay(3000);
   

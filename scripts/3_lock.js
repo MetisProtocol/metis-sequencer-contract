@@ -42,7 +42,7 @@ const main = async () => {
   if (approveAmount <= 0) {
     let approveTx = await metisTokenObj.approve(contractAddresses.contracts.LockingPoolProxy, web3.utils.toWei('1000000000000'))
     console.log("approve tx:", approveTx.hash);
-    delay(3);
+    await approveTx.wait();
   }
 
   // lock params
@@ -52,16 +52,41 @@ const main = async () => {
    const sequencerSigner = addr4;
    const pubkey = testPub4;
 
+  const gov = await hre.ethers.getContractFactory("Proxy");
+  const govProxyObj = await gov.attach(contractAddresses.contracts.GovernanceProxy);
+  let setWitheAddressTx = await setWitheAddress(govProxyObj, contractAddresses.contracts.LockingPoolProxy, sequencerSigner);
+  await setWitheAddressTx.wait();
+  console.log("setWitheAddress:", setWitheAddressTx.hash);
+  
+
   const lockAmount = web3.utils.toWei('2');
   console.log(`Locking ${lockAmount} for ${sequencerSigner}...`);
 
   console.log('locking now...')
   let lockTx = await LockingPoolObj.lockFor(sequencerSigner, lockAmount, pubkey);
+  await lockTx.wait();
   console.log("lock tx ", lockTx.hash);
 
   //  console.log('relocking now...')
   //  let reLockTx = await LockingPoolObj.relock(1, lockAmount, true);
+  // await reLockTx.wait();
   //  console.log("reLock tx ", reLockTx.hash);
+}
+
+async function setWitheAddress(govObj, lockingPoolProxyAddress,user) {
+  let ABI = [
+    "function setWhiteListAddress(address user, bool verified)"
+  ];
+  let iface = new ethers.utils.Interface(ABI);
+  let setWhiteAddressEncodeData = iface.encodeFunctionData("setWhiteListAddress", [
+    user,true
+  ])
+  console.log("setWitheAddress: ", setWhiteAddressEncodeData)
+
+  return govObj.update(
+    lockingPoolProxyAddress,
+    setWhiteAddressEncodeData
+  )
 }
 
 function delay(s) {

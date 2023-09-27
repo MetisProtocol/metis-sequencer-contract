@@ -84,6 +84,9 @@ contract LockingPool is
     // sequencerId to last signer update Batch
     mapping(uint256 => uint256) public latestSignerUpdateBatch;
 
+    // white address list who can lock token
+    mapping(address => bool) public whiteListAddresses;
+
     // mpc history
     MpcHistoryItem[] public mpcHistory; // recent mpc
 
@@ -127,6 +130,13 @@ contract LockingPool is
      * @param _newMpc new min lock.
      */
     event UpdateMpc(address _newMpc);
+
+    /**
+     * @dev Emitted when white address update in 'setWhiteListAddress'
+     * @param user the address who can lock token
+     * @param verified white address state
+     */
+    event WhiteListAdded(address user, bool verified);
 
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -287,6 +297,19 @@ contract LockingPool is
         emit UpdateMpc(_newMpc);
     }
 
+
+     /**
+     * @dev setWhiteListAddress Allow gov to update white address list
+     * @param user the address who can lock token
+     * @param verified white address state
+     */
+    function setWhiteListAddress(address user, bool verified) external onlyProxy {
+        require(whiteListAddresses[user] != verified, "state not change");
+        whiteListAddresses[user] = verified;
+
+        emit WhiteListAdded(user, verified);
+    }
+
      /**
      * @dev lockFor is used to lock Metis and participate in the sequencer block node application
      * @param user sequencer signer address
@@ -298,6 +321,7 @@ contract LockingPool is
         uint256 amount,
         bytes memory signerPubkey
     ) override external  whenNotPaused {
+        require(whiteListAddresses[user],"user should be in the white list");
         require(currentSequencerSetSize() < sequencerThreshold, "no more slots");
         require(amount >= minLock, "not enough deposit");
 

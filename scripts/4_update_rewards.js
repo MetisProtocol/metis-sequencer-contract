@@ -17,6 +17,7 @@ const main = async () => {
 
     // const govObj = await hre.ethers.getContractAt("Proxy", contractAddresses.contracts.ProxyProxy);
     // let updateRewardTx =  await updateReward(govObj, signer, contractAddresses.contracts.LockingPoolProxy);
+    // await updateRewardTx.wait();
     // console.log("updateRewardTx:", updateRewardTx.hash);
 
     const LockingPool = await ethers.getContractFactory("LockingPool");
@@ -28,7 +29,8 @@ const main = async () => {
     const approveAmount = await metisTokenObj.allowance(signer.address, contractAddresses.contracts.LockingPoolProxy);
     console.log("approveAmount: ", approveAmount);
     if (approveAmount <= 0) {
-        let approveTx = await metisTokenObj.approve(contractAddresses.contracts.LockingPoolProxy, web3.utils.toWei('1000000000000'))
+        let approveTx = await metisTokenObj.approve(contractAddresses.contracts.LockingPoolProxy, web3.utils.toWei('1000000000000'));
+        await approveTx.wait();
         console.log("approve tx:", approveTx.hash);
     }
 
@@ -49,6 +51,7 @@ const main = async () => {
 
     let signature = await calcSignature(params);
     let batchSubmitRewardsTx = await LockingPoolObj.batchSubmitRewards(params.batchId, params.payeer, params.startEpoch, params.endEpoch, params.sequencers, params.finishedBlocks, signature);
+    await batchSubmitRewardsTx.wait();
     console.log("batchSubmitRewards tx ", batchSubmitRewardsTx.hash);
 }
 

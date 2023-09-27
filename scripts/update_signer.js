@@ -33,7 +33,8 @@ const main = async () => {
      const testUser = new ethers.Wallet(recevierPri, ethers.provider);
     //  let tokenId = await LockingPoolObj.getSequencerId(node4Addr);
      // console.log("tokenId:", tokenId);
-     await LockingNFTObj.connect(testUser).approve(contractAddresses.contracts.LockingPoolProxy, 1);
+    let approveTx = await LockingNFTObj.connect(testUser).approve(contractAddresses.contracts.LockingPoolProxy, 1);
+    await approveTx.await();
 
     const gov = await hre.ethers.getContractFactory("Proxy");
     const govProxyObj = await gov.attach(contractAddresses.contracts.ProxyProxy);
@@ -49,11 +50,13 @@ const main = async () => {
      console.log("currentBatch:", currentBatch);
 
     if (currentBatch < latestSignerUpdateBatch + signerUpdateLimitValue){
-        await setCurrentBatch(govProxyObj, contractAddresses.contracts.LockingPoolProxy, latestSignerUpdateBatch + signerUpdateLimitValue)
+       let setCurrentBatchTx = await setCurrentBatch(govProxyObj, contractAddresses.contracts.LockingPoolProxy, latestSignerUpdateBatch + signerUpdateLimitValue);
+       await setCurrentBatchTx.wait();
     }
 
     // update signer
     let updateSignerTx = await LockingPoolObj.connect(testUser).updateSigner(1, "0xb548c2a036db2b5cdeb9501ff6c73e4653b691e3365e345bdddeb20145fa2f50f8a527550211b4b0664127a36f370d91c2adc33b14423327097f411c4c68ee96");
+    await updateSignerTx.wait();
     console.log("updateSigner tx ", updateSignerTx.hash);
 }
 

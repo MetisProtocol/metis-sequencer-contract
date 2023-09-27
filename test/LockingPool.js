@@ -290,6 +290,8 @@ describe('LockingPool', async () => {
     
 
     it('lock when pause', async () => {
+        await setWitheAddress(gov, admin, lockingPool.address, testUserAddress);
+
         // pause
         await setPause(gov, wallets[0], lockingPool.address);
 
@@ -303,6 +305,8 @@ describe('LockingPool', async () => {
     })
 
      it('lock with pause change', async () => {
+        await setWitheAddress(gov, admin, lockingPool.address, testUserAddress);
+
         const lockAmount = ethers.utils.parseEther('2');
 
         let pausedStatus = await lockingPool.paused();
@@ -322,6 +326,7 @@ describe('LockingPool', async () => {
      })
 
     it('lock', async () => {
+
         // console.log("lockingPool:", lockingPool.address);
         const lockAmount = ethers.utils.parseEther('2');
         // console.log("lockAmount:", lockAmount);
@@ -331,6 +336,11 @@ describe('LockingPool', async () => {
          expect(lockToken).to.eq(l1MetisToken);
 
          // lock for
+        await expect(lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, testUserPub)).to.be.revertedWith('user should be in the white list');
+
+        await setWitheAddress(gov, admin, lockingPool.address, testUserAddress);
+        await expect(setWitheAddress(gov, admin, lockingPool.address, testUserAddress)).to.be.revertedWith('Update failed');
+
         await expect(lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, [1,2,3])).to.be.revertedWith('not pub');
         await expect(lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, testUser2Pub)).to.be.revertedWith('user and signerPubkey mismatch');
         await lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, testUserPub);
@@ -363,6 +373,8 @@ describe('LockingPool', async () => {
     })
 
     it('owner of', async() =>{
+        await setWitheAddress(gov, admin, lockingPool.address, testUserAddress);
+
         // console.log("lockingPool:", lockingPool.address);
         const lockAmount = ethers.utils.parseEther('2');
         // console.log("lockAmount:", lockAmount);
@@ -382,6 +394,8 @@ describe('LockingPool', async () => {
     })
 
     it('relock', async () => {
+        await setWitheAddress(gov, admin, lockingPool.address, testUserAddress);
+
         // console.log("lockingPool:", lockingPool.address);
         const lockAmount = ethers.utils.parseEther('2');
         const lockAmount0 = ethers.utils.parseEther('0');
@@ -415,6 +429,8 @@ describe('LockingPool', async () => {
     })
 
      it('relock with reward', async () => {
+        await setWitheAddress(gov, admin, lockingPool.address, testUserAddress);
+
          const lockAmount = ethers.utils.parseEther('2');
 
          // lock token
@@ -469,6 +485,12 @@ describe('LockingPool', async () => {
      })
 
     it('lock for sequencer reverted with no more slots', async () => {
+        await setWitheAddress(gov, admin, lockingPool.address, testUserAddress);
+        await setWitheAddress(gov, admin, lockingPool.address, testUser2Address);
+        await setWitheAddress(gov, admin, lockingPool.address, testUser3Address);
+        await setWitheAddress(gov, admin, lockingPool.address, testUser4Address);
+        await setWitheAddress(gov, admin, lockingPool.address, testUser5Address);
+
         // console.log("lockingPool:", lockingPool.address);
         const lockAmount = ethers.utils.parseEther('2');
         // console.log("lockAmount:", lockAmount);
@@ -492,6 +514,8 @@ describe('LockingPool', async () => {
     })
 
     it('withdrawRewards', async () => {
+        await setWitheAddress(gov, admin, lockingPool.address, testUserAddress);
+
         // console.log("lockingPool:", lockingPool.address);
         const lockAmount = ethers.utils.parseEther('2');
         // console.log("lockAmount:", lockAmount);
@@ -551,6 +575,8 @@ describe('LockingPool', async () => {
     })
 
     it('unlock to exit reverted with not allowed', async () => {
+        await setWitheAddress(gov, admin, lockingPool.address, testUserAddress);
+
         const lockAmount = ethers.utils.parseEther('2');
         // console.log("lockAmount:", lockAmount);
 
@@ -572,6 +598,11 @@ describe('LockingPool', async () => {
     })
 
     it('unlock to exit', async () => {
+        await setWitheAddress(gov, admin, lockingPool.address, testUserAddress);
+        await setWitheAddress(gov, admin, lockingPool.address, testUser2Address);
+        await setWitheAddress(gov, admin, lockingPool.address, testUser3Address);
+        await setWitheAddress(gov, admin, lockingPool.address, testUser4Address);
+
         const lockAmount = ethers.utils.parseEther('2');
         // console.log("lockAmount:", lockAmount);
 
@@ -609,6 +640,11 @@ describe('LockingPool', async () => {
     })
 
     it('unlock claim', async () => {
+        await setWitheAddress(gov, admin, lockingPool.address, testUserAddress);
+        await setWitheAddress(gov, admin, lockingPool.address, testUser2Address);
+        await setWitheAddress(gov, admin, lockingPool.address, testUser3Address);
+        await setWitheAddress(gov, admin, lockingPool.address, testUser4Address);
+
         const lockAmount = ethers.utils.parseEther('2');
         // console.log("lockAmount:", lockAmount);
 
@@ -651,6 +687,11 @@ describe('LockingPool', async () => {
     })
 
     it('force unlock', async () => {
+         await setWitheAddress(gov, admin, lockingPool.address, testUserAddress);
+         await setWitheAddress(gov, admin, lockingPool.address, testUser2Address);
+         await setWitheAddress(gov, admin, lockingPool.address, testUser3Address);
+         await setWitheAddress(gov, admin, lockingPool.address, testUser4Address);
+
         const lockAmount = ethers.utils.parseEther('2');
 
         // lock for
@@ -712,6 +753,8 @@ describe('LockingPool', async () => {
     })
 
     it('update signer',async () =>{
+        await setWitheAddress(gov, admin, lockingPool.address, testUserAddress);
+
         const lockAmount = ethers.utils.parseEther('2');
         // console.log("lockAmount:", lockAmount);
 
@@ -850,6 +893,8 @@ describe('LockingPool', async () => {
     })
 
     it('batch submit rewards', async ()=>{
+        await setWitheAddress(gov, admin, lockingPool.address, testUserAddress);
+
         const lockAmount = ethers.utils.parseEther('2');
         // lock for
         await lockingPool.connect(admin).lockFor(testUserAddress, lockAmount, testUserPub);
@@ -927,6 +972,22 @@ describe('LockingPool', async () => {
     })
 })
 
+
+async function setWitheAddress(govObj, signer,lockingPoolProxyAddress, user) {
+    let ABI = [
+        "function setWhiteListAddress(address user, bool verified)"
+    ];
+    let iface = new ethers.utils.Interface(ABI);
+    let setWhiteAddressEncodeData = iface.encodeFunctionData("setWhiteListAddress", [
+        user, true
+    ])
+    // console.log("setWitheAddress: ", setWhiteAddressEncodeData)
+
+    return govObj.connect(signer).update(
+        lockingPoolProxyAddress,
+        setWhiteAddressEncodeData
+    )
+}
 
 async function setPause(govObj, signer, lockingPoolAddress) {
     let ABI = [
