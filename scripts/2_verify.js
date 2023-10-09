@@ -14,7 +14,7 @@ const main = async () => {
   console.log("contractAddresses:", contractAddresses)
 
   await hre.run("verify:verify", {
-      address: contractAddresses.contracts.ProxyProxy,
+      address: contractAddresses.contracts.GovProxy,
       contract: "contracts/Proxy/Proxy.sol:Proxy",
       constructorArguments: [
       ],

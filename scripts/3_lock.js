@@ -53,7 +53,7 @@ const main = async () => {
    const pubkey = testPub4;
 
   const gov = await hre.ethers.getContractFactory("Proxy");
-  const govProxyObj = await gov.attach(contractAddresses.contracts.GovernanceProxy);
+  const govProxyObj = await gov.attach(contractAddresses.contracts.GovProxy);
   let setWitheAddressTx = await setWitheAddress(govProxyObj, contractAddresses.contracts.LockingPoolProxy, sequencerSigner);
   await setWitheAddressTx.wait();
   console.log("setWitheAddress:", setWitheAddressTx.hash);

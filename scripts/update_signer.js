@@ -37,7 +37,7 @@ const main = async () => {
     await approveTx.await();
 
     const gov = await hre.ethers.getContractFactory("Proxy");
-    const govProxyObj = await gov.attach(contractAddresses.contracts.ProxyProxy);
+    const govProxyObj = await gov.attach(contractAddresses.contracts.GovProxy);
 
     // updateSignerUpdateLimit
     // let updateSignerUpdateLimitTx = await updateSignerUpdateLimit(govProxyObj, contractAddresses.contracts.LockingPoolProxy);
