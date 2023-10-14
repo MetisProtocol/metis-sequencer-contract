@@ -6,7 +6,7 @@ const web3 = require("web3");
 
 const l1MetisToken = "0x114f836434a9aa9ca584491e7965b16565bf5d7b";
 const l2MetisToken = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
-const l1BridgeAddress = "0xCF7257A86A5dBba34bAbcd2680f209eb9a05b2d2";
+const l1BridgeAddress = "0xD0738899AE5FA1D2b216E756375eDEd86094c81e";
 const l2Gas = 200000;
 
 let lockingNftName = "Metis Sequencer";
@@ -28,7 +28,7 @@ const main = async () => {
 
   // deploy locking nft
   const LockingNFT = await hre.ethers.getContractFactory("LockingNFT");
-  lockingNFTDeployed = await LockingNFT.deploy(lockingNftName, lockingNftSymbol);
+  let lockingNFTDeployed = await LockingNFT.deploy(lockingNftName, lockingNftSymbol);
   console.log("LockingNFT deployed to:", lockingNFTDeployed.address);
 
   let mpcAddress = signer;
@@ -57,7 +57,7 @@ const main = async () => {
 
   //  deploy locking info
   const LockingInfo = await hre.ethers.getContractFactory("LockingInfo");
-  lockingInfoDeployed = await LockingInfo.deploy(lockingPoolProxy.address);
+  let lockingInfoDeployed = await LockingInfo.deploy(lockingPoolProxy.address);
   console.log("LockingInfo deployed to:", lockingInfoDeployed.address);
   await delay(3000);
 
