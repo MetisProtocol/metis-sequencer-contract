@@ -523,6 +523,81 @@ contract LockingPool is
         return totalReward;
     }
 
+     // query owenr by NFT token id
+    function ownerOf(uint256 tokenId) override external view returns (address) {
+        return NFTContract.ownerOf(tokenId);
+    }
+
+    // query current lock amount by sequencer id
+    function sequencerLock(uint256 sequencerId) override external view returns (uint256) {
+        return sequencers[sequencerId].amount;
+    }
+
+    // get sequencer id by address
+    function getSequencerId(address user) override external view returns (uint256) {
+        return NFTContract.tokenOfOwnerByIndex(user, 0);
+    }
+
+    //  get sequencer reward by sequencer id
+    function sequencerReward(uint256 sequencerId) override external view returns (uint256) {
+        return sequencers[sequencerId].reward - INITIALIZED_AMOUNT;
+    }
+
+    // get total lock amount for all sequencers
+    function currentSequencerSetTotalLock() override external view returns (uint256) {
+        return sequencerState.amount;
+    }
+
+    /**
+      * @dev fetchMpcAddress query mpc address by L1 block height, used by batch-submitter
+      * @param blockHeight the L1 block height
+      */
+    function fetchMpcAddress(uint256 blockHeight) override external view returns(address){
+        address result;
+        for (uint i = mpcHistory.length-1; i>=0; i--) {
+            if (blockHeight>= mpcHistory[i].startBlock){
+                result =  mpcHistory[i].newMpcAddress;
+                break;
+            }
+        }
+
+        return result;
+    }
+
+
+    /*
+        public functions
+    */
+
+    // query whether an id is a sequencer
+    function isSequencer(uint256 sequencerId)  public view returns (bool) {
+        return
+            _isSequencer(
+                sequencers[sequencerId].status,
+                sequencers[sequencerId].amount,
+                sequencers[sequencerId].deactivationBatch,
+                currentBatch
+            );
+    }
+
+    
+    // getL2ChainId return the l2 chain id
+    function getL2ChainId() override public view returns(uint256) {
+        uint256 l2ChainId;
+        if (block.chainid == 1) {
+            l2ChainId = 1088;
+        }else if (block.chainid == 5){
+            l2ChainId = 599;
+        }
+        return l2ChainId;
+    }
+
+    // get all sequencer count
+    function currentSequencerSetSize() override public view returns (uint256) {
+        return sequencerState.lockerCount;
+    }
+
+
 
     /*
         internal functions
@@ -675,6 +750,26 @@ contract LockingPool is
         }
     }
 
+    function isContract(address _target) internal view returns (bool) {
+        if (_target == address(0)) {
+            return false;
+        }
+
+        uint256 size;
+        assembly {
+            size := extcodesize(_target)
+        }
+        return size > 0;
+    }
+
+    function _calculateReward(
+        uint256 blockInterval
+    ) internal view returns (uint256) {
+        // rewards are based on BlockInterval multiplied on `BLOCK_REWARD`
+        return blockInterval * BLOCK_REWARD;
+    }
+
+
     /**
         Private Methods
      */
@@ -722,100 +817,6 @@ contract LockingPool is
         IERC20(l1Token).safeTransferFrom(from, destination, amount);
     }
    
-    /*
-        view funtions
-    */
-
-     // query owenr by NFT token id
-    function ownerOf(uint256 tokenId) override external view returns (address) {
-        return NFTContract.ownerOf(tokenId);
-    }
-
-
-    // query current lock amount by sequencer id
-    function sequencerLock(uint256 sequencerId) override external view returns (uint256) {
-        return sequencers[sequencerId].amount;
-    }
-
-    // get sequencer id by address
-    function getSequencerId(address user) override external view returns (uint256) {
-        return NFTContract.tokenOfOwnerByIndex(user, 0);
-    }
-
-    //  get sequencer reward by sequencer id
-    function sequencerReward(uint256 sequencerId) override external view returns (uint256) {
-        return sequencers[sequencerId].reward - INITIALIZED_AMOUNT;
-    }
-
-    // get total lock amount for all sequencers
-    function currentSequencerSetTotalLock() override external view returns (uint256) {
-        return sequencerState.amount;
-    }
-
-    /**
-      * @dev fetchMpcAddress query mpc address by L1 block height, used by batch-submitter
-      * @param blockHeight the L1 block height
-      */
-    function fetchMpcAddress(uint256 blockHeight) override external view returns(address){
-        address result;
-        for (uint i = mpcHistory.length-1; i>=0; i--) {
-            if (blockHeight>= mpcHistory[i].startBlock){
-                result =  mpcHistory[i].newMpcAddress;
-                break;
-            }
-        }
-
-        return result;
-    }
-
-
-    // query whether an id is a sequencer
-    function isSequencer(uint256 sequencerId)  public view returns (bool) {
-        return
-            _isSequencer(
-                sequencers[sequencerId].status,
-                sequencers[sequencerId].amount,
-                sequencers[sequencerId].deactivationBatch,
-                currentBatch
-            );
-    }
-
-    /**
-     * @dev getL2ChainId return the l2 chain id
-     */
-    function getL2ChainId() override public view returns(uint256) {
-        uint256 l2ChainId;
-        if (block.chainid == 1) {
-            l2ChainId = 1088;
-        }else if (block.chainid == 5){
-            l2ChainId = 599;
-        }
-        return l2ChainId;
-    }
-
-      // get all sequencer count
-    function currentSequencerSetSize() override public view returns (uint256) {
-        return sequencerState.lockerCount;
-    }
-
-    function isContract(address _target) internal view returns (bool) {
-        if (_target == address(0)) {
-            return false;
-        }
-
-        uint256 size;
-        assembly {
-            size := extcodesize(_target)
-        }
-        return size > 0;
-    }
-
-    function _calculateReward(
-        uint256 blockInterval
-    ) internal view returns (uint256) {
-        // rewards are based on BlockInterval multiplied on `BLOCK_REWARD`
-        return blockInterval * BLOCK_REWARD;
-    }
 
     function _getAndAssertSigner(bytes memory pub) private view returns (address) {
         require(pub.length == 64, "not pub");
