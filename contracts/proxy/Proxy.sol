@@ -23,7 +23,18 @@ contract Proxy is IProxy, OwnableUpgradeable {
      */  
     function update(address target, bytes memory data) override external onlyOwner {
         require(target != address(0),"invalid target");
+        require(isContract(target),"not a contract address");
         (bool success, ) = target.call(data); 
         require(success, "Update failed");
+    }
+
+     /**
+     * @dev The isContract method check if an address is a contract address
+     * @param addr Address of target contract
+     */  
+    function isContract(address addr) internal view returns (bool) {
+        uint256 size;
+        assembly { size := extcodesize(addr) }
+        return size > 0;
     }
 }
