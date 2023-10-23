@@ -190,7 +190,7 @@ contract LockingPool is
      */
 
     /**
-     * @dev forceUnlock Allow gov to force a sequencer node to exit
+     * @dev forceUnlock Allow proxy to force a sequencer node to exit
      * @param sequencerId unique integer to identify a sequencer.
      * @param withdrawRewardToL2 Whether the current reward is withdrawn to L2
      */
@@ -199,7 +199,7 @@ contract LockingPool is
     }
 
     /**
-     * @dev updateNFTContract Allow gov update the NFT contract address
+     * @dev updateNFTContract Allow proxy update the NFT contract address
      * @param _nftContract new NFT contract address
      */
     function updateNFTContract(address _nftContract) external onlyProxy {
@@ -209,7 +209,7 @@ contract LockingPool is
     }
 
      /**
-     * @dev updateLockingInfo Allow gov update the locking info contract address
+     * @dev updateLockingInfo Allow proxy update the locking info contract address
      * @param _lockingInfo new locking info contract address
      */
     function updateLockingInfo(address _lockingInfo) external onlyProxy {
@@ -219,7 +219,7 @@ contract LockingPool is
     }
 
     /**
-     * @dev setCurrentBatch  Allow gov to set current batch id
+     * @dev setCurrentBatch  Allow proxy to set current batch id
      * @param _currentBatch batch id to set
      */
     function setCurrentBatch(uint256 _currentBatch) external onlyProxy {
@@ -229,7 +229,7 @@ contract LockingPool is
     }
 
     /**
-     * @dev updateSequencerThreshold  Allow gov to set max sequencer threshold
+     * @dev updateSequencerThreshold  Allow proxy to set max sequencer threshold
      * @param newThreshold the new threshold
      */
     function updateSequencerThreshold(uint256 newThreshold) external onlyProxy {
@@ -239,7 +239,7 @@ contract LockingPool is
     }
 
      /**
-     * @dev updateBlockReward  Allow gov to set per block reward
+     * @dev updateBlockReward  Allow proxy to set per block reward
      * @param newReward the block reward
      */
     function updateBlockReward(uint256 newReward) external onlyProxy {
@@ -250,7 +250,7 @@ contract LockingPool is
 
 
     /**
-    *  @dev updateWithdrawDelayTimeValue Allow gov to set withdraw delay time.
+    *  @dev updateWithdrawDelayTimeValue Allow proxy to set withdraw delay time.
     *  @param newWithdrawDelayTime new withdraw delay time
     */
     function updateWithdrawDelayTimeValue(uint256 newWithdrawDelayTime) external onlyProxy {
@@ -260,7 +260,7 @@ contract LockingPool is
     }
 
     /**
-     * @dev updateSignerUpdateLimit Allow gov to set signer update max limit
+     * @dev updateSignerUpdateLimit Allow proxy to set signer update max limit
      * @param _limit new limit
      */
     function updateSignerUpdateLimit(uint256 _limit) external onlyProxy {
@@ -271,7 +271,7 @@ contract LockingPool is
 
 
     /**
-     * @dev updateMinAmounts Allow gov to update min lock amount 
+     * @dev updateMinAmounts Allow proxy to update min lock amount 
      * @param _minLock new min lock amount
      */
     function updateMinAmounts(uint256 _minLock) external onlyProxy {
@@ -282,7 +282,7 @@ contract LockingPool is
 
 
     /**
-     * @dev updateMpc Allow gov to update new mpc address
+     * @dev updateMpc Allow proxy to update new mpc address
      * @param _newMpc new mpc
      */
     function updateMpc(address _newMpc) external onlyProxy {
@@ -299,7 +299,7 @@ contract LockingPool is
 
 
      /**
-     * @dev setWhiteListAddress Allow gov to update white address list
+     * @dev setWhiteListAddress Allow proxy to update white address list
      * @param user the address who can lock token
      * @param verified white address state
      */
@@ -468,7 +468,7 @@ contract LockingPool is
     }
 
     /**
-     * @dev batchSubmitRewards Allow gov or other roles to submit L2 sequencer block information, and attach Metis reward tokens for reward distribution
+     * @dev batchSubmitRewards Allow proxy or other roles to submit L2 sequencer block information, and attach Metis reward tokens for reward distribution
      * @param batchId The batchId that submitted the reward is that
      * @param payeer Who Pays the Reward Tokens
      * @param startEpoch The startEpoch that submitted the reward is that

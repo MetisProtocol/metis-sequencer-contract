@@ -86,21 +86,21 @@ contract LockingInfo is Ownable {
     event Relocked(uint256 indexed sequencerId, uint256 amount, uint256 total);
 
     /**
-     * @dev Emitted when the gov update threshold in 'updateSequencerThreshold()'.
+     * @dev Emitted when the proxy update threshold in 'updateSequencerThreshold()'.
      * @param newThreshold new threshold
      * @param oldThreshold  old threshold
      */
     event ThresholdChange(uint256 newThreshold, uint256 oldThreshold);
 
     /**
-     * @dev Emitted when the gov update threshold in 'updateWithdrawDelayTimeValue()'.
+     * @dev Emitted when the proxy update threshold in 'updateWithdrawDelayTimeValue()'.
      * @param newWithrawDelayTime new withdraw delay time
      * @param oldWithrawDelayTime  old withdraw delay time
      */
     event WithrawDelayTimeChange(uint256 newWithrawDelayTime, uint256 oldWithrawDelayTime);
 
     /**
-     * @dev Emitted when the gov update threshold in 'updateBlockReward()'.
+     * @dev Emitted when the proxy update threshold in 'updateBlockReward()'.
      * @param newReward new block reward
      * @param oldReward  old block reward
      */

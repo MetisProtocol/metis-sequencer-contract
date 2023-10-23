@@ -8,7 +8,7 @@ contract ProxyPauseable is PausableUpgradeable {
     IProxy public Proxy;
     
     /**
-     * @dev onlyProxy Only the gov address can be used to call the contract method
+     * @dev onlyProxy Only the proxy address can be used to call the contract method
      *
      */    
     modifier onlyProxy() {
