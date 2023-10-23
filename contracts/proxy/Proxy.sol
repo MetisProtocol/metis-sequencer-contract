@@ -25,7 +25,7 @@ contract Proxy is IProxy, OwnableUpgradeable {
         require(target != address(0),"invalid target");
         require(isContract(target),"not a contract address");
         (bool success, ) = target.call(data); 
-        require(success, "Update failed");
+        require(success, "update failed");
     }
 
      /**

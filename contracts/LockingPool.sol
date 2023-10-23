@@ -405,7 +405,7 @@ contract LockingPool is
         bool lockRewards
     ) override external whenNotPaused onlySequencer(sequencerId) {
         require(amount > 0, "invalid amount");
-        require(sequencers[sequencerId].deactivationBatch == 0, "No restaking");
+        require(sequencers[sequencerId].deactivationBatch == 0, "no relocking");
 
         uint256 relockAmount = amount;
 
@@ -444,7 +444,7 @@ contract LockingPool is
     function updateSigner(uint256 sequencerId, bytes memory signerPubkey) external onlySequencer(sequencerId) {
         address signer = _getAndAssertSigner(signerPubkey);
         uint256 _currentBatch = currentBatch;
-        require(_currentBatch >= latestSignerUpdateBatch[sequencerId] + signerUpdateLimit, "Not allowed");
+        require(_currentBatch >= latestSignerUpdateBatch[sequencerId] + signerUpdateLimit, "not allowed");
 
         address currentSigner = sequencers[sequencerId].signer;
         // update signer event
@@ -596,7 +596,6 @@ contract LockingPool is
     function currentSequencerSetSize() override public view returns (uint256) {
         return sequencerState.lockerCount;
     }
-
 
 
     /*
@@ -821,7 +820,7 @@ contract LockingPool is
     function _getAndAssertSigner(bytes memory pub) private view returns (address) {
         require(pub.length == 64, "not pub");
         address signer = address(uint160(uint256(keccak256(pub))));
-        require(signer != address(0) && signerToSequencer[signer] == 0, "Invalid signer");
+        require(signer != address(0) && signerToSequencer[signer] == 0, "invalid signer");
         return signer;
     }
 
