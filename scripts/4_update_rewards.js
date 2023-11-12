@@ -15,11 +15,6 @@ const main = async () => {
     const contractAddresses = utils.getContractAddresses();
     console.log("contractAddresses:", contractAddresses);
 
-    // const govObj = await hre.ethers.getContractAt("Proxy", contractAddresses.contracts.GovProxy);
-    // let updateRewardTx =  await updateReward(govObj, signer, contractAddresses.contracts.LockingPoolProxy);
-    // await updateRewardTx.wait();
-    // console.log("updateRewardTx:", updateRewardTx.hash);
-
     const LockingPool = await ethers.getContractFactory("LockingPool");
     const LockingPoolObj = await LockingPool.attach(contractAddresses.contracts.LockingPoolProxy);
 

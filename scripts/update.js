@@ -4,6 +4,7 @@
 
  const web3 = require("web3");
  const utils = require('./utils');
+ let lockingPoolAddress;
 
  const main = async () => {
      const accounts = await ethers.getSigners();
@@ -12,23 +13,34 @@
 
      const contractAddresses = utils.getContractAddresses();
      console.log("contractAddresses:", contractAddresses);
+     lockingPoolAddress = contractAddresses.contracts.LockingPoolProxy;
+     console.log("lockingPoolAddress address:", lockingPoolAddress);
+
 
      const govProxyObj = await hre.ethers.getContractAt("Proxy", contractAddresses.contracts.GovProxy);
-     let updateMinLockTx = await updateMinLock(govProxyObj);
-     await updateMinLockTx.wait();
-     console.log("updateMinLockTx:", updateMinLockTx.hash);
+     console.log("govProxyObj address:", govProxyObj.address);
 
-    //  updateMpc
-     let updateMpcTx = await updateMpc(govProxyObj, "0x563870eA4f826f1460C8Ce2800ed275f07B234E4");
-      await updateMpcTx.wait();
-     console.log("updateMpcTx:", updateMpcTx.hash);
-     await delay(3000);
+    //  let updateMinLockTx = await updateMinLock(govProxyObj);
+    //  await updateMinLockTx.wait();
+    //  console.log("updateMinLockTx:", updateMinLockTx.hash);
 
-    //  updateMinLock
-     let updateWithdrawDelayTx = await updateWithdrawDelay(govProxyObj);
-      await updateWithdrawDelayTx.wait();
-     console.log("updateWithdrawDelay:", updateWithdrawDelayTx.hash);
-     await delay(3000);
+    // //  updateMpc
+    //  let updateMpcTx = await updateMpc(govProxyObj, "0x563870eA4f826f1460C8Ce2800ed275f07B234E4");
+    //   await updateMpcTx.wait();
+    //  console.log("updateMpcTx:", updateMpcTx.hash);
+    //  await delay(3000);
+
+    // //  updateMinLock
+    //  let updateWithdrawDelayTx = await updateWithdrawDelay(govProxyObj);
+    //   await updateWithdrawDelayTx.wait();
+    //  console.log("updateWithdrawDelay:", updateWithdrawDelayTx.hash);
+    //  await delay(3000);
+
+     // update blockReward amount
+    let newBlockAmount = ethers.utils.parseEther('0.006341958');
+    let updateBlockRewardAmountTx = await updateBlockRewardAmount(govProxyObj, newBlockAmount);
+    console.log("updateBlockRewardAmount:", updateBlockRewardAmountTx.hash);
+    await updateBlockRewardAmountTx.wait();
  }
 
  async function updateRewardByGov(govObj, params) {
@@ -90,7 +102,7 @@
      console.log("updateMinAmounts: ", updateMinAmountsData)
 
      return govObj.update(
-         lockingPoolProxyAddress,
+         lockingPoolAddress,
          updateMinAmountsData
      )
  }
@@ -106,7 +118,7 @@
      console.log("updateWithdrawDelayTimeValue: ", updateWithdrawDelayTimeValueData)
 
      return govObj.update(
-         lockingPoolProxyAddress,
+         lockingPoolAddress,
          updateWithdrawDelayTimeValueData
      )
  }
@@ -122,10 +134,26 @@
      console.log("updateMpc: ", updateMpcData)
 
      return govObj.update(
-         lockingPoolProxyAddress,
+         lockingPoolAddress,
          updateMpcData
      )
  }
+
+  async function updateBlockRewardAmount(govObj, newBlockReward) {
+      let ABI = [
+          "function updateBlockReward(uint256 newReward)"
+      ];
+      let iface = new ethers.utils.Interface(ABI);
+      let newBlockRewardData = iface.encodeFunctionData("updateBlockReward", [
+          newBlockReward
+      ])
+      console.log("newBlockReward: ", newBlockRewardData)
+
+      return govObj.update(
+          lockingPoolAddress,
+          newBlockRewardData
+      )
+  }
 
  main()
      .then(() => process.exit(0))
