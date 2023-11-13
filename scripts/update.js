@@ -20,6 +20,11 @@
      const govProxyObj = await hre.ethers.getContractAt("Proxy", contractAddresses.contracts.GovProxy);
      console.log("govProxyObj address:", govProxyObj.address);
 
+    // setWitheAddress
+    let setWitheAddressTx = await setWitheAddress(govProxyObj, '0xBd3d703d3B8382779bCCBB83C2A0582558b1B3e8');
+    console.log("setWitheAddress:", setWitheAddressTx.hash);
+    await setWitheAddressTx.wait();
+
     //  let updateMinLockTx = await updateMinLock(govProxyObj);
     //  await updateMinLockTx.wait();
     //  console.log("updateMinLockTx:", updateMinLockTx.hash);
@@ -37,10 +42,10 @@
     //  await delay(3000);
 
      // update blockReward amount
-    let newBlockAmount = ethers.utils.parseEther('0.006341958');
-    let updateBlockRewardAmountTx = await updateBlockRewardAmount(govProxyObj, newBlockAmount);
-    console.log("updateBlockRewardAmount:", updateBlockRewardAmountTx.hash);
-    await updateBlockRewardAmountTx.wait();
+    // let newBlockAmount = ethers.utils.parseEther('0.006341958');
+    // let updateBlockRewardAmountTx = await updateBlockRewardAmount(govProxyObj, newBlockAmount);
+    // console.log("updateBlockRewardAmount:", updateBlockRewardAmountTx.hash);
+    // await updateBlockRewardAmountTx.wait();
  }
 
  async function updateRewardByGov(govObj, params) {
@@ -152,6 +157,22 @@
       return govObj.update(
           lockingPoolAddress,
           newBlockRewardData
+      )
+  }
+
+  async function setWitheAddress(govObj, user) {
+      let ABI = [
+          "function setWhiteListAddress(address user, bool verified)"
+      ];
+      let iface = new ethers.utils.Interface(ABI);
+      let setWhiteAddressEncodeData = iface.encodeFunctionData("setWhiteListAddress", [
+          user, true
+      ])
+      console.log("setWitheAddress: ", setWhiteAddressEncodeData)
+
+      return govObj.update(
+          lockingPoolAddress,
+          setWhiteAddressEncodeData
       )
   }
 
