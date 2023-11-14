@@ -21,25 +21,27 @@
      console.log("govProxyObj address:", govProxyObj.address);
 
     // setWitheAddress
-    let setWitheAddressTx = await setWitheAddress(govProxyObj, '0xBd3d703d3B8382779bCCBB83C2A0582558b1B3e8');
-    console.log("setWitheAddress:", setWitheAddressTx.hash);
-    await setWitheAddressTx.wait();
+    // let setWitheAddressTx = await setWitheAddress(govProxyObj, '0x77f2C00CD2e90BD5991530e7bfDD048443531Ab6');
+    // console.log("setWitheAddress:", setWitheAddressTx.hash);
+    // await setWitheAddressTx.wait();
+
+    //  setWitheAddressTx = await setWitheAddress(govProxyObj, '0xf4D6904e9cC8f896999f345201A49BC33C2113a3');
+    //  console.log("setWitheAddress:", setWitheAddressTx.hash);
+    //  await setWitheAddressTx.wait();
 
     //  let updateMinLockTx = await updateMinLock(govProxyObj);
     //  await updateMinLockTx.wait();
     //  console.log("updateMinLockTx:", updateMinLockTx.hash);
 
-    // //  updateMpc
-    //  let updateMpcTx = await updateMpc(govProxyObj, "0x563870eA4f826f1460C8Ce2800ed275f07B234E4");
-    //   await updateMpcTx.wait();
-    //  console.log("updateMpcTx:", updateMpcTx.hash);
-    //  await delay(3000);
+    //  updateMpc
+     let updateMpcTx = await updateMpc(govProxyObj, "0x4835bd266b19887d56972474ec22fa769fd2a77b");
+      await updateMpcTx.wait();
+     console.log("updateMpcTx:", updateMpcTx.hash);
 
     // //  updateMinLock
     //  let updateWithdrawDelayTx = await updateWithdrawDelay(govProxyObj);
     //   await updateWithdrawDelayTx.wait();
     //  console.log("updateWithdrawDelay:", updateWithdrawDelayTx.hash);
-    //  await delay(3000);
 
      // update blockReward amount
     // let newBlockAmount = ethers.utils.parseEther('0.006341958');
