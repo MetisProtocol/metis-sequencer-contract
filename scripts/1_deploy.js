@@ -4,9 +4,9 @@ const utils = require('./utils');
 const { zeroAddress } = require("ethereumjs-util");
 const web3 = require("web3");
 
-const l1MetisToken = "0x114f836434a9aa9ca584491e7965b16565bf5d7b";
+const l1MetisToken = "0x3972AAfb128c9BFcA5328C3D5CeE82fe4d1815ce";
 const l2MetisToken = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
-const l1BridgeAddress = "0xD0738899AE5FA1D2b216E756375eDEd86094c81e";
+const l1BridgeAddress = "0x9c89FD2AA8181bb9883449D2Dd7f0336B0D11AD5";
 const l2Gas = 200000;
 
 let lockingNftName = "Metis Sequencer";
@@ -49,6 +49,7 @@ const main = async () => {
             });
   await lockingPoolProxy.deployed();
   console.log("LockingPool deployed to:", lockingPoolProxy.address);
+  await delay(3000);
 
   // const lockingPoolUpgrade = await hre.ethers.getContractFactory("LockingPool");
   // let upgrade = await upgrades.upgradeProxy(lockingPoolProxy.address, lockingPoolUpgrade);

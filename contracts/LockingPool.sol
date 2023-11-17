@@ -485,13 +485,13 @@ contract LockingPool is
         address[] memory _sequencers,
         uint256[] memory finishedBlocks,
         bytes memory signature
-    )  external onlyProxy returns (uint256) {
+    // )  external onlyProxy returns (uint256) {
+    )  external returns (uint256) {
         uint256 nextBatch = currentBatch + 1;
         require(nextBatch == batchId,"invalid batch id");
         require(_sequencers.length == finishedBlocks.length, "mismatch length");
         require(lastRewardEpochId <= startEpoch,"invalid startEpoch");
         require(startEpoch < endEpoch,"invalid endEpoch");
-
 
         lastRewardEpochId = endEpoch;
         // check mpc signature
@@ -588,6 +588,8 @@ contract LockingPool is
             l2ChainId = 1088;
         }else if (block.chainid == 5){
             l2ChainId = 599;
+        }else if (block.chainid == 17000){
+            l2ChainId = 59901;
         }
         return l2ChainId;
     }

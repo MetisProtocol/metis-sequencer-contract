@@ -34,9 +34,9 @@
     //  console.log("updateMinLockTx:", updateMinLockTx.hash);
 
     //  updateMpc
-     let updateMpcTx = await updateMpc(govProxyObj, "0x4835bd266b19887d56972474ec22fa769fd2a77b");
-      await updateMpcTx.wait();
-     console.log("updateMpcTx:", updateMpcTx.hash);
+    //  let updateMpcTx = await updateMpc(govProxyObj, "0x4835bd266b19887d56972474ec22fa769fd2a77b");
+    //   await updateMpcTx.wait();
+    //  console.log("updateMpcTx:", updateMpcTx.hash);
 
     // //  updateMinLock
     //  let updateWithdrawDelayTx = await updateWithdrawDelay(govProxyObj);
@@ -44,10 +44,10 @@
     //  console.log("updateWithdrawDelay:", updateWithdrawDelayTx.hash);
 
      // update blockReward amount
-    // let newBlockAmount = ethers.utils.parseEther('0.006341958');
-    // let updateBlockRewardAmountTx = await updateBlockRewardAmount(govProxyObj, newBlockAmount);
-    // console.log("updateBlockRewardAmount:", updateBlockRewardAmountTx.hash);
-    // await updateBlockRewardAmountTx.wait();
+    let newBlockAmount = ethers.utils.parseEther('0.008878742');
+    let updateBlockRewardAmountTx = await updateBlockRewardAmount(govProxyObj, newBlockAmount);
+    console.log("updateBlockRewardAmount:", updateBlockRewardAmountTx.hash);
+    await updateBlockRewardAmountTx.wait();
  }
 
  async function updateRewardByGov(govObj, params) {

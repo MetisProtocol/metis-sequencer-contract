@@ -1,0 +1,14 @@
+{
+  "contracts": {
+    "GovProxy": "0x85ABa82500eF170344ba9A2470049345E56749a4",
+    "LockingPoolProxy": "0x68AE0Fc18Fc00dB98F66e1Ca952dfbC501d449fE",
+    "LockingInfo": "0xfE561A7FD30B29BA61555a7Ff1C5b9122da5174a",
+    "LockingNFT": "0x56F136e89359C918249F11a21317B9D76dEbD2Ef",
+    "MetisBridge": "0xD0738899AE5FA1D2b216E756375eDEd86094c81e",
+    "L2Gas": 200000,
+    "tokens": {
+      "L1MetisToken": "0x114f836434a9aa9ca584491e7965b16565bf5d7b",
+      "L2MetisToken": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
+    }
+  }
+}

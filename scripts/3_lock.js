@@ -9,17 +9,20 @@ const IERC20_SOURCE = "@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20";
 
 // params for goerli
 // pubkey should not have the leading 04 prefix
-let seqPub1 = "0xb548c2a036db2b5cdeb9501ff6c73e4653b691e3365e345bdddeb20145fa2f50f8a527550211b4b0664127a36f370d91c2adc33b14423327097f411c4c68ee96"
-let seqAddr1 = "0x1267397fb5BF6f6Dcc3d18d673616D512dbcd8F0"
+let seqPub1 = "0xfaeda3a3e5dafb79153a9a72b8275292237fdb6f89c037bffd6682187ce56b7778f815c5794a457cb35484242fba8cbbed3eefa6f795a7e307830a5af52063bc"
+let seqAddr1 = "0xD3011EaF0050FC6D474DF2e598461080D787e343"
 
-let seqPub2 = "0xa95fde90a1a2ff755ed81ecf8f9a4761ca2e2e1bd017ba202f6d4e222d591f9b8a98718dab19521c6594eeb41ed2707a3e3861cbf5f730de80281cbcf846f3b5"
-let seqAddr2 = "0x432e8fB4C4BD8Ce19DC8c05d6915Ab68C336B147"
+let seqPub2 = "0xa569db9d2cf0ef29eb95c34dd069d14d9b3776b18d792312ce7f02d0c57da22f04fd4331719a2dd3f51c7873b5842bd1a5558654609a3f5e8294a50fe3c7d4d3"
+let seqAddr2 = "0x0e57211BEc9b113d592Dd1072C2E008dd32e8203"
 
-let seqPub3 = "0x94f65bb41bffc7a86abbbe21a9edc68f2fa005f5c366ae130cbca779173e0f46644936d4bd56949d627320e8b66a8ed084d178d4b494172e3a5d8d33855dbde3"
-let seqAddr3 = "0xFe08EE83B1f01d6d7C6eff3c8C84FA6Fe02fca17"
+let seqPub3 = "0x9599fbdebeb91bdffd00d00dc2f5b21c731100169814a9220b3c16a8d87f6f8a115014cf1047f5d9266efa709b7412d62328555e46508b0dafb3c3d9d5556129"
+let seqAddr3 = "0x108fe339187108042871cC918F708b2C97059a32"
 
-let seqPub4 = "0x9ecfdc9f63b7ff3f1771ef1003c2f74f381a3fc210f04f66a81eba56abd2e51a12c63c559c44233332b691eb733c26ad0aea8edd5afd4ba0b8b701988327a882"
-let seqAddr4 = "0x3EB630c3c267395fEE216b603A02061330d39642"
+let seqPub4 = "0x6681d9a6a882431be77aeeaabf155ca5343c62211834303e7b4892c78ebb0454c674f978ef74e3355a3a31167d0479d31a5b3991c1003fbb26420aa5c0f4ddd8"
+let seqAddr4 = "0x79F08238ADA534EEfd4C4D726ad00865d79F05E3"
+
+let seqPub5 = "0x3640bb1ee74ba2ccf479bf7282c566a4298c39a05e639b5c7304fd2da758e0727c737f9c3fe7dee207a2b4085bc7d8d008a84beaed6cdaef662152a9ca5ebf16"
+let seqAddr5 = "0x6eec40d64Fe44c1d40c96AC6A40A130330AC9819"
 
 const main = async () => {
   const accounts = await ethers.getSigners();
@@ -38,7 +41,7 @@ const main = async () => {
   const approveAmount = await metisTokenObj.allowance(signer, contractAddresses.contracts.LockingPoolProxy);
   console.log("approveAmount: ", approveAmount);
   if (approveAmount <= 0) {
-    let approveTx = await metisTokenObj.approve(contractAddresses.contracts.LockingPoolProxy, web3.utils.toWei('1000000000000'))
+    let approveTx = await metisTokenObj.approve(contractAddresses.contracts.LockingPoolProxy, web3.utils.toWei('100000000000000000000000000000000'))
     console.log("approve tx:", approveTx.hash);
     await approveTx.wait();
   }
@@ -46,10 +49,11 @@ const main = async () => {
   const gov = await hre.ethers.getContractFactory("Proxy");
   const govProxyObj = await gov.attach(contractAddresses.contracts.GovProxy);
 
-  await lockFor(govProxyObj, LockingPoolObj, contractAddresses, seqAddr1, seqPub1);
-  await lockFor(govProxyObj, LockingPoolObj, contractAddresses, seqAddr2, seqPub2);
+  // await lockFor(govProxyObj, LockingPoolObj, contractAddresses, seqAddr1, seqPub1);
+  // await lockFor(govProxyObj, LockingPoolObj, contractAddresses, seqAddr2, seqPub2);
   await lockFor(govProxyObj, LockingPoolObj, contractAddresses, seqAddr3, seqPub3);
   await lockFor(govProxyObj, LockingPoolObj, contractAddresses, seqAddr4, seqPub4);
+  // await lockFor(govProxyObj, LockingPoolObj, contractAddresses, seqAddr5, seqPub5);
 
   //  console.log('relocking now...')
   //  let reLockTx = await LockingPoolObj.relock(1, lockAmount, true);
@@ -61,7 +65,6 @@ async function lockFor(govProxyObj, LockingPoolObj, contractAddresses, sequencer
    let setWitheAddressTx = await setWitheAddress(govProxyObj, contractAddresses.contracts.LockingPoolProxy, sequencerSigner);
    await setWitheAddressTx.wait();
    console.log("setWitheAddress:", setWitheAddressTx.hash);
-
 
    const lockAmount = web3.utils.toWei('20000');
    console.log(`Locking ${lockAmount} for ${sequencerSigner}...`);

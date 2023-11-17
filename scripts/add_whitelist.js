@@ -6,6 +6,8 @@
  const utils = require('./utils');
  let lockingPoolAddress;
 
+ const sequencerSigner = "0xf3da13DdCCC5B6676a33A1859F303306f4863A89";
+
  const main = async () => {
      const accounts = await ethers.getSigners();
      let signer = accounts[0];
@@ -20,27 +22,30 @@
      const govProxyObj = await hre.ethers.getContractAt("Proxy", contractAddresses.contracts.GovProxy);
      console.log("govProxyObj address:", govProxyObj.address);
 
-     //  updateMpc
-     let updateMpcTx = await updateMpc(govProxyObj, "0x96ec1fc0100550dfc2603b4e17f6b5b2c84bd3dd");
-     await updateMpcTx.wait();
-     console.log("updateMpcTx:", updateMpcTx.hash);
+    
+     let setWitheAddressTx = await setWitheAddress(govProxyObj, contractAddresses.contracts.LockingPoolProxy, sequencerSigner);
+     await setWitheAddressTx.wait();
+     console.log("setWitheAddress:", setWitheAddressTx.hash);
  }
 
- async function updateMpc(govObj, newMpc) {
-     let ABI = [
-         "function updateMpc(address _newMpc)"
-     ];
-     let iface = new ethers.utils.Interface(ABI);
-     let updateMpcData = iface.encodeFunctionData("updateMpc", [
-         newMpc
-     ])
-     console.log("updateMpc: ", updateMpcData)
 
-     return govObj.update(
-         lockingPoolAddress,
-         updateMpcData
-     )
- }
+
+async function setWitheAddress(govObj, lockingPoolProxyAddress, user) {
+    let ABI = [
+        "function setWhiteListAddress(address user, bool verified)"
+    ];
+    let iface = new ethers.utils.Interface(ABI);
+    let setWhiteAddressEncodeData = iface.encodeFunctionData("setWhiteListAddress", [
+        user, true
+    ])
+    console.log("setWitheAddress: ", setWhiteAddressEncodeData)
+
+    return govObj.update(
+        lockingPoolProxyAddress,
+        setWhiteAddressEncodeData
+    )
+}
+
 
 
  main()
