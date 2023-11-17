@@ -44,13 +44,25 @@ module.exports = {
     goerli: {
       url: process.env.GOERLI_RPC !== undefined ? process.env.GOERLI_RPC : "",
       accounts: process.env.DEVNET_PRIVKEY !== undefined ? [process.env.DEVNET_PRIVKEY] : [],
+    },
+    holesky: {
+      url: process.env.HOLESKY_RPC !== undefined ? process.env.HOLESKY_RPC : "",
+      accounts: process.env.DEVNET_PRIVKEY !== undefined ? [process.env.DEVNET_PRIVKEY] : [],
     }
   },
   etherscan: {
     apiKey: {
       mainnet: process.env.ETHERSCAN_API_KEY,
       goerli: process.env.ETHERSCAN_API_KEY
-    }
+    },
+    customChains: [{
+      network: "holesky",
+      chainId: 17000,
+      urls: {
+        apiURL: "https://api-holesky.etherscan.io/api",
+        browserURL: "https://holesky.etherscan.io"
+      }
+    }]
   },
   watcher: {
     compilation: {
