@@ -69,6 +69,7 @@ contract LockingPool is
     // genesis/Proxy variables
     uint256 public BLOCK_REWARD; // update via Proxy
     uint256 public minLock; // min lock Metis token 
+    uint256 public maxLock; // max lock Metis token 
     uint256 public signerUpdateLimit; // sequencer signer need have a update limit,how many batches are not allowed to update the signer
     address public mpcAddress; // current mpc address for batch submit reward 
     uint256 public sequencerThreshold; // maximum sequencer limit
@@ -86,6 +87,8 @@ contract LockingPool is
 
     // white address list who can lock token
     mapping(address => bool) public whiteListAddresses;
+    // A whitelist address can only be bound to one sequencer
+    mapping(address => address) public whiteListBoundSequencer;
 
     // mpc history
     MpcHistoryItem[] public mpcHistory; // recent mpc
@@ -124,6 +127,12 @@ contract LockingPool is
      * @param _newMinLock new min lock.
      */
     event UpdateMinAmounts(uint256 _newMinLock);
+
+    /**
+     * @dev Emitted when min lock amount update in 'UpdateMaxAmounts'
+     * @param _newMaxLock new max lock.
+     */
+    event UpdateMaxAmounts(uint256 _newMaxLock);
 
     /**
      * @dev Emitted when mpc address update in 'UpdateMpc'
@@ -180,6 +189,7 @@ contract LockingPool is
         currentBatch = 1;  // default start from batch 1
         BLOCK_REWARD = 2 * (10**18); // per block reward, update via Proxy
         minLock = 20000* (10**18);  // min lock amount
+        maxLock = 100000 * (10**18); // max lock amount
         signerUpdateLimit = 100; // how many batches are not allowed to update the signer
         sequencerThreshold = 10; // allow max sequencers
         NFTCounter = 1; // sequencer id
@@ -280,6 +290,16 @@ contract LockingPool is
         emit UpdateMinAmounts(_minLock);
     }
 
+     /**
+     * @dev updateMaxAmounts Allow proxy to update max lock amount 
+     * @param _maxLock new max lock amount
+     */
+    function updateMaxAmounts(uint256 _maxLock) external onlyProxy {
+        require(_maxLock > 0,"invalid _maxLock");
+        maxLock = _maxLock;
+        emit UpdateMaxAmounts(_maxLock);
+    }
+
 
     /**
      * @dev updateMpc Allow proxy to update new mpc address
@@ -321,11 +341,14 @@ contract LockingPool is
         uint256 amount,
         bytes memory signerPubkey
     ) override external  whenNotPaused {
-        require(whiteListAddresses[user],"user should be in the white list");
+        require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
         require(currentSequencerSetSize() < sequencerThreshold, "no more slots");
-        require(amount >= minLock, "not enough deposit");
+        require(amount >= minLock, "amount less than minLock");
+        require(amount <= maxLock, "amount large than maxLock");
+        require(whiteListBoundSequencer[msg.sender] == address(0),"had bound sequencer");
 
         _lockFor(user, amount, signerPubkey);
+        whiteListBoundSequencer[msg.sender] = user;
         _transferTokenFrom(msg.sender, address(this), amount);
     }
 
@@ -334,9 +357,11 @@ contract LockingPool is
      * @dev unlock is used to unlock Metis and exit the sequencer node
      *
      * @param sequencerId sequencer id
-     * @param withdrawRewardToL2 Whether the current reward is withdrawn to L2
      */    
-    function unlock(uint256 sequencerId, bool withdrawRewardToL2) override external onlySequencer(sequencerId) {
+    function unlock(uint256 sequencerId) override external  {
+        require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
+        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequender mismatch");
+
         Status status = sequencers[sequencerId].status;
         require(
             sequencers[sequencerId].activationBatch > 0 &&
@@ -346,6 +371,7 @@ contract LockingPool is
         );
 
         uint256 exitBatch = currentBatch + 1; // notice period
+        bool withdrawRewardToL2 = true; // froce withdraw to L2
         _unlock(sequencerId, exitBatch, withdrawRewardToL2,false);
     }
 
@@ -354,9 +380,11 @@ contract LockingPool is
      * @dev unlockClaim Because unlock has a waiting period, after the waiting period is over, you can claim locked tokens
      *
      * @param sequencerId sequencer id
-     * @param withdrawToL2 Whether the current reward is withdrawn to L2
      */   
-    function unlockClaim(uint256 sequencerId, bool withdrawToL2) override external onlySequencer(sequencerId) {
+    function unlockClaim(uint256 sequencerId) override external  {
+        require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
+        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequender mismatch");
+
         uint256 deactivationBatch = sequencers[sequencerId].deactivationBatch;
         uint256 unlockClaimTime = sequencers[sequencerId].unlockClaimTime;
 
@@ -372,6 +400,7 @@ contract LockingPool is
         uint256 newTotalLocked = totalLocked - amount;
         totalLocked = newTotalLocked;
 
+        bool withdrawToL2 = true; // froce withdraw to L2
         // Check for unclaimed rewards
         _liquidateRewards(sequencerId, msg.sender, withdrawToL2);
 
@@ -403,9 +432,11 @@ contract LockingPool is
         uint256 sequencerId,
         uint256 amount,
         bool lockRewards
-    ) override external whenNotPaused onlySequencer(sequencerId) {
+    ) override external whenNotPaused  {
         require(amount > 0, "invalid amount");
         require(sequencers[sequencerId].deactivationBatch == 0, "no relocking");
+        require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
+        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequender mismatch");
 
         uint256 relockAmount = amount;
 
@@ -430,9 +461,12 @@ contract LockingPool is
      * @dev withdrawRewards withdraw current rewards
      *
      * @param sequencerId unique integer to identify a sequencer.
-     * @param withdrawToL2 Whether the current reward is withdrawn to L2
      */   
-    function withdrawRewards(uint256 sequencerId, bool withdrawToL2) override external onlySequencer(sequencerId) {
+    function withdrawRewards(uint256 sequencerId) override external  {
+        require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
+        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequender mismatch");
+        
+        bool withdrawToL2 = true; // froce withdraw to L2
         _liquidateRewards(sequencerId, msg.sender, withdrawToL2);
     }
 
@@ -468,7 +502,7 @@ contract LockingPool is
     }
 
     /**
-     * @dev batchSubmitRewards Allow proxy or other roles to submit L2 sequencer block information, and attach Metis reward tokens for reward distribution
+     * @dev batchSubmitRewards Allow to submit L2 sequencer block information, and attach Metis reward tokens for reward distribution
      * @param batchId The batchId that submitted the reward is that
      * @param payeer Who Pays the Reward Tokens
      * @param startEpoch The startEpoch that submitted the reward is that
@@ -485,7 +519,6 @@ contract LockingPool is
         address[] memory _sequencers,
         uint256[] memory finishedBlocks,
         bytes memory signature
-    // )  external onlyProxy returns (uint256) {
     )  external returns (uint256) {
         uint256 nextBatch = currentBatch + 1;
         require(nextBatch == batchId,"invalid batch id");

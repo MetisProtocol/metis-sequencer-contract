@@ -37,29 +37,25 @@ interface ILockingPool {
      * @dev withdrawRewards withdraw current reward
      *
      * @param sequencerId sequencer id
-     * @param withdrawToL2 Whether the current reward is withdrawn to L2
      */   
     function withdrawRewards(
-        uint256 sequencerId, 
-        bool withdrawToL2
+        uint256 sequencerId
     ) external;
     
     /**
      * @dev unlock is used to unlock Metis and exit the sequencer node
      *
      * @param sequencerId sequencer id
-     * @param withdrawRewardToL2 Whether the current reward is withdrawn to L2
      */    
-    function unlock(uint256 sequencerId, bool withdrawRewardToL2) external;
+    function unlock(uint256 sequencerId) external;
 
     
      /**
      * @dev unlockClaim Because unlock has a waiting period, after the waiting period is over, you can claim locked tokens
      *
      * @param sequencerId sequencer id
-     * @param withdrawToL2 Whether the current reward is withdrawn to L2
      */   
-     function unlockClaim(uint256 sequencerId, bool withdrawToL2) external ;
+     function unlockClaim(uint256 sequencerId) external ;
 
 
     /**
