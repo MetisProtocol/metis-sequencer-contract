@@ -448,6 +448,7 @@ contract LockingPool is
         uint256 newTotalLocked = totalLocked + amount;
         totalLocked = newTotalLocked;
         sequencers[sequencerId].amount = sequencers[sequencerId].amount + amount;
+        require(sequencers[sequencerId].amount <= maxLock, "amount large than maxLock");
 
         updateTimeline(int256(amount), 0, 0);
 
