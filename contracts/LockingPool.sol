@@ -617,15 +617,10 @@ contract LockingPool is
     
     // getL2ChainId return the l2 chain id
     function getL2ChainId() override public view returns(uint256) {
-        uint256 l2ChainId;
         if (block.chainid == 1) {
-            l2ChainId = 1088;
-        }else if (block.chainid == 5){
-            l2ChainId = 599;
-        }else if (block.chainid == 17000){
-            l2ChainId = 59901;
-        }
-        return l2ChainId;
+            return 1088;
+        } 
+        return 59901;
     }
 
     // get all sequencer count
