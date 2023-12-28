@@ -93,10 +93,6 @@ contract LockingPool is
     // mpc history
     MpcHistoryItem[] public mpcHistory; // recent mpc
 
-    modifier onlySequencer(uint256 sequencerId) {
-        _assertSequencer(sequencerId);
-        _;
-    }
 
     /**
      * @dev Emitted when nft contract update in 'UpdateLockingInfo'
@@ -476,7 +472,10 @@ contract LockingPool is
      * @param sequencerId unique integer to identify a sequencer.
      * @param signerPubkey the new signer pubkey address
      */
-    function updateSigner(uint256 sequencerId, bytes memory signerPubkey) external onlySequencer(sequencerId) {
+    function updateSigner(uint256 sequencerId, bytes memory signerPubkey) external {
+        require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
+        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequender mismatch");
+
         address signer = _getAndAssertSigner(signerPubkey);
         uint256 _currentBatch = currentBatch;
         require(_currentBatch >= latestSignerUpdateBatch[sequencerId] + signerUpdateLimit, "not allowed");
@@ -855,9 +854,6 @@ contract LockingPool is
         return signer;
     }
 
-    function _assertSequencer(uint256 sequencerId) private view {
-        require(NFTContract.ownerOf(sequencerId) == msg.sender,"not nft owner");
-    }
 
     function _isSequencer(
         Status status,
