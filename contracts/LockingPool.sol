@@ -44,7 +44,6 @@ contract LockingPool is
         uint256 unlockClaimTime;    // sequencer unlock lock amount timestamp, has a withdraw delay time
         address signer;             // sequencer signer address
         Status status;              // sequencer status
-        uint256 initialRewardPerLock; // initial reward per lock
     }
 
     uint256 constant REWARD_PRECISION = 10**25;
@@ -687,8 +686,7 @@ contract LockingPool is
             deactivationTime: 0,
             unlockClaimTime: 0,
             signer: signer,
-            status: Status.Active,
-            initialRewardPerLock: 0
+            status: Status.Active
         });
 
         latestSignerUpdateBatch[sequencerId] = _currentBatch;
@@ -810,10 +808,6 @@ contract LockingPool is
         uint256 sequencerId = signerToSequencer[sequencer];
         Sequencer memory sequencerInfo = sequencers[sequencerId];
 
-        // rewardPerLock update
-        uint256 newRewardPerLock = sequencerInfo.initialRewardPerLock + reward * REWARD_PRECISION / sequencerInfo.amount;
-        sequencers[sequencerId].initialRewardPerLock = newRewardPerLock;
-      
         // update reward
         if (sequencerInfo.deactivationBatch == 0 || currentBatch < sequencerInfo.deactivationBatch){
             sequencers[sequencerId].reward +=  reward;
