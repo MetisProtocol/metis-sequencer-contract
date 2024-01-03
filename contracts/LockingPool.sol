@@ -4,9 +4,8 @@ pragma solidity 0.8.9;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-
-import {ProxyPauseable} from "./proxy/ProxyPauseable.sol";
-import {IProxy} from "./interfaces/IProxy.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ILockingPool} from "./interfaces/ILockingPool.sol";
 import {LockingInfo} from "./LockingInfo.sol";
 import {LockingNFT} from "./LockingNFT.sol";
@@ -14,7 +13,8 @@ import { IL1ERC20Bridge } from "./interfaces/IL1ERC20Bridge.sol";
 
 contract LockingPool is
     ILockingPool,
-    ProxyPauseable
+    OwnableUpgradeable,
+    PausableUpgradeable
 {
     using SafeERC20 for IERC20;
 
@@ -149,7 +149,6 @@ contract LockingPool is
     }
 
     function initialize(
-        address _Proxy,
         address _bridge,
         address _l1Token,
         address _l2Token,
@@ -157,14 +156,11 @@ contract LockingPool is
         address _NFTContract,
         address _mpc
     ) external initializer {
-        require(_Proxy != address(0),"invalid _Proxy");
         require(_bridge != address(0),"invalid _bridge");
         require(_l1Token != address(0),"invalid _l1Token");
         require(_l2Token != address(0),"invalid _l2Token");
         require(_NFTContract != address(0),"invalid _NFTContract");
         require(_mpc != address(0),"_mpc is zero address");
-        
-        __ProxyPauseable_init(_Proxy);
         
         bridge = _bridge;
         l1Token = _l1Token;
@@ -188,10 +184,12 @@ contract LockingPool is
         signerUpdateLimit = 100; // how many batches are not allowed to update the signer
         sequencerThreshold = 10; // allow max sequencers
         NFTCounter = 1; // sequencer id
+
+        __Ownable_init();
     }
 
     /**
-        Proxy Methods
+        Admin Methods
      */
 
     /**
@@ -199,7 +197,7 @@ contract LockingPool is
      * @param sequencerId unique integer to identify a sequencer.
      * @param withdrawRewardToL2 Whether the current reward is withdrawn to L2
      */
-    function forceUnlock(uint256 sequencerId, bool withdrawRewardToL2) external onlyProxy {
+    function forceUnlock(uint256 sequencerId, bool withdrawRewardToL2) external onlyOwner {
         _unlock(sequencerId, currentBatch, withdrawRewardToL2,true);
     }
 
@@ -207,7 +205,7 @@ contract LockingPool is
      * @dev updateNFTContract Allow proxy update the NFT contract address
      * @param _nftContract new NFT contract address
      */
-    function updateNFTContract(address _nftContract) external onlyProxy {
+    function updateNFTContract(address _nftContract) external onlyOwner {
         require(_nftContract != address(0),"invalid _nftContract");
         NFTContract = LockingNFT(_nftContract);
         emit UpdateNFTContract(_nftContract);
@@ -217,7 +215,7 @@ contract LockingPool is
      * @dev updateLockingInfo Allow proxy update the locking info contract address
      * @param _lockingInfo new locking info contract address
      */
-    function updateLockingInfo(address _lockingInfo) external onlyProxy {
+    function updateLockingInfo(address _lockingInfo) external onlyOwner {
         require(_lockingInfo != address(0),"invalid _lockingInfo");
         logger = LockingInfo(_lockingInfo); 
         emit UpdateLockingInfo(_lockingInfo);
@@ -227,7 +225,7 @@ contract LockingPool is
      * @dev setCurrentBatch  Allow proxy to set current batch id
      * @param _currentBatch batch id to set
      */
-    function setCurrentBatch(uint256 _currentBatch) external onlyProxy {
+    function setCurrentBatch(uint256 _currentBatch) external onlyOwner {
         require(_currentBatch != 0,"invalid _currentBatch");
         currentBatch = _currentBatch;
         emit SetCurrentBatch(_currentBatch);
@@ -237,7 +235,7 @@ contract LockingPool is
      * @dev updateSequencerThreshold  Allow proxy to set max sequencer threshold
      * @param newThreshold the new threshold
      */
-    function updateSequencerThreshold(uint256 newThreshold) external onlyProxy {
+    function updateSequencerThreshold(uint256 newThreshold) external onlyOwner {
         require(newThreshold != 0,"invalid newThreshold");
         sequencerThreshold = newThreshold;
         logger.logThresholdChange(newThreshold, sequencerThreshold);
@@ -247,7 +245,7 @@ contract LockingPool is
      * @dev updateBlockReward  Allow proxy to set per block reward
      * @param newReward the block reward
      */
-    function updateBlockReward(uint256 newReward) external onlyProxy {
+    function updateBlockReward(uint256 newReward) external onlyOwner {
         require(newReward != 0,"invalid newReward");
         BLOCK_REWARD = newReward;
         logger.logRewardUpdate(newReward, BLOCK_REWARD);
@@ -258,7 +256,7 @@ contract LockingPool is
     *  @dev updateWithdrawDelayTimeValue Allow proxy to set withdraw delay time.
     *  @param newWithdrawDelayTime new withdraw delay time
     */
-    function updateWithdrawDelayTimeValue(uint256 newWithdrawDelayTime) external onlyProxy {
+    function updateWithdrawDelayTimeValue(uint256 newWithdrawDelayTime) external onlyOwner {
         require(newWithdrawDelayTime > 0,"invalid newWithdrawDelayTime");
         WITHDRAWAL_DELAY = newWithdrawDelayTime;
         logger.logWithrawDelayTimeChange(newWithdrawDelayTime, WITHDRAWAL_DELAY);
@@ -268,7 +266,7 @@ contract LockingPool is
      * @dev updateSignerUpdateLimit Allow proxy to set signer update max limit
      * @param _limit new limit
      */
-    function updateSignerUpdateLimit(uint256 _limit) external onlyProxy {
+    function updateSignerUpdateLimit(uint256 _limit) external onlyOwner {
         require(_limit > 0,"invalid _limit");
         signerUpdateLimit = _limit;
         emit UpdateSignerUpdateLimit(_limit);
@@ -279,7 +277,7 @@ contract LockingPool is
      * @dev updateMinAmounts Allow proxy to update min lock amount 
      * @param _minLock new min lock amount
      */
-    function updateMinAmounts(uint256 _minLock) external onlyProxy {
+    function updateMinAmounts(uint256 _minLock) external onlyOwner {
         require(_minLock > 0,"invalid _minLock");
         minLock = _minLock;
         emit UpdateMinAmounts(_minLock);
@@ -289,7 +287,7 @@ contract LockingPool is
      * @dev updateMaxAmounts Allow proxy to update max lock amount 
      * @param _maxLock new max lock amount
      */
-    function updateMaxAmounts(uint256 _maxLock) external onlyProxy {
+    function updateMaxAmounts(uint256 _maxLock) external onlyOwner {
         require(_maxLock > 0,"invalid _maxLock");
         maxLock = _maxLock;
         emit UpdateMaxAmounts(_maxLock);
@@ -300,7 +298,7 @@ contract LockingPool is
      * @dev updateMpc Allow proxy to update new mpc address
      * @param _newMpc new mpc
      */
-    function updateMpc(address _newMpc) external onlyProxy {
+    function updateMpc(address _newMpc) external onlyOwner {
         require(!isContract(_newMpc),"_newMpc is a contract");
         require(_newMpc != address(0),"_newMpc is zero address");
         mpcAddress = _newMpc;
@@ -318,12 +316,27 @@ contract LockingPool is
      * @param user the address who can lock token
      * @param verified white address state
      */
-    function setWhiteListAddress(address user, bool verified) external onlyProxy {
+    function setWhiteListAddress(address user, bool verified) external onlyOwner {
         require(whiteListAddresses[user] != verified, "state not change");
         whiteListAddresses[user] = verified;
 
         emit WhiteListAdded(user, verified);
     }
+
+    /**
+     * @dev setPause can set the contract not suspended status
+     */  
+    function setPause() external onlyOwner {
+        _pause();
+    }
+
+    /**
+     * @dev setUnpause can cancel the suspended state
+     */  
+    function setUnpause() external onlyOwner {
+        _unpause();
+    }
+
 
      /**
      * @dev lockFor is used to lock Metis and participate in the sequencer block node application
