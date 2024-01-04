@@ -37,9 +37,11 @@ interface ILockingPool {
      * @dev withdrawRewards withdraw current reward
      *
      * @param sequencerId sequencer id
+     * @param recipient the address that receive reward tokens
      */   
     function withdrawRewards(
-        uint256 sequencerId
+        uint256 sequencerId,
+        address recipient
     ) external;
     
     /**

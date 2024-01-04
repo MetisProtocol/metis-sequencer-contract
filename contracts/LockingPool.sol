@@ -36,13 +36,14 @@ contract LockingPool is
     }
 
     struct Sequencer {
-        uint256 amount;         // sequencer current lock amount 
-        uint256 reward;         // sequencer current reward
+        uint256 amount;             // sequencer current lock amount 
+        uint256 reward;             // sequencer current reward
         uint256 activationBatch;    // sequencer activation batch id
         uint256 deactivationBatch;  // sequencer deactivation batch id
         uint256 deactivationTime;   // sequencer deactivation timestamp
         uint256 unlockClaimTime;    // sequencer unlock lock amount timestamp, has a withdraw delay time
         address signer;             // sequencer signer address
+        address rewardRecipient;     // seqeuncer rewarder recipient address
         Status status;              // sequencer status
     }
 
@@ -410,7 +411,7 @@ contract LockingPool is
 
         bool withdrawToL2 = true; // froce withdraw to L2
         // Check for unclaimed rewards
-        _liquidateRewards(sequencerId, msg.sender, withdrawToL2);
+        _liquidateRewards(sequencerId,sequencers[sequencerId].rewardRecipient, withdrawToL2);
 
         sequencers[sequencerId].amount = 0;
         sequencers[sequencerId].signer = address(0);
@@ -459,7 +460,6 @@ contract LockingPool is
         require(sequencers[sequencerId].amount <= maxLock, "amount large than maxLock");
 
         updateTimeline(int256(amount), 0, 0);
-
         _transferTokenFrom(msg.sender, address(this), relockAmount);
 
         logger.logLockUpdate(sequencerId,sequencers[sequencerId].amount);
@@ -470,13 +470,21 @@ contract LockingPool is
      * @dev withdrawRewards withdraw current rewards
      *
      * @param sequencerId unique integer to identify a sequencer.
+     * @param recipient the address that receive reward tokens
      */   
-    function withdrawRewards(uint256 sequencerId) override external  {
+    function withdrawRewards(uint256 sequencerId,address recipient) override external  {
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
         require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequender mismatch");
+
+        Sequencer storage sequencerInfo = sequencers[sequencerId];
+        if (recipient != address(0) && sequencerInfo.rewardRecipient == address(0)){
+            sequencerInfo.rewardRecipient = recipient;
+        }else{
+            sequencerInfo.rewardRecipient = msg.sender;
+        }
         
         bool withdrawToL2 = true; // froce withdraw to L2
-        _liquidateRewards(sequencerId, msg.sender, withdrawToL2);
+        _liquidateRewards(sequencerId, sequencerInfo.rewardRecipient, withdrawToL2);
     }
 
     /**
@@ -676,7 +684,6 @@ contract LockingPool is
     }
 
 
-
     function _lockFor(
         address user,
         uint256 amount,
@@ -699,6 +706,7 @@ contract LockingPool is
             deactivationTime: 0,
             unlockClaimTime: 0,
             signer: signer,
+            rewardRecipient: address(0),
             status: Status.Active
         });
 
@@ -737,7 +745,7 @@ contract LockingPool is
         currentUnlockedInit++;
 
         _removeSigner(sequencers[sequencerId].signer);
-        _liquidateRewards(sequencerId, sequencer, withdrawRewardToL2);
+        _liquidateRewards(sequencerId, sequencers[sequencerId].rewardRecipient, withdrawRewardToL2);
 
         logger.logUnlockInit(
             sequencer,
@@ -838,7 +846,7 @@ contract LockingPool is
             IERC20(l1Token).safeIncreaseAllowance(bridge, reward);
             IL1ERC20Bridge(bridge).depositERC20ToByChainId(getL2ChainId(), l1Token, l2Token, sequencerUser, reward, l2Gas, "0x0");
         }
-        logger.logClaimRewards(sequencerId, reward, totalRewardsLiquidated);
+        logger.logClaimRewards(sequencerId, sequencerUser,reward, totalRewardsLiquidated);
     }
 
     function _transferToken(address destination, uint256 amount) private {

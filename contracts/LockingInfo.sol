@@ -121,11 +121,13 @@ contract LockingInfo is Ownable {
     /**
      * @dev Emitted when sequencer withdraw rewards in 'withdrawRewards' or 'unlockClaim'
      * @param sequencerId unique integer to identify a sequencer.
+     * @param recipient the address receive reward tokens
      * @param amount the reward amount.
      * @param totalAmount total rewards liquidated
      */
     event ClaimRewards(
         uint256 indexed sequencerId,
+        address recipient,
         uint256 indexed amount,
         uint256 indexed totalAmount
     );
@@ -301,10 +303,11 @@ contract LockingInfo is Ownable {
      */
     function logClaimRewards(
         uint256 sequencerId,
+        address recipient,
         uint256 amount,
         uint256 totalAmount
     ) external onlyLockingPool {
-        emit ClaimRewards(sequencerId, amount, totalAmount);
+        emit ClaimRewards(sequencerId, recipient,amount, totalAmount);
     }
 
      /**
