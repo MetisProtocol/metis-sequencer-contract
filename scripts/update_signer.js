@@ -13,83 +13,23 @@ let recevierPri = "0x5b3749b365d2745b7b49b08575f782083a3a477d7afbdb564bd68a4e20c
 let receiverPub = "0xc17815e183e03fd7bdaa398d2d4b8cb1c665e7f86445470f35468af2d982324ad4e2ee5947d0ac5b49938c30c8eb3f3b5ef13a1133dd70af4b2e47fc77dc7aff"
 
 const main = async () => {
-    const accounts = await ethers.getSigners();
-    let signer = accounts[0];
-    console.log("tx sender:", signer.address);
+     const accounts = await ethers.getSigners();
+     let signer = accounts[0];
+     console.log("tx sender:", signer.address);
 
-    const contractAddresses = utils.getContractAddresses();
-    console.log("contractAddresses:", contractAddresses);
+     const contractAddresses = utils.getContractAddresses();
+     console.log("contractAddresses:", contractAddresses);
 
-    const LockingPool = await ethers.getContractFactory("LockingPool");
-    const LockingPoolObj = await LockingPool.attach(contractAddresses.contracts.LockingPoolProxy);
+     lockingPoolAddress = contractAddresses.contracts.LockingPoolProxy;
+     console.log("lockingPoolAddress address:", lockingPoolAddress);
 
-    let latestSignerUpdateBatch = await LockingPoolObj.latestSignerUpdateBatch(1);
-    console.log("latestSignerUpdateBatch:", latestSignerUpdateBatch)
+     const LockingPool = await ethers.getContractFactory("LockingPool");
+     const LockingPoolObj = await LockingPool.attach(contractAddresses.contracts.LockingPoolProxy);
 
-    const LockingNFT = await ethers.getContractFactory("LockingNFT");
-    const LockingNFTObj = await LockingNFT.attach(contractAddresses.contracts.LockingNFT);
-
-     // NFT approve
-     const testUser = new ethers.Wallet(recevierPri, ethers.provider);
-    //  let tokenId = await LockingPoolObj.getSequencerId(node4Addr);
-     // console.log("tokenId:", tokenId);
-    let approveTx = await LockingNFTObj.connect(testUser).approve(contractAddresses.contracts.LockingPoolProxy, 1);
-    await approveTx.await();
-
-    const gov = await hre.ethers.getContractFactory("Proxy");
-    const govProxyObj = await gov.attach(contractAddresses.contracts.GovProxy);
-
-    // updateSignerUpdateLimit
-    // let updateSignerUpdateLimitTx = await updateSignerUpdateLimit(govProxyObj, contractAddresses.contracts.LockingPoolProxy);
-    // console.log("updateSignerUpdateLimitTx:", updateSignerUpdateLimitTx.hash);
-
-    let signerUpdateLimitValue = await LockingPoolObj.signerUpdateLimit();
-    console.log("signerUpdateLimitValue:", signerUpdateLimitValue);
-
-     let currentBatch = await LockingPoolObj.currentBatch();
-     console.log("currentBatch:", currentBatch);
-
-    if (currentBatch < latestSignerUpdateBatch + signerUpdateLimitValue){
-       let setCurrentBatchTx = await setCurrentBatch(govProxyObj, contractAddresses.contracts.LockingPoolProxy, latestSignerUpdateBatch + signerUpdateLimitValue);
-       await setCurrentBatchTx.wait();
-    }
-
-    // update signer
-    let updateSignerTx = await LockingPoolObj.connect(testUser).updateSigner(1, "0xb548c2a036db2b5cdeb9501ff6c73e4653b691e3365e345bdddeb20145fa2f50f8a527550211b4b0664127a36f370d91c2adc33b14423327097f411c4c68ee96");
-    await updateSignerTx.wait();
-    console.log("updateSigner tx ", updateSignerTx.hash);
-}
-
-async function updateSignerUpdateLimit(govObj,lockingPoolAddress) {
-    let ABI = [
-        "function updateSignerUpdateLimit(uint256 newLimit) "
-    ];
-    let iface = new ethers.utils.Interface(ABI);
-    let updateSignerUpdateLimitData = iface.encodeFunctionData("updateSignerUpdateLimit", [
-        1,
-    ])
-    console.log("updateSignerUpdateLimit: ", updateSignerUpdateLimitData)
-
-    return govObj.update(
-        lockingPoolAddress,
-        updateSignerUpdateLimitData
-    )
-}
-
-async function setCurrentBatch(govObj, lockingPoolAddress,batch) {
-    let ABI = [
-        "function setCurrentBatch(uint256 newBatch) "
-    ];
-    let iface = new ethers.utils.Interface(ABI);
-    let setCurrentBatchData = iface.encodeFunctionData("setCurrentBatch", [
-        batch,
-    ])
-    console.log("setCurrentBatch: ", setCurrentBatchData)
-
-    return govObj.update(
-        lockingPoolAddress,
-        setCurrentBatchData
-    )
+     //  updateSigner
+     let updateSignerTx = await LockingPoolObj.updateSigner(1, "0xb548c2a036db2b5cdeb9501ff6c73e4653b691e3365e345bdddeb20145fa2f50f8a527550211b4b0664127a36f370d91c2adc33b14423327097f411c4c68ee96");
+     await updateSignerTx.wait();
+     console.log("updateSigner:", updateSignerTx.hash);
 }
 
 main()

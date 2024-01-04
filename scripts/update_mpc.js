@@ -13,35 +13,18 @@
 
      const contractAddresses = utils.getContractAddresses();
      console.log("contractAddresses:", contractAddresses);
+
      lockingPoolAddress = contractAddresses.contracts.LockingPoolProxy;
      console.log("lockingPoolAddress address:", lockingPoolAddress);
 
+    const LockingPool = await ethers.getContractFactory("LockingPool");
+    const LockingPoolObj = await LockingPool.attach(contractAddresses.contracts.LockingPoolProxy);
 
-     const govProxyObj = await hre.ethers.getContractAt("Proxy", contractAddresses.contracts.GovProxy);
-     console.log("govProxyObj address:", govProxyObj.address);
-
-     //  updateMpc
-     let updateMpcTx = await updateMpc(govProxyObj, "0x96ec1fc0100550dfc2603b4e17f6b5b2c84bd3dd");
-     await updateMpcTx.wait();
-     console.log("updateMpcTx:", updateMpcTx.hash);
+    //  updateMpc
+    let updateMpcTx = await LockingPoolObj.updateMpc(sequencerSigner);
+    await updateMpcTx.wait();
+    console.log("updateMpc:", updateMpcTx.hash);
  }
-
- async function updateMpc(govObj, newMpc) {
-     let ABI = [
-         "function updateMpc(address _newMpc)"
-     ];
-     let iface = new ethers.utils.Interface(ABI);
-     let updateMpcData = iface.encodeFunctionData("updateMpc", [
-         newMpc
-     ])
-     console.log("updateMpc: ", updateMpcData)
-
-     return govObj.update(
-         lockingPoolAddress,
-         updateMpcData
-     )
- }
-
 
  main()
      .then(() => process.exit(0))

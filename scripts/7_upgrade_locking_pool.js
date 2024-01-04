@@ -24,14 +24,6 @@ const main = async () => {
     console.log("LockingPool upgrade to:", upgrade.address);
 }
 
-setTimeout(function () {
-    console.log('This printed after about {time} second');
-}, 1000);
-
-function delay(time) {
-    return new Promise(resolve => setTimeout(resolve, time));
-}
-
 main()
     .then(() => process.exit(0))
     .catch((error) => {

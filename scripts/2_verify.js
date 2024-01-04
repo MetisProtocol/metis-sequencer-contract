@@ -4,7 +4,6 @@ const utils = require('./utils');
 let lockingNftName = "Metis Sequencer";
 let lockingNftSymbol = "MS";
 
-
 const main = async () => {
   const accounts = await hre.ethers.getSigners();
   let signer = accounts[0].address;
@@ -12,13 +11,6 @@ const main = async () => {
 
   const contractAddresses = utils.getContractAddresses();
   console.log("contractAddresses:", contractAddresses)
-
-  await hre.run("verify:verify", {
-      address: contractAddresses.contracts.GovProxy,
-      contract: "contracts/Proxy/Proxy.sol:Proxy",
-      constructorArguments: [
-      ],
-  });
 
   await hre.run("verify:verify", {
     address: contractAddresses.contracts.LockingNFT,

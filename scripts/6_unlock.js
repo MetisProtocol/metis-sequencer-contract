@@ -16,7 +16,7 @@ const main = async () => {
    const LockingPool = await ethers.getContractFactory("LockingPool");
    const LockingPoolObj = await LockingPool.attach(contractAddresses.contracts.LockingPoolProxy);
 
-   let unlockTx = await LockingPoolObj.unlock(1,true);
+   let unlockTx = await LockingPoolObj.unlock(1);
    await unlockTx.await();
    console.log("unlock tx ", unlockTx.hash);
 }

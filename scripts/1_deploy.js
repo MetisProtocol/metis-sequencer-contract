@@ -8,6 +8,7 @@ const l1MetisToken = "0x3972AAfb128c9BFcA5328C3D5CeE82fe4d1815ce";
 const l2MetisToken = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
 const l1BridgeAddress = "0x9c89FD2AA8181bb9883449D2Dd7f0336B0D11AD5";
 const l2Gas = 200000;
+const epochLength = 200;
 
 let lockingNftName = "Metis Sequencer";
 let lockingNftSymbol = "MS";
@@ -19,33 +20,27 @@ const main = async () => {
 
   console.log('deploying contracts...');
 
-  // deploy gov and gov proxy
-  const gov = await hre.ethers.getContractFactory("Proxy");
-  const govProxy = await upgrades.deployProxy(gov, []);
-  await govProxy.deployed();
-  console.log("gov proxy deployed to:", govProxy.address);
-  await delay(3000);
-
   // deploy locking nft
   const LockingNFT = await hre.ethers.getContractFactory("LockingNFT");
   let lockingNFTDeployed = await LockingNFT.deploy(lockingNftName, lockingNftSymbol);
   console.log("LockingNFT deployed to:", lockingNFTDeployed.address);
+  await delay(3000);
 
   let mpcAddress = signer;
   // deploy locking and proxy
   const LockingPool = await hre.ethers.getContractFactory("LockingPool");
   const lockingPoolProxy = await upgrades.deployProxy(LockingPool,
             [
-              govProxy.address,
               l1BridgeAddress,
               l1MetisToken,
               l2MetisToken,
               l2Gas,
               lockingNFTDeployed.address,
-              mpcAddress
+              mpcAddress,
+              epochLength
             ],
             {
-              initializer: 'initialize(address,address,address,address,uint32,address,address)'
+              initializer: 'initialize(address,address,address,uint32,address,address,uint256)'
             });
   await lockingPoolProxy.deployed();
   console.log("LockingPool deployed to:", lockingPoolProxy.address);
@@ -68,8 +63,7 @@ const main = async () => {
   console.log("LockingPool logger address:", loggerAddress, "zeroAddress", zeroAddress());
   
   if (loggerAddress == zeroAddress()){
-    const govProxyObj = await gov.attach(govProxy.address);
-    let setLockingInfoTx = await updateLockingPoolLoggerAddress(govProxyObj, lockingPoolProxy.address,lockingInfoDeployed.address);
+    let setLockingInfoTx =  await lockingPoolObj.updateLockingInfo(lockingInfoDeployed.address);
     await setLockingInfoTx.wait();
     console.log("updateLockingPoolLoggerAddress:", setLockingInfoTx.hash);
     await delay(3000);
@@ -85,7 +79,6 @@ const main = async () => {
   console.log('writing contract addresses to file...')
   const contractAddresses = {
     contracts: {
-      GovProxy: govProxy.address,
       LockingPoolProxy: lockingPoolProxy.address,
       LockingInfo: lockingInfoDeployed.address,
       LockingNFT: lockingNFTDeployed.address,

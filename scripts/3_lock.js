@@ -46,23 +46,14 @@ const main = async () => {
     await approveTx.wait();
   }
 
-  const gov = await hre.ethers.getContractFactory("Proxy");
-  const govProxyObj = await gov.attach(contractAddresses.contracts.GovProxy);
-
-  // await lockFor(govProxyObj, LockingPoolObj, contractAddresses, seqAddr1, seqPub1);
-  // await lockFor(govProxyObj, LockingPoolObj, contractAddresses, seqAddr2, seqPub2);
-  await lockFor(govProxyObj, LockingPoolObj, contractAddresses, seqAddr3, seqPub3);
-  await lockFor(govProxyObj, LockingPoolObj, contractAddresses, seqAddr4, seqPub4);
-  // await lockFor(govProxyObj, LockingPoolObj, contractAddresses, seqAddr5, seqPub5);
-
-  //  console.log('relocking now...')
-  //  let reLockTx = await LockingPoolObj.relock(1, lockAmount, true);
-  // await reLockTx.wait();
-  //  console.log("reLock tx ", reLockTx.hash);
+  await lockFor(LockingPoolObj, seqAddr1, seqPub1);
+  // await lockFor(LockingPoolObj, seqAddr2, seqPub2);
+  // await lockFor(LockingPoolObj, seqAddr3, seqPub3);
+  // await lockFor(LockingPoolObj, seqAddr4, seqPub4);
 }
 
-async function lockFor(govProxyObj, LockingPoolObj, contractAddresses, sequencerSigner, sequencerPubkey) {
-   let setWitheAddressTx = await setWitheAddress(govProxyObj, contractAddresses.contracts.LockingPoolProxy, sequencerSigner);
+async function lockFor( LockingPoolObj, sequencerSigner, sequencerPubkey) {
+   let setWitheAddressTx = await LockingPoolObj.setWhiteListAddress(sequencerSigner, true);
    await setWitheAddressTx.wait();
    console.log("setWitheAddress:", setWitheAddressTx.hash);
 
@@ -73,26 +64,6 @@ async function lockFor(govProxyObj, LockingPoolObj, contractAddresses, sequencer
    let lockTx = await LockingPoolObj.lockFor(sequencerSigner, lockAmount, sequencerPubkey);
    await lockTx.wait();
    console.log("lock tx ", lockTx.hash);
-}
-
-async function setWitheAddress(govObj, lockingPoolProxyAddress,user) {
-  let ABI = [
-    "function setWhiteListAddress(address user, bool verified)"
-  ];
-  let iface = new ethers.utils.Interface(ABI);
-  let setWhiteAddressEncodeData = iface.encodeFunctionData("setWhiteListAddress", [
-    user,true
-  ])
-  console.log("setWitheAddress: ", setWhiteAddressEncodeData)
-
-  return govObj.update(
-    lockingPoolProxyAddress,
-    setWhiteAddressEncodeData
-  )
-}
-
-function delay(s) {
-  return new Promise(resolve => setTimeout(resolve, s * 1000));
 }
 
 main()

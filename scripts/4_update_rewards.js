@@ -50,31 +50,6 @@ const main = async () => {
     console.log("batchSubmitRewards tx ", batchSubmitRewardsTx.hash);
 }
 
-async function updateRewardByGov(govObj, params) {
-    let signature = await calcSignature(params);
-    console.log("signature:", signature);
-
-    let ABI = [
-        "function batchSubmitRewards(uint256 batchId,address payeer,uint256 startEpoch,uint256 endEpoch,address[] memory sequencers,uint256[] memory finishedBlocks,bytes memory signature)"
-    ];
-    let iface = new ethers.utils.Interface(ABI);
-    let updateRewardData = iface.encodeFunctionData("batchSubmitRewards", [
-        params.batchId,
-        params.signer.address,
-        params.startEpoch,
-        params.endEpoch,
-        params.sequencers,
-        params.finishedBlocks,
-        signature,
-    ])
-    console.log("updateRewardByGov: ", updateRewardData)
-
-    return govObj.update(
-        params.lockingPool,
-        updateRewardData
-    )
-}
-
 async function calcSignature(params) {
     let message = ethers.utils.solidityPack(["uint256", "uint256", "uint256", "address[]", "uint256[]", "address"], [
         params.batchId,
