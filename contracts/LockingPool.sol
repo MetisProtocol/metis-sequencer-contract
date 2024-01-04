@@ -43,7 +43,7 @@ contract LockingPool is
         uint256 deactivationTime;   // sequencer deactivation timestamp
         uint256 unlockClaimTime;    // sequencer unlock lock amount timestamp, has a withdraw delay time
         address signer;             // sequencer signer address
-        address rewardRecipient;     // seqeuncer rewarder recipient address
+        address rewardRecipient;    // seqeuncer rewarder recipient address
         Status status;              // sequencer status
     }
 
@@ -65,9 +65,10 @@ contract LockingPool is
     address[] public signers; // all signers
     uint256 public currentUnlockedInit; // sequencer unlock queue count, need have a limit
     uint256 public lastRewardEpochId; // the last epochId for update reward
+    uint256 public epochLength; // the length per epoch
 
-    // genesis/Proxy variables
-    uint256 public BLOCK_REWARD; // update via Proxy
+    // genesis variables
+    uint256 public BLOCK_REWARD; // reward per l2 block
     uint256 public minLock; // min lock Metis token 
     uint256 public maxLock; // max lock Metis token 
     uint256 public signerUpdateLimit; // sequencer signer need have a update limit,how many batches are not allowed to update the signer
@@ -155,19 +156,22 @@ contract LockingPool is
         address _l2Token,
         uint32 _l2Gas,
         address _NFTContract,
-        address _mpc
+        address _mpc,
+        uint256 _epochLength
     ) external initializer {
         require(_bridge != address(0),"invalid _bridge");
         require(_l1Token != address(0),"invalid _l1Token");
         require(_l2Token != address(0),"invalid _l2Token");
         require(_NFTContract != address(0),"invalid _NFTContract");
         require(_mpc != address(0),"_mpc is zero address");
+        require(_epochLength > 0,"invalid _epochLength");
         
         bridge = _bridge;
         l1Token = _l1Token;
         l2Token = _l2Token;
         l2Gas = _l2Gas;
-        NFTContract = LockingNFT(_NFTContract); 
+        NFTContract = LockingNFT(_NFTContract);
+        epochLength =  _epochLength;
 
         require(!isContract(_mpc),"_mpc is a contract");
         mpcAddress = _mpc;
@@ -179,7 +183,7 @@ contract LockingPool is
 
         WITHDRAWAL_DELAY = 21 days; // sequencer exit withdraw delay time
         currentBatch = 1;  // default start from batch 1
-        BLOCK_REWARD = 2 * (10**18); // per block reward, update via Proxy
+        BLOCK_REWARD = 2 * (10**18); // per block reward
         minLock = 20000* (10**18);  // min lock amount
         maxLock = 100000 * (10**18); // max lock amount
         signerUpdateLimit = 100; // how many batches are not allowed to update the signer
@@ -194,7 +198,7 @@ contract LockingPool is
      */
 
     /**
-     * @dev forceUnlock Allow proxy to force a sequencer node to exit
+     * @dev forceUnlock Allow owner to force a sequencer node to exit
      * @param sequencerId unique integer to identify a sequencer.
      * @param withdrawRewardToL2 Whether the current reward is withdrawn to L2
      */
@@ -203,7 +207,7 @@ contract LockingPool is
     }
 
     /**
-     * @dev updateNFTContract Allow proxy update the NFT contract address
+     * @dev updateNFTContract Allow owner update the NFT contract address
      * @param _nftContract new NFT contract address
      */
     function updateNFTContract(address _nftContract) external onlyOwner {
@@ -213,7 +217,7 @@ contract LockingPool is
     }
 
      /**
-     * @dev updateLockingInfo Allow proxy update the locking info contract address
+     * @dev updateLockingInfo Allow owner update the locking info contract address
      * @param _lockingInfo new locking info contract address
      */
     function updateLockingInfo(address _lockingInfo) external onlyOwner {
@@ -223,7 +227,7 @@ contract LockingPool is
     }
 
     /**
-     * @dev setCurrentBatch  Allow proxy to set current batch id
+     * @dev setCurrentBatch  Allow owner to set current batch id
      * @param _currentBatch batch id to set
      */
     function setCurrentBatch(uint256 _currentBatch) external onlyOwner {
@@ -233,7 +237,7 @@ contract LockingPool is
     }
 
     /**
-     * @dev updateSequencerThreshold  Allow proxy to set max sequencer threshold
+     * @dev updateSequencerThreshold  Allow owner to set max sequencer threshold
      * @param newThreshold the new threshold
      */
     function updateSequencerThreshold(uint256 newThreshold) external onlyOwner {
@@ -243,7 +247,7 @@ contract LockingPool is
     }
 
      /**
-     * @dev updateBlockReward  Allow proxy to set per block reward
+     * @dev updateBlockReward  Allow owner to set per block reward
      * @param newReward the block reward
      */
     function updateBlockReward(uint256 newReward) external onlyOwner {
@@ -254,7 +258,7 @@ contract LockingPool is
 
 
     /**
-    *  @dev updateWithdrawDelayTimeValue Allow proxy to set withdraw delay time.
+    *  @dev updateWithdrawDelayTimeValue Allow owner to set withdraw delay time.
     *  @param newWithdrawDelayTime new withdraw delay time
     */
     function updateWithdrawDelayTimeValue(uint256 newWithdrawDelayTime) external onlyOwner {
@@ -264,7 +268,7 @@ contract LockingPool is
     }
 
     /**
-     * @dev updateSignerUpdateLimit Allow proxy to set signer update max limit
+     * @dev updateSignerUpdateLimit Allow owner to set signer update max limit
      * @param _limit new limit
      */
     function updateSignerUpdateLimit(uint256 _limit) external onlyOwner {
@@ -275,7 +279,7 @@ contract LockingPool is
 
 
     /**
-     * @dev updateMinAmounts Allow proxy to update min lock amount 
+     * @dev updateMinAmounts Allow owner to update min lock amount 
      * @param _minLock new min lock amount
      */
     function updateMinAmounts(uint256 _minLock) external onlyOwner {
@@ -285,7 +289,7 @@ contract LockingPool is
     }
 
      /**
-     * @dev updateMaxAmounts Allow proxy to update max lock amount 
+     * @dev updateMaxAmounts Allow owner to update max lock amount 
      * @param _maxLock new max lock amount
      */
     function updateMaxAmounts(uint256 _maxLock) external onlyOwner {
@@ -296,7 +300,7 @@ contract LockingPool is
 
 
     /**
-     * @dev updateMpc Allow proxy to update new mpc address
+     * @dev updateMpc Allow owner to update new mpc address
      * @param _newMpc new mpc
      */
     function updateMpc(address _newMpc) external onlyOwner {
@@ -313,7 +317,7 @@ contract LockingPool is
 
 
      /**
-     * @dev setWhiteListAddress Allow proxy to update white address list
+     * @dev setWhiteListAddress Allow owner to update white address list
      * @param user the address who can lock token
      * @param verified white address state
      */
@@ -322,6 +326,17 @@ contract LockingPool is
         whiteListAddresses[user] = verified;
 
         emit WhiteListAdded(user, verified);
+    }
+
+    /**
+     * @dev updateEpochLength Allow owner to update epoch length
+     * @param newEpochLength the new epoch length to update
+     */
+    function updateEpochLength(uint256 newEpochLength) external onlyOwner {
+        require(newEpochLength >0,"invliad newEpochLength");
+        uint256 oldEpochLength = epochLength;
+        epochLength = newEpochLength;
+        logger.logUpdateEpochLength(oldEpochLength, newEpochLength,currentBatch+1);
     }
 
     /**
@@ -475,12 +490,13 @@ contract LockingPool is
     function withdrawRewards(uint256 sequencerId,address recipient) override external  {
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
         require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequender mismatch");
+        require(recipient != address(0), "invalid recipient");
 
         Sequencer storage sequencerInfo = sequencers[sequencerId];
-        if (recipient != address(0) && sequencerInfo.rewardRecipient == address(0)){
+        if (sequencerInfo.rewardRecipient == address(0)){
             sequencerInfo.rewardRecipient = recipient;
         }else{
-            sequencerInfo.rewardRecipient = msg.sender;
+            require(sequencerInfo.rewardRecipient == recipient,"not allowed recipient");
         }
         
         bool withdrawToL2 = true; // froce withdraw to L2

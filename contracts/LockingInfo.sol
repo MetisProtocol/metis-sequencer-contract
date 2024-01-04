@@ -137,6 +137,16 @@ contract LockingInfo is Ownable {
      * @param _newBatchId new batchId.
      */
     event BatchSubmitReward(uint256 _newBatchId);
+
+
+    /**
+     * @dev Emitted when batch update in  'updateEpochLength'
+     * @param _oldEpochLength old epoch length.
+     * @param _newEpochLength new epoch length.
+     * @param _effectiveBatch effective batch id.
+     */
+    event UpdateEpochLength(uint256 _oldEpochLength, uint256 _newEpochLength, uint256 _effectiveBatch);
+    
    
     modifier onlyLockingPool() {
         require(lockingPool == msg.sender,
@@ -317,5 +327,16 @@ contract LockingInfo is Ownable {
         uint256 newBatchId
     ) external onlyLockingPool {
         emit BatchSubmitReward(newBatchId);
+    }
+
+    /**
+     * @dev logUpdateEpochLength log event UpdateEpochLength
+     */
+    function logUpdateEpochLength(
+        uint256 oldEpochLength,
+        uint256 newEpochLength,
+        uint256 effectiveBatch
+    ) external onlyLockingPool {
+        emit UpdateEpochLength(oldEpochLength,newEpochLength,effectiveBatch);
     }
 }
