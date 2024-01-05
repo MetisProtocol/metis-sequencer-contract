@@ -200,10 +200,9 @@ contract LockingPool is
     /**
      * @dev forceUnlock Allow owner to force a sequencer node to exit
      * @param sequencerId unique integer to identify a sequencer.
-     * @param withdrawRewardToL2 Whether the current reward is withdrawn to L2
      */
-    function forceUnlock(uint256 sequencerId, bool withdrawRewardToL2) external onlyOwner {
-        _unlock(sequencerId, currentBatch, withdrawRewardToL2,true);
+    function forceUnlock(uint256 sequencerId) external onlyOwner {
+        _unlock(sequencerId, currentBatch,true);
     }
 
     /**
@@ -395,8 +394,7 @@ contract LockingPool is
         );
 
         uint256 exitBatch = currentBatch + 1; // notice period
-        bool withdrawRewardToL2 = true; // froce withdraw to L2
-        _unlock(sequencerId, exitBatch, withdrawRewardToL2,false);
+        _unlock(sequencerId, exitBatch, false);
     }
 
 
@@ -424,9 +422,8 @@ contract LockingPool is
         uint256 newTotalLocked = totalLocked - amount;
         totalLocked = newTotalLocked;
 
-        bool withdrawToL2 = true; // froce withdraw to L2
         // Check for unclaimed rewards
-        _liquidateRewards(sequencerId,sequencers[sequencerId].rewardRecipient, withdrawToL2);
+        _liquidateRewards(sequencerId,sequencers[sequencerId].rewardRecipient);
 
         sequencers[sequencerId].amount = 0;
         sequencers[sequencerId].signer = address(0);
@@ -435,12 +432,7 @@ contract LockingPool is
         sequencers[sequencerId].status = Status.Unlocked;
 
         // withdraw locked token
-        if (!withdrawToL2){
-            _transferToken(msg.sender, amount);
-        }else{
-            IERC20(l1Token).safeIncreaseAllowance(bridge, amount);
-            IL1ERC20Bridge(bridge).depositERC20ToByChainId(getL2ChainId(), l1Token, l2Token, msg.sender, amount, l2Gas, "0x0");
-        }
+        _transferToken(msg.sender, amount);
 
         logger.logUnlocked(msg.sender, sequencerId, amount, newTotalLocked);
         NFTContract.burn(sequencerId);
@@ -499,8 +491,7 @@ contract LockingPool is
             require(sequencerInfo.rewardRecipient == recipient,"not allowed recipient");
         }
         
-        bool withdrawToL2 = true; // froce withdraw to L2
-        _liquidateRewards(sequencerId, sequencerInfo.rewardRecipient, withdrawToL2);
+        _liquidateRewards(sequencerId, sequencerInfo.rewardRecipient);
     }
 
     /**
@@ -741,7 +732,7 @@ contract LockingPool is
     // The function restricts the sequencer's exit if the number of total locked sequencers divided by 3 is less than the number of 
     // sequencers that have already exited. This would effectively freeze the sequencer's unlock function until a sufficient number of 
     // new sequencers join the system.
-    function _unlock(uint256 sequencerId, uint256 exitBatch, bool withdrawRewardToL2,bool force) internal {
+    function _unlock(uint256 sequencerId, uint256 exitBatch,bool force) internal {
         if (!force){
             // Ensure that the number of exit sequencer is less than 1/3 of the total
             require(currentUnlockedInit + 1 <= sequencerState.lockerCount/3, "not allowed");
@@ -761,7 +752,7 @@ contract LockingPool is
         currentUnlockedInit++;
 
         _removeSigner(sequencers[sequencerId].signer);
-        _liquidateRewards(sequencerId, sequencers[sequencerId].rewardRecipient, withdrawRewardToL2);
+        _liquidateRewards(sequencerId, sequencers[sequencerId].rewardRecipient);
 
         logger.logUnlockInit(
             sequencer,
@@ -851,18 +842,15 @@ contract LockingPool is
         }
     }
 
-    function _liquidateRewards(uint256 sequencerId, address sequencerUser, bool withdrawRewardToL2) private {
+    function _liquidateRewards(uint256 sequencerId, address recipient) private {
         uint256 reward = sequencers[sequencerId].reward - INITIALIZED_AMOUNT;
         totalRewardsLiquidated = totalRewardsLiquidated + reward;
         sequencers[sequencerId].reward = INITIALIZED_AMOUNT;
 
-        if (!withdrawRewardToL2){
-           _transferToken(sequencerUser, reward);
-        }else{
-            IERC20(l1Token).safeIncreaseAllowance(bridge, reward);
-            IL1ERC20Bridge(bridge).depositERC20ToByChainId(getL2ChainId(), l1Token, l2Token, sequencerUser, reward, l2Gas, "0x0");
-        }
-        logger.logClaimRewards(sequencerId, sequencerUser,reward, totalRewardsLiquidated);
+        // withdraw reward to L2
+        IERC20(l1Token).safeIncreaseAllowance(bridge, reward);
+        IL1ERC20Bridge(bridge).depositERC20ToByChainId(getL2ChainId(), l1Token, l2Token, recipient, reward, l2Gas, "0x0");
+        logger.logClaimRewards(sequencerId, recipient,reward, totalRewardsLiquidated);
     }
 
     function _transferToken(address destination, uint256 amount) private {
