@@ -12,6 +12,7 @@ Main contract code function introduction:
 
 ## Install Dependencies
 ```
+node version v18.15.0
 npm install
 ```
 
