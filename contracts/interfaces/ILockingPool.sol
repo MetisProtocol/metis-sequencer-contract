@@ -100,8 +100,9 @@ interface ILockingPool {
 
      /**
      * @dev getL2ChainId query current l2 chain id
+     * @param l1ChainId pass the l1 chain id
      */  
-    function getL2ChainId() external view returns(uint256);
+    function getL2ChainId(uint256 l1ChainId) external view returns(uint256);
 
     /**
      * @dev fetchMpcAddress query mpc address by L1 block height, used by batch-submitter

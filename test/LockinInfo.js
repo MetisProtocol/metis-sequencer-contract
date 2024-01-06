@@ -72,7 +72,17 @@ describe('LockingInfo', async () => {
     })
 
     it('log ClaimRewards', async () => {
-        await lockingInfo.logClaimRewards(1, 100,200);
-        await expect(lockingInfo.connect(wallets[1]).logClaimRewards(1, 100, 200)).to.be.revertedWith("Invalid sender, not locking pool");
+        await lockingInfo.logClaimRewards(1, wallets[0].address, 100, 200);
+        await expect(lockingInfo.connect(wallets[1]).logClaimRewards(1, wallets[0].address,100, 200)).to.be.revertedWith("Invalid sender, not locking pool");
     })
+
+    it('log logBatchSubmitReward', async () => {
+        await lockingInfo.logBatchSubmitReward(1);
+        await expect(lockingInfo.connect(wallets[1]).logBatchSubmitReward(1)).to.be.revertedWith("Invalid sender, not locking pool");
+    })
+
+     it('log logUpdateEpochLength', async () => {
+         await lockingInfo.logUpdateEpochLength(100,1000,5);
+         await expect(lockingInfo.connect(wallets[1]).logUpdateEpochLength(100, 1000, 5)).to.be.revertedWith("Invalid sender, not locking pool");
+     })
 })

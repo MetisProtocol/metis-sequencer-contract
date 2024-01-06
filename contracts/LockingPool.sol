@@ -332,7 +332,7 @@ contract LockingPool is
      * @param newEpochLength the new epoch length to update
      */
     function updateEpochLength(uint256 newEpochLength) external onlyOwner {
-        require(newEpochLength >0,"invliad newEpochLength");
+        require(newEpochLength >0,"invalid newEpochLength");
         uint256 oldEpochLength = epochLength;
         epochLength = newEpochLength;
         logger.logUpdateEpochLength(oldEpochLength, newEpochLength,currentBatch+1);
@@ -383,7 +383,8 @@ contract LockingPool is
      */    
     function unlock(uint256 sequencerId) override external  {
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
-        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequender mismatch");
+        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequencer mismatch");
+        require(sequencers[sequencerId].rewardRecipient != address(0),"rewardRecipient not set");
 
         Status status = sequencers[sequencerId].status;
         require(
@@ -405,7 +406,8 @@ contract LockingPool is
      */   
     function unlockClaim(uint256 sequencerId) override external  {
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
-        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequender mismatch");
+        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequencer mismatch");
+        require(sequencers[sequencerId].rewardRecipient != address(0),"rewardRecipient not set");
 
         uint256 deactivationBatch = sequencers[sequencerId].deactivationBatch;
         uint256 unlockClaimTime = sequencers[sequencerId].unlockClaimTime;
@@ -452,7 +454,7 @@ contract LockingPool is
         require(amount > 0, "invalid amount");
         require(sequencers[sequencerId].deactivationBatch == 0, "no relocking");
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
-        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequender mismatch");
+        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequencer mismatch");
 
         uint256 relockAmount = amount;
 
@@ -481,16 +483,15 @@ contract LockingPool is
      */   
     function withdrawRewards(uint256 sequencerId,address recipient) override external  {
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
-        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequender mismatch");
+        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequencer mismatch");
         require(recipient != address(0), "invalid recipient");
 
         Sequencer storage sequencerInfo = sequencers[sequencerId];
         if (sequencerInfo.rewardRecipient == address(0)){
             sequencerInfo.rewardRecipient = recipient;
-        }else{
-            require(sequencerInfo.rewardRecipient == recipient,"not allowed recipient");
         }
-        
+
+        require(sequencerInfo.rewardRecipient == recipient,"not allowed recipient");
         _liquidateRewards(sequencerId, sequencerInfo.rewardRecipient);
     }
 
@@ -501,7 +502,8 @@ contract LockingPool is
      */
     function updateSigner(uint256 sequencerId, bytes memory signerPubkey) external {
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
-        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequender mismatch");
+        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequencer mismatch");
+        require(sequencers[sequencerId].deactivationBatch == 0, "exited sequencer");
 
         address signer = _getAndAssertSigner(signerPubkey);
         uint256 _currentBatch = currentBatch;
@@ -510,16 +512,15 @@ contract LockingPool is
         address currentSigner = sequencers[sequencerId].signer;
         // update signer event
         logger.logSignerChange(sequencerId, currentSigner, signer, signerPubkey);
-        
-        if (sequencers[sequencerId].deactivationBatch == 0) { 
-            // didn't unlock, swap signer in the list
-            _removeSigner(currentSigner);
-            _insertSigner(signer);
-        }
+    
+        // swap signer in the list
+        _removeSigner(currentSigner);
+        _insertSigner(signer);
 
         signerToSequencer[currentSigner] = INCORRECT_SEQUENCER_ID;
         signerToSequencer[signer] = sequencerId;
         sequencers[sequencerId].signer = signer;
+        whiteListBoundSequencer[msg.sender] = signer;
 
         // reset update time to current time
         latestSignerUpdateBatch[sequencerId] = _currentBatch;
@@ -642,8 +643,8 @@ contract LockingPool is
 
     
     // getL2ChainId return the l2 chain id
-    function getL2ChainId() override public view returns(uint256) {
-        if (block.chainid == 1) {
+    function getL2ChainId(uint256 l1ChainId) override public pure returns(uint256) {
+        if (l1ChainId == 1) {
             return 1088;
         } 
         return 59901;
@@ -735,7 +736,7 @@ contract LockingPool is
     function _unlock(uint256 sequencerId, uint256 exitBatch,bool force) internal {
         if (!force){
             // Ensure that the number of exit sequencer is less than 1/3 of the total
-            require(currentUnlockedInit + 1 <= sequencerState.lockerCount/3, "not allowed");
+            require(currentUnlockedInit + 1 <= sequencerState.lockerCount/3, "unlock not allowed");
         }
 
         uint256 amount = sequencers[sequencerId].amount;
@@ -834,12 +835,8 @@ contract LockingPool is
         uint256 reward
     ) private {
         uint256 sequencerId = signerToSequencer[sequencer];
-        Sequencer memory sequencerInfo = sequencers[sequencerId];
-
         // update reward
-        if (sequencerInfo.deactivationBatch == 0 || currentBatch < sequencerInfo.deactivationBatch){
-            sequencers[sequencerId].reward +=  reward;
-        }
+        sequencers[sequencerId].reward +=  reward;
     }
 
     function _liquidateRewards(uint256 sequencerId, address recipient) private {
@@ -849,7 +846,7 @@ contract LockingPool is
 
         // withdraw reward to L2
         IERC20(l1Token).safeIncreaseAllowance(bridge, reward);
-        IL1ERC20Bridge(bridge).depositERC20ToByChainId(getL2ChainId(), l1Token, l2Token, recipient, reward, l2Gas, "0x0");
+        IL1ERC20Bridge(bridge).depositERC20ToByChainId(getL2ChainId(block.chainid), l1Token, l2Token, recipient, reward, l2Gas, "0x0");
         logger.logClaimRewards(sequencerId, recipient,reward, totalRewardsLiquidated);
     }
 
@@ -880,6 +877,6 @@ contract LockingPool is
         uint256 deactivationBatch,
         uint256 _currentBatch
     ) private pure returns (bool) {
-        return (amount > 0 && (deactivationBatch == 0 || deactivationBatch > _currentBatch) && status == Status.Active);
+        return (amount > 0 && (deactivationBatch == 0 || deactivationBatch > _currentBatch || status == Status.Active));
     }
 }

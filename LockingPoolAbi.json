@@ -21,6 +21,25 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "internalType": "address",
         "name": "account",
@@ -67,6 +86,19 @@
       }
     ],
     "name": "UpdateLockingInfo",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_newMaxLock",
+        "type": "uint256"
+      }
+    ],
+    "name": "UpdateMaxAmounts",
     "type": "event"
   },
   {
@@ -174,19 +206,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "Proxy",
-    "outputs": [
-      {
-        "internalType": "contract IProxy",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -339,6 +358,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "epochLength",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -363,11 +395,6 @@
         "internalType": "uint256",
         "name": "sequencerId",
         "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "withdrawRewardToL2",
-        "type": "bool"
       }
     ],
     "name": "forceUnlock",
@@ -376,7 +403,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "l1ChainId",
+        "type": "uint256"
+      }
+    ],
     "name": "getL2ChainId",
     "outputs": [
       {
@@ -411,11 +444,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_Proxy",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
         "name": "_bridge",
         "type": "address"
       },
@@ -443,6 +471,11 @@
         "internalType": "address",
         "name": "_mpc",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_epochLength",
+        "type": "uint256"
       }
     ],
     "name": "initialize",
@@ -578,6 +611,19 @@
   },
   {
     "inputs": [],
+    "name": "maxLock",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "minLock",
     "outputs": [
       {
@@ -620,6 +666,19 @@
       {
         "internalType": "address",
         "name": "newMpcAddress",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
         "type": "address"
       }
     ],
@@ -677,6 +736,13 @@
       }
     ],
     "name": "relock",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -820,14 +886,14 @@
         "type": "address"
       },
       {
+        "internalType": "address",
+        "name": "rewardRecipient",
+        "type": "address"
+      },
+      {
         "internalType": "enum LockingPool.Status",
         "name": "status",
         "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "initialRewardPerLock",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -958,14 +1024,22 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "sequencerId",
         "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "withdrawRewardToL2",
-        "type": "bool"
       }
     ],
     "name": "unlock",
@@ -979,11 +1053,6 @@
         "internalType": "uint256",
         "name": "sequencerId",
         "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "withdrawToL2",
-        "type": "bool"
       }
     ],
     "name": "unlockClaim",
@@ -1007,12 +1076,38 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "newEpochLength",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateEpochLength",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "_lockingInfo",
         "type": "address"
       }
     ],
     "name": "updateLockingInfo",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_maxLock",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateMaxAmounts",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1135,14 +1230,33 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "whiteListBoundSequencer",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "sequencerId",
         "type": "uint256"
       },
       {
-        "internalType": "bool",
-        "name": "withdrawToL2",
-        "type": "bool"
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
       }
     ],
     "name": "withdrawRewards",
