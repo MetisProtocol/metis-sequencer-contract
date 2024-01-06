@@ -642,7 +642,11 @@ contract LockingPool is
     }
 
     
-    // getL2ChainId return the l2 chain id
+
+    /*
+    * @dev getL2ChainId return the l2 chain id
+    * @param l1ChainId the L1 chain id
+    */
     function getL2ChainId(uint256 l1ChainId) override public pure returns(uint256) {
         if (l1ChainId == 1) {
             return 1088;
