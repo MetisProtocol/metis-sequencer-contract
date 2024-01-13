@@ -65,7 +65,6 @@ contract LockingPool is
     address[] public signers; // all signers
     uint256 public currentUnlockedInit; // sequencer unlock queue count, need have a limit
     uint256 public lastRewardEpochId; // the last epochId for update reward
-    uint256 public epochLength; // the length per epoch
 
     // genesis variables
     uint256 public BLOCK_REWARD; // reward per l2 block
@@ -156,22 +155,19 @@ contract LockingPool is
         address _l2Token,
         uint32 _l2Gas,
         address _NFTContract,
-        address _mpc,
-        uint256 _epochLength
+        address _mpc
     ) external initializer {
         require(_bridge != address(0),"invalid _bridge");
         require(_l1Token != address(0),"invalid _l1Token");
         require(_l2Token != address(0),"invalid _l2Token");
         require(_NFTContract != address(0),"invalid _NFTContract");
         require(_mpc != address(0),"_mpc is zero address");
-        require(_epochLength > 0,"invalid _epochLength");
         
         bridge = _bridge;
         l1Token = _l1Token;
         l2Token = _l2Token;
         l2Gas = _l2Gas;
         NFTContract = LockingNFT(_NFTContract);
-        epochLength =  _epochLength;
 
         require(!isContract(_mpc),"_mpc is a contract");
         mpcAddress = _mpc;
@@ -325,17 +321,6 @@ contract LockingPool is
         whiteListAddresses[user] = verified;
 
         emit WhiteListAdded(user, verified);
-    }
-
-    /**
-     * @dev updateEpochLength Allow owner to update epoch length
-     * @param newEpochLength the new epoch length to update
-     */
-    function updateEpochLength(uint256 newEpochLength) external onlyOwner {
-        require(newEpochLength >0,"invalid newEpochLength");
-        uint256 oldEpochLength = epochLength;
-        epochLength = newEpochLength;
-        logger.logUpdateEpochLength(oldEpochLength, newEpochLength,currentBatch+1);
     }
 
     /**

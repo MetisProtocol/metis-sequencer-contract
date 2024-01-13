@@ -12,3 +12,4 @@ bin
 .VSCodeCounter
 contractAddresses.json
 coverage
+coverage.json

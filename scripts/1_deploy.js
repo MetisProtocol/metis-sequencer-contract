@@ -8,7 +8,6 @@ const l1MetisToken = "0x3972AAfb128c9BFcA5328C3D5CeE82fe4d1815ce";
 const l2MetisToken = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
 const l1BridgeAddress = "0x9c89FD2AA8181bb9883449D2Dd7f0336B0D11AD5";
 const l2Gas = 200000;
-const epochLength = 200;
 
 let lockingNftName = "Metis Sequencer";
 let lockingNftSymbol = "MS";
@@ -36,11 +35,10 @@ const main = async () => {
               l2MetisToken,
               l2Gas,
               lockingNFTDeployed.address,
-              mpcAddress,
-              epochLength
+              mpcAddress
             ],
             {
-              initializer: 'initialize(address,address,address,uint32,address,address,uint256)'
+              initializer: 'initialize(address,address,address,uint32,address,address)'
             });
   await lockingPoolProxy.deployed();
   console.log("LockingPool deployed to:", lockingPoolProxy.address);
@@ -92,22 +90,6 @@ const main = async () => {
   }
   await utils.writeContractAddresses(contractAddresses)
 };
-
-async function updateLockingPoolLoggerAddress(govObj, lockingPoolProxyAddress,lockingInfoAddress) {
-  let ABI = [
-    "function updateLockingInfo(address _lockingInfo)"
-  ];
-  let iface = new ethers.utils.Interface(ABI);
-  let updateLockingInfoEncodeData = iface.encodeFunctionData("updateLockingInfo", [
-    lockingInfoAddress,
-  ])
-  console.log("updateLockingInfo: ", updateLockingInfoEncodeData)
-
-  return govObj.update(
-    lockingPoolProxyAddress,
-    updateLockingInfoEncodeData
-  )
-}
 
 setTimeout(function () {
   console.log('This printed after about {time} second');

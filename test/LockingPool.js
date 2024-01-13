@@ -20,7 +20,6 @@ describe('LockingPool', async () => {
     let admin;
     let mpc;
     let testERC20;
-    let epochLength;
     let l1Bridge;
 
     let testUserPub = "0xeeef8d4d35c9dc2d64df24af6bb4be3b08557a995b2907d97039c536f96477fecbd56bb78fdcde962ccaa579dcc75376e7839f6211cf62cea8b2871b84106674";
@@ -110,10 +109,9 @@ describe('LockingPool', async () => {
                 "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
                 200000,
                 lockingNFT.address,
-                mpc,
-                epochLength
+                mpc
             ], {
-                initializer: 'initialize(address,address,address,uint32,address,address,uint256)'
+                initializer: 'initialize(address,address,address,uint32,address,address)'
             });
         await lockingPoolProxy.connect(admin).deployed();
 
@@ -188,10 +186,9 @@ describe('LockingPool', async () => {
                 "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
                 200000,
                 lockingNFT.address,
-                mpc,
-                epochLength
+                mpc
             ], {
-                 initializer: 'initialize(address,address,address,uint32,address,address,uint256)'
+                 initializer: 'initialize(address,address,address,uint32,address,address)'
             })).to.be.revertedWith("invalid _bridge");
 
         await expect(upgrades.deployProxy(LockingPool1,
@@ -201,10 +198,9 @@ describe('LockingPool', async () => {
                 "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
                 200000,
                 lockingNFT.address,
-                mpc,
-                epochLength
+                mpc
             ], {
-                 initializer: 'initialize(address,address,address,uint32,address,address,uint256)'
+                 initializer: 'initialize(address,address,address,uint32,address,address)'
             })).to.be.revertedWith("invalid _l1Token");
 
         await expect(upgrades.deployProxy(LockingPool1,
@@ -214,10 +210,9 @@ describe('LockingPool', async () => {
                 zeroAddress,
                 200000,
                 lockingNFT.address,
-                mpc,
-                epochLength
+                mpc
             ], {
-                 initializer: 'initialize(address,address,address,uint32,address,address,uint256)'
+                 initializer: 'initialize(address,address,address,uint32,address,address)'
             })).to.be.revertedWith("invalid _l2Token");
 
         await expect(upgrades.deployProxy(LockingPool1,
@@ -227,10 +222,9 @@ describe('LockingPool', async () => {
                 "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
                 200000,
                 zeroAddress,
-                mpc,
-                epochLength
+                mpc
             ], {
-                 initializer: 'initialize(address,address,address,uint32,address,address,uint256)'
+                 initializer: 'initialize(address,address,address,uint32,address,address)'
             })).to.be.revertedWith("invalid _NFTContract");
 
         await expect(upgrades.deployProxy(LockingPool1,
@@ -240,10 +234,9 @@ describe('LockingPool', async () => {
                 "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
                 200000,
                 lockingNFT.address,
-                zeroAddress,
-                epochLength
+                zeroAddress
             ], {
-                 initializer: 'initialize(address,address,address,uint32,address,address,uint256)'
+                 initializer: 'initialize(address,address,address,uint32,address,address)'
             })).to.be.revertedWith("_mpc is zero address");
 
         await expect(upgrades.deployProxy(LockingPool1,
@@ -253,24 +246,10 @@ describe('LockingPool', async () => {
                 "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
                 200000,
                 lockingNFT.address,
-                lockingNFT.address,
-                epochLength
+                lockingNFT.address
             ], {
-                 initializer: 'initialize(address,address,address,uint32,address,address,uint256)'
+                 initializer: 'initialize(address,address,address,uint32,address,address)'
             })).to.be.revertedWith("_mpc is a contract");
-
-         await expect(upgrades.deployProxy(LockingPool1,
-             [
-                 "0xCF7257A86A5dBba34bAbcd2680f209eb9a05b2d2",
-                 l1MetisToken,
-                 "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
-                 200000,
-                 lockingNFT.address,
-                 admin.address,
-                 0
-             ], {
-                 initializer: 'initialize(address,address,address,uint32,address,address,uint256)'
-             })).to.be.revertedWith("invalid _epochLength");
     })
 
     it('l2 chainId', async () => {
@@ -982,17 +961,6 @@ describe('LockingPool', async () => {
         await expect(updateMaxAmounts(lockingPool, testUser, lockAmount)).to.be.revertedWith("Ownable: caller is not the owner");
     })
 
-    it('update epoch length', async () => {
-        await expect(updateEpochLength(lockingPool, wallets[0], 0)).to.be.revertedWith("invalid newEpochLength");
-        await updateEpochLength(lockingPool, wallets[0], 100);
-
-        let epochLength = await lockingPool.epochLength();
-        expect(epochLength).to.eq(100);
-
-        // not allow 
-        const testUser = new ethers.Wallet(testUserPri, ethers.provider);
-        await expect(updateEpochLength(lockingPool, testUser, 100)).to.be.revertedWith("Ownable: caller is not the owner");
-    })
 
     it('update mpc', async () => {
         let currentMpc = await lockingPool.mpcAddress();
@@ -1154,10 +1122,6 @@ async function updateMinAmounts(lockingPoolObj,signer, minAmount) {
 
 async function updateMaxAmounts(lockingPoolObj, signer, maxAmount) {
     return lockingPoolObj.connect(signer).updateMaxAmounts(maxAmount)
-}
-
-async function updateEpochLength(lockingPoolObj, signer, newEpochLength) {
-    return lockingPoolObj.connect(signer).updateEpochLength(newEpochLength)
 }
 
 async function updateMpc(lockingPoolObj, signer, mpc) {
