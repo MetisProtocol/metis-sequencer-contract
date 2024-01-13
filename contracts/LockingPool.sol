@@ -418,6 +418,9 @@ contract LockingPool is
         signerToSequencer[sequencers[sequencerId].signer] = INCORRECT_SEQUENCER_ID;
         sequencers[sequencerId].status = Status.Unlocked;
 
+        // Reduce the number of unlockInit queue
+        currentUnlockedInit--;
+
         // withdraw locked token
         _transferToken(msg.sender, amount);
 
