@@ -9,20 +9,18 @@ const IERC20_SOURCE = "@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20";
 
 // params for goerli
 // pubkey should not have the leading 04 prefix
-let seqPub1 = "0xfaeda3a3e5dafb79153a9a72b8275292237fdb6f89c037bffd6682187ce56b7778f815c5794a457cb35484242fba8cbbed3eefa6f795a7e307830a5af52063bc"
-let seqAddr1 = "0xD3011EaF0050FC6D474DF2e598461080D787e343"
+let seqPub1 = "0xb21c89c5716dbc670f4cbc247a1af723bb810463e2b56625b7a00c43f2b34a4be1c00db627f8dbd02833d12a2b957e54b19398dcb730e805cd592d7c1c4006b3"
+let seqAddr1 = "0xAa3d162b95596d36CB33Bcf1EF24759A23D9b032"
+let seqPri1 = "0xcfc5a0541eba3cc187f67e2cb836bf0516dcb395b266522a59938b937f37c628"
 
-let seqPub2 = "0xa569db9d2cf0ef29eb95c34dd069d14d9b3776b18d792312ce7f02d0c57da22f04fd4331719a2dd3f51c7873b5842bd1a5558654609a3f5e8294a50fe3c7d4d3"
-let seqAddr2 = "0x0e57211BEc9b113d592Dd1072C2E008dd32e8203"
+let seqPub2 = "0x932f98ef71534bb88efbb064f91605928034a38f62d7f47d17a81de084d05a9bbe52d0c75b585550654bae50827a9df97a701b015b7585e9ba4fe0447a35ecee"
+let seqAddr2 = "0x46D0D6A056257ac88D809a6CF4F51202345eAC3f"
+let seqPri2 = "0xcbc33dd78c5bb5f5e292bf96a4d1bb223822d3a39b5d721f99b720658d1d81cd"
 
-let seqPub3 = "0x9599fbdebeb91bdffd00d00dc2f5b21c731100169814a9220b3c16a8d87f6f8a115014cf1047f5d9266efa709b7412d62328555e46508b0dafb3c3d9d5556129"
-let seqAddr3 = "0x108fe339187108042871cC918F708b2C97059a32"
+let seqPub3 = "0xb65fa94bef4cddacff69a54c3a370704fb286dc242a8a0245755896a73a5c5697a123ecf6469ca98cdf4a938f94c2754e0e9c310395ab8231ce3faffc54c92e6"
+let seqAddr3 = "0x44323A0044Cf40F5E0B05c0f6af3C7A5bE7B0f3B"
+let seqPri3 = "0x76f1dcfc092e14605dbcc79d939a725709e3e24cb7b4bd66751da34777e5e694"
 
-let seqPub4 = "0x6681d9a6a882431be77aeeaabf155ca5343c62211834303e7b4892c78ebb0454c674f978ef74e3355a3a31167d0479d31a5b3991c1003fbb26420aa5c0f4ddd8"
-let seqAddr4 = "0x79F08238ADA534EEfd4C4D726ad00865d79F05E3"
-
-let seqPub5 = "0x3640bb1ee74ba2ccf479bf7282c566a4298c39a05e639b5c7304fd2da758e0727c737f9c3fe7dee207a2b4085bc7d8d008a84beaed6cdaef662152a9ca5ebf16"
-let seqAddr5 = "0x6eec40d64Fe44c1d40c96AC6A40A130330AC9819"
 
 const main = async () => {
   const accounts = await ethers.getSigners();
@@ -35,24 +33,12 @@ const main = async () => {
   const LockingPool = await ethers.getContractFactory("LockingPool");
   const LockingPoolObj = await LockingPool.attach(contractAddresses.contracts.LockingPoolProxy);
 
-  const metisTokenObj = await ethers.getContractAt(IERC20_SOURCE, contractAddresses.contracts.tokens.L1MetisToken);
-  console.log('Sender accounts has a balanceOf', (await metisTokenObj.balanceOf(signer)).toString())
-
-  const approveAmount = await metisTokenObj.allowance(signer, contractAddresses.contracts.LockingPoolProxy);
-  console.log("approveAmount: ", approveAmount);
-  if (approveAmount <= 0) {
-    let approveTx = await metisTokenObj.approve(contractAddresses.contracts.LockingPoolProxy, web3.utils.toWei('100000000000000000000000000000000'))
-    console.log("approve tx:", approveTx.hash);
-    await approveTx.wait();
-  }
-
-  await lockFor(LockingPoolObj, seqAddr1, seqPub1);
-  // await lockFor(LockingPoolObj, seqAddr2, seqPub2);
-  // await lockFor(LockingPoolObj, seqAddr3, seqPub3);
-  // await lockFor(LockingPoolObj, seqAddr4, seqPub4);
+  await lockFor(LockingPoolObj, seqAddr1, seqPub1, seqPri1, contractAddresses);
+  await lockFor(LockingPoolObj, seqAddr2, seqPub2, seqPri2, contractAddresses);
+  await lockFor(LockingPoolObj, seqAddr3, seqPub3, seqPri3, contractAddresses);
 }
 
-async function lockFor( LockingPoolObj, sequencerSigner, sequencerPubkey) {
+async function lockFor(LockingPoolObj, sequencerSigner, sequencerPubkey, sequencerPri, contractAddresses) {
    let setWitheAddressTx = await LockingPoolObj.setWhiteListAddress(sequencerSigner, true);
    await setWitheAddressTx.wait();
    console.log("setWitheAddress:", setWitheAddressTx.hash);
@@ -61,7 +47,19 @@ async function lockFor( LockingPoolObj, sequencerSigner, sequencerPubkey) {
    console.log(`Locking ${lockAmount} for ${sequencerSigner}...`);
 
    console.log('locking now...')
-   let lockTx = await LockingPoolObj.lockFor(sequencerSigner, lockAmount, sequencerPubkey);
+  const testUser = new ethers.Wallet(sequencerPri, ethers.provider);
+
+  const metisTokenObj = await ethers.getContractAt(IERC20_SOURCE, contractAddresses.contracts.tokens.L1MetisToken);
+  console.log('Sender accounts has a balanceOf', (await metisTokenObj.balanceOf(sequencerSigner)).toString())
+
+  const approveAmount = await metisTokenObj.connect(testUser).allowance(sequencerSigner, contractAddresses.contracts.LockingPoolProxy);
+  if (approveAmount <= 0) {
+    let approveTx = await metisTokenObj.connect(testUser).approve(contractAddresses.contracts.LockingPoolProxy, web3.utils.toWei('100000000000000000000000000000000'))
+    console.log("approve tx:", approveTx.hash);
+    await approveTx.wait();
+  }
+
+   let lockTx = await LockingPoolObj.connect(testUser).lockFor(sequencerSigner, lockAmount, sequencerPubkey);
    await lockTx.wait();
    console.log("lock tx ", lockTx.hash);
 }
