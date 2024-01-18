@@ -48,7 +48,11 @@ module.exports = {
     holesky: {
       url: process.env.HOLESKY_RPC !== undefined ? process.env.HOLESKY_RPC : "",
       accounts: process.env.DEVNET_PRIVKEY !== undefined ? [process.env.DEVNET_PRIVKEY] : [],
-    }
+    },
+    sepolia: {
+       url: process.env.SEPOLIA_RPC !== undefined ? process.env.SEPOLIA_RPC : "",
+       accounts: process.env.DEVNET_PRIVKEY !== undefined ? [process.env.DEVNET_PRIVKEY] : [],
+     }
   },
   etherscan: {
     apiKey: {
