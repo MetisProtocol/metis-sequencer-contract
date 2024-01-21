@@ -4,9 +4,9 @@ const utils = require('./utils');
 const { zeroAddress } = require("ethereumjs-util");
 const web3 = require("web3");
 
-const l1MetisToken = "0x3972AAfb128c9BFcA5328C3D5CeE82fe4d1815ce";
+const l1MetisToken = "0x7f49160EB9BB068101d445fe77E17ecDb37D0B47";
 const l2MetisToken = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
-const l1BridgeAddress = "0x9c89FD2AA8181bb9883449D2Dd7f0336B0D11AD5";
+const l1BridgeAddress = "0xCB22CC16329e3D7A9cAf46Dbc0Aa0a5f6D0341c2";
 const l2Gas = 200000;
 
 let lockingNftName = "Metis Sequencer";
