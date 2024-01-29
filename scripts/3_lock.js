@@ -7,20 +7,15 @@ const web3 = require("web3");
 const utils = require('./utils');
 const IERC20_SOURCE = "@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20";
 
-// params for goerli
 // pubkey should not have the leading 04 prefix
 let seqPub1 = "0xb21c89c5716dbc670f4cbc247a1af723bb810463e2b56625b7a00c43f2b34a4be1c00db627f8dbd02833d12a2b957e54b19398dcb730e805cd592d7c1c4006b3"
 let seqAddr1 = "0xAa3d162b95596d36CB33Bcf1EF24759A23D9b032"
-let seqPri1 = "0xcfc5a0541eba3cc187f67e2cb836bf0516dcb395b266522a59938b937f37c628"
 
 let seqPub2 = "0x932f98ef71534bb88efbb064f91605928034a38f62d7f47d17a81de084d05a9bbe52d0c75b585550654bae50827a9df97a701b015b7585e9ba4fe0447a35ecee"
 let seqAddr2 = "0x46D0D6A056257ac88D809a6CF4F51202345eAC3f"
-let seqPri2 = "0xcbc33dd78c5bb5f5e292bf96a4d1bb223822d3a39b5d721f99b720658d1d81cd"
 
 let seqPub3 = "0xb65fa94bef4cddacff69a54c3a370704fb286dc242a8a0245755896a73a5c5697a123ecf6469ca98cdf4a938f94c2754e0e9c310395ab8231ce3faffc54c92e6"
 let seqAddr3 = "0x44323A0044Cf40F5E0B05c0f6af3C7A5bE7B0f3B"
-let seqPri3 = "0x76f1dcfc092e14605dbcc79d939a725709e3e24cb7b4bd66751da34777e5e694"
-
 
 const main = async () => {
   const accounts = await ethers.getSigners();
