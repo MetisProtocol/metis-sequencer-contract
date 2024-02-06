@@ -38,26 +38,30 @@ interface ILockingPool {
      *
      * @param sequencerId sequencer id
      * @param recipient the address that receive reward tokens
+     * @param l2Gas bridge reward to L2 gasLimit
      */   
     function withdrawRewards(
         uint256 sequencerId,
-        address recipient
+        address recipient,
+        uint32 l2Gas
     ) external;
     
     /**
      * @dev unlock is used to unlock Metis and exit the sequencer node
      *
      * @param sequencerId sequencer id
+     * @param l2Gas bridge reward to L2 gasLimit
      */    
-    function unlock(uint256 sequencerId) external;
+    function unlock(uint256 sequencerId, uint32 l2Gas) external;
 
     
      /**
      * @dev unlockClaim Because unlock has a waiting period, after the waiting period is over, you can claim locked tokens
      *
      * @param sequencerId sequencer id
+     * @param l2Gas bridge reward to L2 gasLimit
      */   
-     function unlockClaim(uint256 sequencerId) external ;
+     function unlockClaim(uint256 sequencerId, uint32 l2Gas) external ;
 
 
     /**

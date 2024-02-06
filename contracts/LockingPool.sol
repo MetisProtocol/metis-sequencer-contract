@@ -52,7 +52,6 @@ contract LockingPool is
     address public bridge;     // L1 metis bridge address
     address public l1Token;    // L1 metis token address
     address public l2Token;    // L2 metis token address
-    uint32 public l2Gas;        // bridge metis to l2 gaslimit
     LockingInfo public logger;  // logger lockingPool event
     LockingNFT public NFTContract;  // NFT for locker
     uint256 public WITHDRAWAL_DELAY;    // delay time for unlock
@@ -151,7 +150,6 @@ contract LockingPool is
         address _bridge,
         address _l1Token,
         address _l2Token,
-        uint32 _l2Gas,
         address _NFTContract,
         address _mpc
     ) external initializer {
@@ -164,7 +162,6 @@ contract LockingPool is
         bridge = _bridge;
         l1Token = _l1Token;
         l2Token = _l2Token;
-        l2Gas = _l2Gas;
         NFTContract = LockingNFT(_NFTContract);
 
         require(!isContract(_mpc),"_mpc is a contract");
@@ -194,8 +191,9 @@ contract LockingPool is
     /**
      * @dev forceUnlock Allow owner to force a sequencer node to exit
      * @param sequencerId unique integer to identify a sequencer.
+     * @param l2Gas bridge reward to L2 gasLimit
      */
-    function forceUnlock(uint256 sequencerId) external onlyOwner {
+    function forceUnlock(uint256 sequencerId,uint32 l2Gas) external onlyOwner {
         Status status = sequencers[sequencerId].status;
         require(
             sequencers[sequencerId].activationBatch > 0 &&
@@ -203,7 +201,7 @@ contract LockingPool is
                 status == Status.Active,
                 "invalid sequencer status"
         );
-        _unlock(sequencerId, currentBatch,true);
+        _unlock(sequencerId, currentBatch, true, l2Gas);
     }
 
     /**
@@ -370,8 +368,9 @@ contract LockingPool is
      * @dev unlock is used to unlock Metis and exit the sequencer node
      *
      * @param sequencerId sequencer id
+     * @param l2Gas bridge reward to L2 gasLimit
      */    
-    function unlock(uint256 sequencerId) override external  {
+    function unlock(uint256 sequencerId, uint32 l2Gas) override external  {
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
         require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequencer mismatch");
         require(sequencers[sequencerId].rewardRecipient != address(0),"rewardRecipient not set");
@@ -385,7 +384,7 @@ contract LockingPool is
         );
 
         uint256 exitBatch = currentBatch + 1; // notice period
-        _unlock(sequencerId, exitBatch, false);
+        _unlock(sequencerId, exitBatch, false, l2Gas);
     }
 
 
@@ -393,8 +392,9 @@ contract LockingPool is
      * @dev unlockClaim Because unlock has a waiting period, after the waiting period is over, you can claim locked tokens
      *
      * @param sequencerId sequencer id
+     * @param l2Gas bridge reward to L2 gasLimit
      */   
-    function unlockClaim(uint256 sequencerId) override external  {
+    function unlockClaim(uint256 sequencerId, uint32 l2Gas) override external  {
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
         require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequencer mismatch");
         require(sequencers[sequencerId].rewardRecipient != address(0),"rewardRecipient not set");
@@ -415,7 +415,7 @@ contract LockingPool is
         totalLocked = newTotalLocked;
 
         // Check for unclaimed rewards
-        _liquidateRewards(sequencerId,sequencers[sequencerId].rewardRecipient);
+        _liquidateRewards(sequencerId,sequencers[sequencerId].rewardRecipient, l2Gas);
 
         sequencers[sequencerId].amount = 0;
         sequencers[sequencerId].signer = address(0);
@@ -473,8 +473,9 @@ contract LockingPool is
      *
      * @param sequencerId unique integer to identify a sequencer.
      * @param recipient the address that receive reward tokens
+     * @param l2Gas bridge reward to L2 gasLimit
      */   
-    function withdrawRewards(uint256 sequencerId,address recipient) override external  {
+    function withdrawRewards(uint256 sequencerId,address recipient,uint32 l2Gas) override external  {
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
         require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequencer mismatch");
         require(recipient != address(0), "invalid recipient");
@@ -485,7 +486,7 @@ contract LockingPool is
         }
 
         require(sequencerInfo.rewardRecipient == recipient,"not allowed recipient");
-        _liquidateRewards(sequencerId, sequencerInfo.rewardRecipient);
+        _liquidateRewards(sequencerId, sequencerInfo.rewardRecipient,l2Gas);
     }
 
     /**
@@ -730,7 +731,7 @@ contract LockingPool is
     // The function restricts the sequencer's exit if the number of total locked sequencers divided by 3 is less than the number of 
     // sequencers that have already exited. This would effectively freeze the sequencer's unlock function until a sufficient number of 
     // new sequencers join the system.
-    function _unlock(uint256 sequencerId, uint256 exitBatch,bool force) internal {
+    function _unlock(uint256 sequencerId, uint256 exitBatch,bool force,uint32 l2Gas) internal {
         if (!force){
             // Ensure that the number of exit sequencer is less than 1/3 of the total
             require(currentUnlockedInit + 1 <= sequencerState.lockerCount/3, "unlock not allowed");
@@ -750,7 +751,7 @@ contract LockingPool is
         currentUnlockedInit++;
 
         _removeSigner(sequencers[sequencerId].signer);
-        _liquidateRewards(sequencerId, sequencers[sequencerId].rewardRecipient);
+        _liquidateRewards(sequencerId, sequencers[sequencerId].rewardRecipient, l2Gas);
 
         logger.logUnlockInit(
             sequencer,
@@ -836,7 +837,7 @@ contract LockingPool is
         sequencers[sequencerId].reward +=  reward;
     }
 
-    function _liquidateRewards(uint256 sequencerId, address recipient) private {
+    function _liquidateRewards(uint256 sequencerId, address recipient, uint32 l2Gas) private {
         uint256 reward = sequencers[sequencerId].reward ;
         totalRewardsLiquidated = totalRewardsLiquidated + reward;
         sequencers[sequencerId].reward = 0;
