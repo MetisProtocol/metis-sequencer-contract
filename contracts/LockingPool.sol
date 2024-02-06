@@ -62,9 +62,10 @@ contract LockingPool is
     address[] public signers; // all signers
     uint256 public currentUnlockedInit; // sequencer unlock queue count, need have a limit
     uint256 public lastRewardEpochId; // the last epochId for update reward
+    uint256 public lastRewardTime; // the last reward time for update reward
 
     // genesis variables
-    uint256 public BLOCK_REWARD; // reward per l2 block
+    uint256 public perSecondReward; // reward per second
     uint256 public minLock; // min lock Metis token 
     uint256 public maxLock; // max lock Metis token 
     uint256 public signerUpdateLimit; // sequencer signer need have a update limit,how many batches are not allowed to update the signer
@@ -181,7 +182,7 @@ contract LockingPool is
 
         WITHDRAWAL_DELAY = 21 days; // sequencer exit withdraw delay time
         currentBatch = 1;  // default start from batch 1
-        BLOCK_REWARD = 2 * (10**18); // per block reward
+        perSecondReward = 1 * (10**8); // per secondreward
         minLock = 20000* (10**18);  // min lock amount
         maxLock = 100000 * (10**18); // max lock amount
         signerUpdateLimit = 10; // how many batches are not allowed to update the signer
@@ -242,13 +243,13 @@ contract LockingPool is
     }
 
      /**
-     * @dev updateBlockReward  Allow owner to set per block reward
-     * @param newReward the block reward
+     * @dev updatePerSecondReward  Allow owner to set per block reward
+     * @param newReward the new reward
      */
-    function updateBlockReward(uint256 newReward) external onlyOwner {
+    function updatePerSecondReward(uint256 newReward) external onlyOwner {
         require(newReward != 0,"invalid newReward");
-        BLOCK_REWARD = newReward;
-        logger.logRewardUpdate(newReward, BLOCK_REWARD);
+        perSecondReward = newReward;
+        logger.logRewardUpdate(newReward, perSecondReward);
     }
 
 
@@ -548,17 +549,28 @@ contract LockingPool is
         address signer = ECDSA.recover(operationHash, signature);
         require(signer == mpcAddress, "invalid mpc signature");
 
-        // calc reward
-        uint256 totalReward;
+        // calc total reward
+        uint256 totalReward = perSecondReward * (block.timestamp-lastRewardTime);
+        lastRewardTime = block.timestamp;
+
+        // calc total finished blocks
+        uint256 totalFinishedBlocks;
+        for (uint256 i = 0; i < finishedBlocks.length;) {
+             unchecked{
+                totalFinishedBlocks += finishedBlocks[i];
+                ++i;
+            }
+        }
+
+        // distribute reward
         for (uint256 i = 0; i < _sequencers.length;) {
             require(signerToSequencer[_sequencers[i]] > 0,"sequencer not exist");
             require(isSequencer(signerToSequencer[_sequencers[i]]), "invalid sequencer");
 
-            uint256 reward = _calculateReward(finishedBlocks[i]);
+            uint256 reward = _calculateReward(totalReward,totalFinishedBlocks,finishedBlocks[i]);
             _increaseReward(_sequencers[i],reward);
 
             unchecked{
-                totalReward += reward;
                 ++i;
             }
         }
@@ -829,10 +841,12 @@ contract LockingPool is
     }
 
     function _calculateReward(
-        uint256 blockInterval
-    ) internal view returns (uint256) {
-        // rewards are based on BlockInterval multiplied on `BLOCK_REWARD`
-        return blockInterval * BLOCK_REWARD;
+        uint256 totalRewards,
+        uint256 totalBlocks,
+        uint256 finishedBlocks
+    ) internal pure returns (uint256) {
+        // rewards are based on BlockInterval multiplied on `perSecondReward`
+        return totalRewards * (finishedBlocks / totalBlocks);
     }
 
 
