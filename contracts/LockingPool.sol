@@ -47,7 +47,6 @@ contract LockingPool is
         Status status;              // sequencer status
     }
 
-    uint256 constant REWARD_PRECISION = 10**25;
     uint256 internal constant INCORRECT_SEQUENCER_ID = 2**256 - 1;
     uint256 internal constant INITIALIZED_AMOUNT = 1;
 
