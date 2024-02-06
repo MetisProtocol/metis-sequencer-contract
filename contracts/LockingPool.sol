@@ -232,16 +232,6 @@ contract LockingPool is
     }
 
     /**
-     * @dev setCurrentBatch  Allow owner to set current batch id
-     * @param _currentBatch batch id to set
-     */
-    function setCurrentBatch(uint256 _currentBatch) external onlyOwner {
-        require(_currentBatch != 0,"invalid _currentBatch");
-        currentBatch = _currentBatch;
-        emit SetCurrentBatch(_currentBatch);
-    }
-
-    /**
      * @dev updateSequencerThreshold  Allow owner to set max sequencer threshold
      * @param newThreshold the new threshold
      */
