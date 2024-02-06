@@ -441,7 +441,7 @@ contract LockingPool is
         uint256 amount,
         bool lockRewards
     ) override external whenNotPaused  {
-        require(amount > 0, "invalid amount");
+        require(sequencers[sequencerId].amount > 0,"invalid sequencer locked amount");
         require(sequencers[sequencerId].deactivationBatch == 0, "no relocking");
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
         require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequencer mismatch");
@@ -452,6 +452,7 @@ contract LockingPool is
             amount = amount + sequencers[sequencerId].reward;
             sequencers[sequencerId].reward = 0;
         }
+        require(amount > 0,"invalid relock amount");
 
         uint256 newTotalLocked = totalLocked + amount;
         totalLocked = newTotalLocked;
@@ -459,7 +460,9 @@ contract LockingPool is
         require(sequencers[sequencerId].amount <= maxLock, "amount large than maxLock");
 
         updateTimeline(int256(amount), 0, 0);
-        _transferTokenFrom(msg.sender, address(this), relockAmount);
+        if (relockAmount > 0){
+            _transferTokenFrom(msg.sender, address(this), relockAmount);
+        }
 
         logger.logLockUpdate(sequencerId,sequencers[sequencerId].amount);
         logger.logRelockd(sequencerId, sequencers[sequencerId].amount, newTotalLocked);
