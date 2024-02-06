@@ -537,7 +537,7 @@ contract LockingPool is
         uint256 nextBatch = currentBatch + 1;
         require(nextBatch == batchId,"invalid batch id");
         require(_sequencers.length == finishedBlocks.length, "mismatch length");
-        require(lastRewardEpochId <= startEpoch,"invalid startEpoch");
+        require(lastRewardEpochId < startEpoch,"invalid startEpoch");
         require(startEpoch < endEpoch,"invalid endEpoch");
 
         lastRewardEpochId = endEpoch;
