@@ -196,6 +196,13 @@ contract LockingPool is
      * @param sequencerId unique integer to identify a sequencer.
      */
     function forceUnlock(uint256 sequencerId) external onlyOwner {
+        Status status = sequencers[sequencerId].status;
+        require(
+            sequencers[sequencerId].activationBatch > 0 &&
+                sequencers[sequencerId].deactivationBatch == 0 &&
+                status == Status.Active,
+                "invalid sequencer status"
+        );
         _unlock(sequencerId, currentBatch,true);
     }
 
