@@ -184,7 +184,7 @@ contract LockingPool is
         BLOCK_REWARD = 2 * (10**18); // per block reward
         minLock = 20000* (10**18);  // min lock amount
         maxLock = 100000 * (10**18); // max lock amount
-        signerUpdateLimit = 100; // how many batches are not allowed to update the signer
+        signerUpdateLimit = 10; // how many batches are not allowed to update the signer
         sequencerThreshold = 10; // allow max sequencers
         NFTCounter = 1; // sequencer id
 
