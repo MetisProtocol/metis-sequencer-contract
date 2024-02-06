@@ -48,7 +48,6 @@ contract LockingPool is
     }
 
     uint256 internal constant INCORRECT_SEQUENCER_ID = 2**256 - 1;
-    uint256 internal constant INITIALIZED_AMOUNT = 1;
 
     address public bridge;     // L1 metis bridge address
     address public l1Token;    // L1 metis token address
@@ -446,8 +445,8 @@ contract LockingPool is
         uint256 relockAmount = amount;
 
         if (lockRewards) {
-            amount = amount + sequencers[sequencerId].reward - INITIALIZED_AMOUNT;
-            sequencers[sequencerId].reward = INITIALIZED_AMOUNT;
+            amount = amount + sequencers[sequencerId].reward;
+            sequencers[sequencerId].reward = 0;
         }
 
         uint256 newTotalLocked = totalLocked + amount;
@@ -588,7 +587,7 @@ contract LockingPool is
 
     //  get sequencer reward by sequencer id
     function sequencerReward(uint256 sequencerId) override external view returns (uint256) {
-        return sequencers[sequencerId].reward - INITIALIZED_AMOUNT;
+        return sequencers[sequencerId].reward ;
     }
 
     // get total lock amount for all sequencers
@@ -698,7 +697,7 @@ contract LockingPool is
         totalLocked = newTotalLocked;
 
         sequencers[sequencerId] = Sequencer({
-            reward: INITIALIZED_AMOUNT,
+            reward: 0,
             amount: amount,
             activationBatch: _currentBatch,
             deactivationBatch: 0,
@@ -831,9 +830,9 @@ contract LockingPool is
     }
 
     function _liquidateRewards(uint256 sequencerId, address recipient) private {
-        uint256 reward = sequencers[sequencerId].reward - INITIALIZED_AMOUNT;
+        uint256 reward = sequencers[sequencerId].reward ;
         totalRewardsLiquidated = totalRewardsLiquidated + reward;
-        sequencers[sequencerId].reward = INITIALIZED_AMOUNT;
+        sequencers[sequencerId].reward = 0;
 
         // withdraw reward to L2
         IERC20(l1Token).safeIncreaseAllowance(bridge, reward);
