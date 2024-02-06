@@ -37,12 +37,10 @@ interface ILockingPool {
      * @dev withdrawRewards withdraw current reward
      *
      * @param sequencerId sequencer id
-     * @param recipient the address that receive reward tokens
      * @param l2Gas bridge reward to L2 gasLimit
      */   
     function withdrawRewards(
         uint256 sequencerId,
-        address recipient,
         uint32 l2Gas
     ) external;
     

@@ -140,6 +140,13 @@ contract LockingPool is
      */
     event WhiteListAdded(address user, bool verified);
 
+    /**
+     * @dev Emitted when reward recipient address update in 'updateSequencerRewardRecipient'
+     * @param sequencerId the sequencerId
+     * @param recipient the address receive reward token
+     */
+    event SequencerRewardRecipientChanged(uint256 sequencerId, address recipient);
+
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -472,20 +479,13 @@ contract LockingPool is
      * @dev withdrawRewards withdraw current rewards
      *
      * @param sequencerId unique integer to identify a sequencer.
-     * @param recipient the address that receive reward tokens
      * @param l2Gas bridge reward to L2 gasLimit
      */   
-    function withdrawRewards(uint256 sequencerId,address recipient,uint32 l2Gas) override external  {
+    function withdrawRewards(uint256 sequencerId, uint32 l2Gas) override external  {
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
         require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequencer mismatch");
-        require(recipient != address(0), "invalid recipient");
 
         Sequencer storage sequencerInfo = sequencers[sequencerId];
-        if (sequencerInfo.rewardRecipient == address(0)){
-            sequencerInfo.rewardRecipient = recipient;
-        }
-
-        require(sequencerInfo.rewardRecipient == recipient,"not allowed recipient");
         _liquidateRewards(sequencerId, sequencerInfo.rewardRecipient,l2Gas);
     }
 
@@ -576,6 +576,25 @@ contract LockingPool is
         // reward income
         IERC20(l1Token).safeTransferFrom(payeer, address(this), totalReward);
         return totalReward;
+    }
+
+    /**
+     * @dev updateSequencerRewardRecipient Allow sequencer owner to set a reward recipient
+     * @param sequencerId The sequencerId
+     * @param recipient Who will receive the reward token
+     */
+    function updateSequencerRewardRecipient(
+        uint256 sequencerId,
+        address recipient
+    )  external {
+        require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
+        require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequencer mismatch");
+        require(recipient != address(0), "invalid recipient");
+
+        Sequencer storage sequencerInfo = sequencers[sequencerId];
+        sequencerInfo.rewardRecipient = recipient;
+
+        emit SequencerRewardRecipientChanged(sequencerId,recipient);
     }
 
      // query owenr by NFT token id
@@ -838,6 +857,7 @@ contract LockingPool is
     }
 
     function _liquidateRewards(uint256 sequencerId, address recipient, uint32 l2Gas) private {
+        require(recipient != address(0), "invalid reward recipient");
         uint256 reward = sequencers[sequencerId].reward ;
         totalRewardsLiquidated = totalRewardsLiquidated + reward;
         sequencers[sequencerId].reward = 0;
