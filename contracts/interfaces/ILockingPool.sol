@@ -42,7 +42,7 @@ interface ILockingPool {
     function withdrawRewards(
         uint256 sequencerId,
         uint32 l2Gas
-    ) external;
+    ) external payable;
     
     /**
      * @dev unlock is used to unlock Metis and exit the sequencer node
@@ -50,7 +50,7 @@ interface ILockingPool {
      * @param sequencerId sequencer id
      * @param l2Gas bridge reward to L2 gasLimit
      */    
-    function unlock(uint256 sequencerId, uint32 l2Gas) external;
+    function unlock(uint256 sequencerId, uint32 l2Gas) external payable;
 
     
      /**
@@ -59,7 +59,7 @@ interface ILockingPool {
      * @param sequencerId sequencer id
      * @param l2Gas bridge reward to L2 gasLimit
      */   
-     function unlockClaim(uint256 sequencerId, uint32 l2Gas) external ;
+     function unlockClaim(uint256 sequencerId, uint32 l2Gas) external payable;
 
 
     /**

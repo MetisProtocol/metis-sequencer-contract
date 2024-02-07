@@ -142,7 +142,7 @@ contract LockingPool is
     event WhiteListAdded(address user, bool verified);
 
     /**
-     * @dev Emitted when reward recipient address update in 'updateSequencerRewardRecipient'
+     * @dev Emitted when reward recipient address update in 'setSequencerRewardRecipient'
      * @param sequencerId the sequencerId
      * @param recipient the address receive reward token
      */
@@ -368,7 +368,7 @@ contract LockingPool is
      * @param sequencerId sequencer id
      * @param l2Gas bridge reward to L2 gasLimit
      */    
-    function unlock(uint256 sequencerId, uint32 l2Gas) override external  {
+    function unlock(uint256 sequencerId, uint32 l2Gas) override external payable {
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
         require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequencer mismatch");
         require(sequencers[sequencerId].rewardRecipient != address(0),"rewardRecipient not set");
@@ -392,7 +392,7 @@ contract LockingPool is
      * @param sequencerId sequencer id
      * @param l2Gas bridge reward to L2 gasLimit
      */   
-    function unlockClaim(uint256 sequencerId, uint32 l2Gas) override external  {
+    function unlockClaim(uint256 sequencerId, uint32 l2Gas) override external payable {
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
         require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequencer mismatch");
         require(sequencers[sequencerId].rewardRecipient != address(0),"rewardRecipient not set");
@@ -461,9 +461,7 @@ contract LockingPool is
         require(sequencers[sequencerId].amount <= maxLock, "amount large than maxLock");
 
         updateTimeline(int256(amount), 0, 0);
-        if (relockAmount > 0){
-            _transferTokenFrom(msg.sender, address(this), relockAmount);
-        }
+        _transferTokenFrom(msg.sender, address(this), relockAmount);
 
         logger.logLockUpdate(sequencerId,sequencers[sequencerId].amount);
         logger.logRelockd(sequencerId, sequencers[sequencerId].amount, newTotalLocked);
@@ -475,7 +473,7 @@ contract LockingPool is
      * @param sequencerId unique integer to identify a sequencer.
      * @param l2Gas bridge reward to L2 gasLimit
      */   
-    function withdrawRewards(uint256 sequencerId, uint32 l2Gas) override external  {
+    function withdrawRewards(uint256 sequencerId, uint32 l2Gas) override external payable {
         require(whiteListAddresses[msg.sender],"msg sender should be in the white list");
         require(whiteListBoundSequencer[msg.sender] == sequencers[sequencerId].signer,"whiteAddress and boundSequencer mismatch");
 
@@ -535,7 +533,7 @@ contract LockingPool is
         address[] memory _sequencers,
         uint256[] memory finishedBlocks,
         bytes memory signature
-    )  external returns (uint256) {
+    )  external payable returns (uint256) {
         uint256 nextBatch = currentBatch + 1;
         require(nextBatch == batchId,"invalid batch id");
         require(_sequencers.length == finishedBlocks.length, "mismatch length");
@@ -584,11 +582,11 @@ contract LockingPool is
     }
 
     /**
-     * @dev updateSequencerRewardRecipient Allow sequencer owner to set a reward recipient
+     * @dev setSequencerRewardRecipient Allow sequencer owner to set a reward recipient
      * @param sequencerId The sequencerId
      * @param recipient Who will receive the reward token
      */
-    function updateSequencerRewardRecipient(
+    function setSequencerRewardRecipient(
         uint256 sequencerId,
         address recipient
     )  external {
@@ -857,7 +855,7 @@ contract LockingPool is
     function _increaseReward(
         address sequencer,
         uint256 reward
-    ) private {
+    ) private  {
         uint256 sequencerId = signerToSequencer[sequencer];
         // update reward
         sequencers[sequencerId].reward +=  reward;
@@ -871,7 +869,7 @@ contract LockingPool is
 
         // withdraw reward to L2
         IERC20(l1Token).safeIncreaseAllowance(bridge, reward);
-        IL1ERC20Bridge(bridge).depositERC20ToByChainId(getL2ChainId(block.chainid), l1Token, l2Token, recipient, reward, l2Gas, "0x0");
+        IL1ERC20Bridge(bridge).depositERC20ToByChainId{value:msg.value}(getL2ChainId(block.chainid), l1Token, l2Token, recipient, reward, l2Gas, "0x0");
         logger.logClaimRewards(sequencerId, recipient,reward, totalRewardsLiquidated);
     }
 
