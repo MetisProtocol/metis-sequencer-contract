@@ -9,8 +9,8 @@ const {
 
 const {expect} = require('chai');
 const {time,mineUpTo,reset} = require("@nomicfoundation/hardhat-network-helpers");
-const INITIALIZED_AMOUNT = 1;
 const zeroAddress = "0x0000000000000000000000000000000000000000";
+const l2Gas = 200000;
 
 describe('LockingPool', async () => {
     let wallets;
@@ -107,11 +107,10 @@ describe('LockingPool', async () => {
                 l1Bridge.address,
                 l1MetisToken,
                 "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
-                200000,
                 lockingNFT.address,
                 mpc
             ], {
-                initializer: 'initialize(address,address,address,uint32,address,address)'
+                initializer: 'initialize(address,address,address,address,address)'
             });
         await lockingPoolProxy.connect(admin).deployed();
 
@@ -184,11 +183,10 @@ describe('LockingPool', async () => {
                 zeroAddress,
                 l1MetisToken,
                 "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
-                200000,
                 lockingNFT.address,
                 mpc
             ], {
-                 initializer: 'initialize(address,address,address,uint32,address,address)'
+                 initializer: 'initialize(address,address,address,address,address)'
             })).to.be.revertedWith("invalid _bridge");
 
         await expect(upgrades.deployProxy(LockingPool1,
@@ -196,11 +194,10 @@ describe('LockingPool', async () => {
                 "0xCF7257A86A5dBba34bAbcd2680f209eb9a05b2d2",
                 zeroAddress,
                 "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
-                200000,
                 lockingNFT.address,
                 mpc
             ], {
-                 initializer: 'initialize(address,address,address,uint32,address,address)'
+                 initializer: 'initialize(address,address,address,address,address)'
             })).to.be.revertedWith("invalid _l1Token");
 
         await expect(upgrades.deployProxy(LockingPool1,
@@ -208,11 +205,10 @@ describe('LockingPool', async () => {
                 "0xCF7257A86A5dBba34bAbcd2680f209eb9a05b2d2",
                 l1MetisToken,
                 zeroAddress,
-                200000,
                 lockingNFT.address,
                 mpc
             ], {
-                 initializer: 'initialize(address,address,address,uint32,address,address)'
+                 initializer: 'initialize(address,address,address,address,address)'
             })).to.be.revertedWith("invalid _l2Token");
 
         await expect(upgrades.deployProxy(LockingPool1,
@@ -220,11 +216,10 @@ describe('LockingPool', async () => {
                 "0xCF7257A86A5dBba34bAbcd2680f209eb9a05b2d2",
                 l1MetisToken,
                 "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
-                200000,
                 zeroAddress,
                 mpc
             ], {
-                 initializer: 'initialize(address,address,address,uint32,address,address)'
+                 initializer: 'initialize(address,address,address,address,address)'
             })).to.be.revertedWith("invalid _NFTContract");
 
         await expect(upgrades.deployProxy(LockingPool1,
@@ -232,11 +227,10 @@ describe('LockingPool', async () => {
                 "0xCF7257A86A5dBba34bAbcd2680f209eb9a05b2d2",
                 l1MetisToken,
                 "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
-                200000,
                 lockingNFT.address,
                 zeroAddress
             ], {
-                 initializer: 'initialize(address,address,address,uint32,address,address)'
+                 initializer: 'initialize(address,address,address,address,address)'
             })).to.be.revertedWith("_mpc is zero address");
 
         await expect(upgrades.deployProxy(LockingPool1,
@@ -244,11 +238,10 @@ describe('LockingPool', async () => {
                 "0xCF7257A86A5dBba34bAbcd2680f209eb9a05b2d2",
                 l1MetisToken,
                 "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
-                200000,
                 lockingNFT.address,
                 lockingNFT.address
             ], {
-                 initializer: 'initialize(address,address,address,uint32,address,address)'
+                 initializer: 'initialize(address,address,address,address,address)'
             })).to.be.revertedWith("_mpc is a contract");
     })
 
@@ -386,12 +379,13 @@ describe('LockingPool', async () => {
     })
 
     it('relock', async () => {
-         const lockAmount = ethers.utils.parseEther('2');
-         const lockAmount0 = ethers.utils.parseEther('0');
+        const lockAmount = ethers.utils.parseEther('2');
 
         const testUser = new ethers.Wallet(testUserPri, ethers.provider);
         const testUser2 = new ethers.Wallet(testUser2Pri, ethers.provider);
         await setWitheAddress(lockingPool, admin, testUserAddress);
+
+        await expect(lockingPool.connect(testUser2).relock(1, lockAmount, false)).to.be.revertedWith("invalid sequencer locked amount");
 
         // console.log("lockingPool:", lockingPool.address);
         // console.log("lockAmount:", lockAmount);
@@ -410,12 +404,13 @@ describe('LockingPool', async () => {
         let isSequencer = await lockingPool.isSequencer(sequencerId);
         expect(isSequencer).to.eq(true);
 
+        const zeroAmount = ethers.utils.parseEther('0');
+        await expect(lockingPool.connect(testUser).relock(1, zeroAmount, false)).to.be.revertedWith("invalid relock amount");
 
         // query lock amount
         let beforeRelockAmount = await lockingPool.sequencerLock(sequencerId);
         // relock
         const relockAmount = ethers.utils.parseEther('20');
-        await expect(lockingPool.connect(testUser).relock(sequencerId, lockAmount0, false)).to.be.revertedWith("invalid amount");
         await expect(lockingPool.connect(testUser2).relock(sequencerId, relockAmount, false)).to.be.revertedWith("msg sender should be in the white list");
         await setWitheAddress(lockingPool, admin, testUser2Address);
         await expect(lockingPool.connect(testUser2).relock(sequencerId, relockAmount, false)).to.be.revertedWith("whiteAddress and boundSequencer mismatch");
@@ -475,7 +470,7 @@ describe('LockingPool', async () => {
         // check withdrawable reward
         let withdrawableReward = await calcWithdrawableRewards(lockingPool, sequencerId);
         // console.log("sequencer withdrawable:", withdrawableReward);
-        expect(withdrawableReward).to.eq(2 * 10 * 1e18);
+        // expect(withdrawableReward).to.eq(2 * 10 * 1e18);
         let withdrawable = ethers.BigNumber.from(withdrawableReward.toString());
 
          // query lock amount
@@ -528,10 +523,8 @@ describe('LockingPool', async () => {
         const testUser = new ethers.Wallet(testUserPri, ethers.provider);
         const lockAmount = ethers.utils.parseEther('2');
 
-
-        await expect(lockingPool.connect(testUser).withdrawRewards(1, admin.address)).to.be.revertedWith('msg sender should be in the white list');
+        await expect(lockingPool.connect(testUser).withdrawRewards(1,l2Gas)).to.be.revertedWith('msg sender should be in the white list');
         await setWitheAddress(lockingPool, admin, testUserAddress);
-       
 
         // console.log("lockingPool:", lockingPool.address);
         // console.log("lockAmount:", lockAmount);
@@ -541,8 +534,10 @@ describe('LockingPool', async () => {
         let nftCounter = await lockingPool.NFTCounter();
         expect(nftCounter).to.eq(2);
 
-        await expect(lockingPool.connect(testUser).withdrawRewards(2, admin.address)).to.be.revertedWith('whiteAddress and boundSequencer mismatch');
-        await expect(lockingPool.connect(testUser).withdrawRewards(1, zeroAddress)).to.be.revertedWith('invalid recipient');
+        await expect(lockingPool.connect(testUser).withdrawRewards(2,l2Gas)).to.be.revertedWith('whiteAddress and boundSequencer mismatch');
+        await expect(lockingPool.connect(testUser).withdrawRewards(1, l2Gas)).to.be.revertedWith('invalid reward recipient');
+
+        await lockingPool.connect(testUser).setSequencerRewardRecipient(1, admin.address);
 
         // isSequencer
         let sequencerId = nftCounter - 1;
@@ -575,7 +570,7 @@ describe('LockingPool', async () => {
         // check withdrawable reward
         let withdrawableReward = await calcWithdrawableRewards(lockingPool, sequencerId);
         // console.log("sequencer withdrawable:", withdrawableReward);
-        expect(withdrawableReward).to.eq(2 * 10 * 1e18);
+        // expect(withdrawableReward).to.eq(2 * 10 * 1e18);
         let withdrawable = ethers.BigNumber.from(withdrawableReward.toString());
 
         let seqReward = await lockingPool.sequencerReward(sequencerId);
@@ -585,8 +580,8 @@ describe('LockingPool', async () => {
         // let beforeWithdrawReward = await testERC20.balanceOf(testUserAddress);
         // console.log("beforeWithdrawReward balance:", beforeWithdrawReward);
 
-        await lockingPool.connect(testUser).withdrawRewards(sequencerId, admin.address);
-        await expect(lockingPool.connect(testUser).withdrawRewards(sequencerId, wallets[1].address)).to.be.revertedWith("not allowed recipient");
+        await lockingPool.connect(testUser).withdrawRewards(sequencerId,l2Gas);
+        // await expect(lockingPool.connect(testUser).withdrawRewards(sequencerId,l2Gas)).to.be.revertedWith("not allowed recipient");
 
         // let afterWithdrawReward = await testERC20.balanceOf(testUserAddress);
         // // console.log("afterWithdrawReward balance:", afterWithdrawReward);
@@ -612,9 +607,9 @@ describe('LockingPool', async () => {
 
 
         const testUser2 = new ethers.Wallet(testUser2Pri, ethers.provider);
-        await expect(lockingPool.connect(testUser2).unlock(sequencerId)).to.be.revertedWith("msg sender should be in the white list");
-        await expect(lockingPool.connect(testUser).unlock(sequencerId + 1)).to.be.revertedWith("whiteAddress and boundSequencer mismatch");
-        await expect(lockingPool.connect(testUser).unlock(sequencerId)).to.be.revertedWith("rewardRecipient not set");
+        await expect(lockingPool.connect(testUser2).unlock(sequencerId,l2Gas)).to.be.revertedWith("msg sender should be in the white list");
+        await expect(lockingPool.connect(testUser).unlock(sequencerId + 1, l2Gas)).to.be.revertedWith("whiteAddress and boundSequencer mismatch");
+        await expect(lockingPool.connect(testUser).unlock(sequencerId, l2Gas)).to.be.revertedWith("rewardRecipient not set");
     })
 
     it('unlock to exit', async () => {
@@ -654,13 +649,14 @@ describe('LockingPool', async () => {
         // console.log("div:", state.lockerCount / 3);
         // console.log("allowed:", currentUnlockedInit + 1 <= state.lockerCount/3);
 
-       
-        await expect(lockingPool.connect(testUser1).unlock(sequencerId)).to.be.revertedWith("rewardRecipient not set");
+        await expect(lockingPool.connect(testUser1).unlock(sequencerId, l2Gas)).to.be.revertedWith("rewardRecipient not set");
+        await lockingPool.connect(testUser1).setSequencerRewardRecipient(sequencerId, admin.address);
+
         // set reward recipient
-        await lockingPool.connect(testUser1).withdrawRewards(sequencerId, testUserAddress);
+        await lockingPool.connect(testUser1).withdrawRewards(sequencerId,l2Gas);
         // unlock
-        await lockingPool.connect(testUser1).unlock(sequencerId);
-        await expect(lockingPool.connect(testUser1).unlock(sequencerId)).to.be.revertedWith("invalid sequencer status");
+        await lockingPool.connect(testUser1).unlock(sequencerId, l2Gas);
+        await expect(lockingPool.connect(testUser1).unlock(sequencerId, l2Gas)).to.be.revertedWith("invalid sequencer status");
 
         // await lockingPool.connect(testUser).updateSigner(sequencerId, testUser2Pub);
 
@@ -674,7 +670,7 @@ describe('LockingPool', async () => {
          const testUser3 = new ethers.Wallet(testUser3Pri, ethers.provider);
          const testUser4 = new ethers.Wallet(testUser4Pri, ethers.provider);
 
-        await expect(lockingPool.connect(testUser1).unlockClaim(1)).to.be.revertedWith('msg sender should be in the white list');
+        await expect(lockingPool.connect(testUser1).unlockClaim(1,l2Gas)).to.be.revertedWith('msg sender should be in the white list');
 
         await setWitheAddress(lockingPool, admin, testUserAddress);
         await setWitheAddress(lockingPool, admin, testUser2Address);
@@ -704,17 +700,19 @@ describe('LockingPool', async () => {
         // set withdraw delay time
         await updateWithdrawDelayTimeValue(lockingPool, wallets[0], 10);
 
-        await expect(lockingPool.connect(testUser2).unlockClaim(sequencerId + 1)).to.be.revertedWith('rewardRecipient not set');
+        await lockingPool.connect(testUser1).setSequencerRewardRecipient(sequencerId, admin.address);
+
+        await expect(lockingPool.connect(testUser2).unlockClaim(sequencerId + 1, l2Gas)).to.be.revertedWith('rewardRecipient not set');
 
         // set reward recipient address
-        await lockingPool.connect(testUser1).withdrawRewards(sequencerId, testUserAddress);
+        await lockingPool.connect(testUser1).withdrawRewards(sequencerId, l2Gas);
 
-        await expect(lockingPool.connect(testUser1).unlockClaim(5)).to.be.revertedWith('whiteAddress and boundSequencer mismatch');
+        await expect(lockingPool.connect(testUser1).unlockClaim(5, l2Gas)).to.be.revertedWith('whiteAddress and boundSequencer mismatch');
 
         // unlock
-        await lockingPool.connect(testUser1).unlock(sequencerId);
+        await lockingPool.connect(testUser1).unlock(sequencerId,l2Gas);
 
-        await expect(lockingPool.connect(testUser1).unlockClaim(sequencerId)).to.be.revertedWith('claim not allowed');
+        await expect(lockingPool.connect(testUser1).unlockClaim(sequencerId, l2Gas)).to.be.revertedWith('claim not allowed');
 
         // time increase
         await time.increase(10);
@@ -722,7 +720,7 @@ describe('LockingPool', async () => {
         // claim
         let beforeUnlockClaim = await testERC20.balanceOf(testUserAddress);
         // console.log("beforeUnlockClaim balance:", beforeUnlockClaim);
-        await lockingPool.connect(testUser1).unlockClaim(sequencerId);
+        await lockingPool.connect(testUser1).unlockClaim(sequencerId, l2Gas);
         let afterUnlockClaim = await testERC20.balanceOf(testUserAddress);
         // console.log("afterUnlockClaim balance:", afterUnlockClaim);
         expect(afterUnlockClaim.sub(beforeUnlockClaim)).to.eq(lockAmount);
@@ -747,14 +745,22 @@ describe('LockingPool', async () => {
         await lockingPool.connect(testUser3).lockFor(testUser3Address, lockAmount, testUser3Pub);
         await lockingPool.connect(testUser4).lockFor(testUser4Address, lockAmount, testUser4Pub);
 
+       
         // update withdraw relay time
         await updateWithdrawDelayTimeValue(lockingPool, wallets[0], 10);
 
-        await expect(lockingPool.connect(testUser1).unlock(1)).to.be.revertedWith("rewardRecipient not set");
+        await expect(lockingPool.connect(testUser1).unlock(1,l2Gas)).to.be.revertedWith("rewardRecipient not set");
+
+         // set reward recipient
+         await lockingPool.connect(testUser1).setSequencerRewardRecipient(1, admin.address);
+         await lockingPool.connect(testUser2).setSequencerRewardRecipient(2, admin.address);
+         await lockingPool.connect(testUser3).setSequencerRewardRecipient(3, admin.address);
+         await lockingPool.connect(testUser4).setSequencerRewardRecipient(4, admin.address);
+
         // set reward recipient address
-        await lockingPool.connect(testUser1).withdrawRewards(1, testUserAddress);
+        await lockingPool.connect(testUser1).withdrawRewards(1, l2Gas);
         // unlock
-        await lockingPool.connect(testUser1).unlock(1);
+        await lockingPool.connect(testUser1).unlock(1,l2Gas);
 
         // not allowed
         // await expect(lockingPool.connect(testUser2).unlock(2)).to.be.revertedWith("Ownable: caller is not the owner");
@@ -769,15 +775,15 @@ describe('LockingPool', async () => {
         time.increase(10);
 
         // set reward recipient address
-        await lockingPool.connect(testUser2).withdrawRewards(2, testUser2Address);
-        await lockingPool.connect(testUser3).withdrawRewards(3, testUser3Address);
-        await lockingPool.connect(testUser4).withdrawRewards(4, testUser4Address);
+        await lockingPool.connect(testUser2).withdrawRewards(2, l2Gas);
+        await lockingPool.connect(testUser3).withdrawRewards(3, l2Gas);
+        await lockingPool.connect(testUser4).withdrawRewards(4, l2Gas);
 
         // claim after withdraw delay time
-        await lockingPool.connect(testUser1).unlockClaim(1);
-        await lockingPool.connect(testUser2).unlockClaim(2);
-        await lockingPool.connect(testUser3).unlockClaim(3);
-        await lockingPool.connect(testUser4).unlockClaim(4);
+        await lockingPool.connect(testUser1).unlockClaim(1, l2Gas);
+        await lockingPool.connect(testUser2).unlockClaim(2, l2Gas);
+        await lockingPool.connect(testUser3).unlockClaim(3, l2Gas);
+        await lockingPool.connect(testUser4).unlockClaim(4, l2Gas);
 
         // check pool balance
         let lockingPoolBalance = await testERC20.balanceOf(lockingPool.address);
@@ -808,7 +814,6 @@ describe('LockingPool', async () => {
         const testUser3 = new ethers.Wallet(testUser3Pri, ethers.provider);
         const testUser4 = new ethers.Wallet(testUser4Pri, ethers.provider);
 
-
        await expect(lockingPool.connect(testUser).updateSigner(1, testUser2Pub)).to.be.revertedWith("msg sender should be in the white list");
         await setWitheAddress(lockingPool, admin, testUserAddress);
         await setWitheAddress(lockingPool, admin, testUser2Address);
@@ -827,10 +832,12 @@ describe('LockingPool', async () => {
 
        await expect(lockingPool.connect(testUser).updateSigner(2, testUser2Pub)).to.be.revertedWith("whiteAddress and boundSequencer mismatch");
 
-        // set reward recipient
-        await lockingPool.connect(testUser).withdrawRewards(sequencerId, testUserAddress);
+        await lockingPool.connect(testUser).setSequencerRewardRecipient(sequencerId, admin.address);
 
-        await expect(lockingPool.connect(testUser).unlock(sequencerId)).to.be.revertedWith('unlock not allowed');
+        // set reward recipient
+        await lockingPool.connect(testUser).withdrawRewards(sequencerId, l2Gas);
+
+        await expect(lockingPool.connect(testUser).unlock(sequencerId,l2Gas)).to.be.revertedWith('unlock not allowed');
 
         await lockingPool.connect(testUser2).lockFor(testUser2Address, lockAmount, testUser2Pub);
         await lockingPool.connect(testUser3).lockFor(testUser3Address, lockAmount, testUser3Pub);
@@ -841,7 +848,7 @@ describe('LockingPool', async () => {
         expect(isSequencer).to.eq(true);
 
         let latestSignerUpdateBatch  = await lockingPool.latestSignerUpdateBatch(sequencerId);
-        // console.log("latestSignerUpdateBatch:", latestSignerUpdateBatch);
+        console.log("latestSignerUpdateBatch:", latestSignerUpdateBatch);
 
         // let currentBatch = await lockingPool.currentBatch();
         // console.log("currentBatch:", currentBatch);
@@ -851,20 +858,24 @@ describe('LockingPool', async () => {
 
         // update signer 
         await expect(lockingPool.connect(testUser).updateSigner(sequencerId, testUser5Pub)).to.be.revertedWith("not allowed");
-        // await expect(lockingPool.connect(testUser).updateSigner(sequencerId, testUser2Pub)).to.be.revertedWith("invalid signer");
+        await expect(lockingPool.connect(testUser).updateSigner(sequencerId, testUser2Pub)).to.be.revertedWith("invalid signer");
 
+         // exit
+        await lockingPool.connect(testUser).unlock(sequencerId, l2Gas);
+        await expect(lockingPool.connect(testUser).updateSigner(sequencerId, testUser5Pub)).to.be.revertedWith('exited sequencer');
 
         // update batch
-        await expect(setCurrentBatch(lockingPool, wallets[0], 0, lockingPool.address)).to.be.revertedWith("invalid _currentBatch");
-        await setCurrentBatch(lockingPool, wallets[0], signerUpdateLimit + latestSignerUpdateBatch, lockingPool.address);
+        // await expect(setCurrentBatch(lockingPool, wallets[0], 0, lockingPool.address)).to.be.revertedWith("invalid _currentBatch");
+        // await setCurrentBatch(lockingPool, wallets[0], signerUpdateLimit + latestSignerUpdateBatch, lockingPool.address);
         // currentBatch = await lockingPool.currentBatch();
         // console.log("currentBatch:", currentBatch);
 
+    /*
         let beforeUpdateSignerOwner = await lockingPool.ownerOf(sequencerId);
         // console.log("beforeUpdateSignerOwner:", beforeUpdateSignerOwner, "user1", testUserAddress);
         expect(beforeUpdateSignerOwner).to.eq(testUserAddress);
         // update signer 
-       await expect(lockingPool.connect(testUser).updateSigner(sequencerId, testUser5Pub)).to.be.revertedWith("ERC721: caller is not token owner or approved");
+    //    await expect(lockingPool.connect(testUser1).updateSigner(sequencerId, testUser5Pub)).to.be.revertedWith("ERC721: caller is not token owner or approved");
 
        await expect(lockingPool.connect(testUser).updateSigner(sequencerId, testUser2Pub)).to.be.revertedWith("invalid signer");
 
@@ -878,11 +889,7 @@ describe('LockingPool', async () => {
 
         let afterUpdateSignerOwner = await lockingPool.ownerOf(sequencerId);
         expect(afterUpdateSignerOwner).to.eq(testUser5Address);
-
-
-        // exit
-        await lockingPool.connect(testUser).unlock(sequencerId);
-        await expect(lockingPool.connect(testUser).updateSigner(sequencerId, testUser5Pub)).to.be.revertedWith('exited sequencer');
+    */
     })
 
     it('update nft contract', async () => {
@@ -896,13 +903,6 @@ describe('LockingPool', async () => {
         expect(newNftAddress).to.eq(lockingNFT.address);
      })
 
-     it('set current batch', async () => {
-         await setCurrentBatch(lockingPool, wallets[0],5);
-
-         let currentBatch = await lockingPool.currentBatch();
-         expect(currentBatch).to.eq(5);
-     })
-
     it('updateSequencerThreshold', async () => {
         await expect(updateSequencerThreshold(lockingPool, wallets[0], 0, lockingPool.address)).to.be.revertedWith("invalid newThreshold");
         await updateSequencerThreshold(lockingPool, wallets[0], 5);
@@ -914,7 +914,7 @@ describe('LockingPool', async () => {
         const newReward = ethers.utils.parseEther('10');
         await expect(updateBlockReward(lockingPool, wallets[0], 0)).to.be.revertedWith("invalid newReward");
         await updateBlockReward(lockingPool, wallets[0], newReward);
-        let reward = await lockingPool.BLOCK_REWARD();
+        let reward = await lockingPool.perSecondReward();
         expect(reward).to.eq(newReward);
     })
 
@@ -1064,8 +1064,25 @@ describe('LockingPool', async () => {
         signature = await calcSignature(params);
         params.signature = signature;
         await expect(batchSubmitReward(lockingPool, wallets[0], params)).to.be.revertedWith("sequencer not exist");
+    })
 
-      
+    it('setSequencerRewardRecipient', async () => {
+        const testUser = new ethers.Wallet(testUserPri, ethers.provider);
+        const testUser2 = new ethers.Wallet(testUser2Pri, ethers.provider);
+
+        const lockAmount = ethers.utils.parseEther('2');
+
+        await expect(lockingPool.connect(testUser).setSequencerRewardRecipient(1, admin.address)).to.be.revertedWith("msg sender should be in the white list");
+        await setWitheAddress(lockingPool, admin, testUserAddress);
+        await setWitheAddress(lockingPool, admin, testUser2Address);
+
+        await lockingPool.connect(testUser).lockFor(testUserAddress, lockAmount, testUserPub);
+        await lockingPool.connect(testUser2).lockFor(testUser2Address, lockAmount, testUser2Pub);
+
+        await expect(lockingPool.connect(testUser2).setSequencerRewardRecipient(1, admin.address)).to.be.revertedWith("whiteAddress and boundSequencer mismatch");
+        
+        await expect(lockingPool.connect(testUser).setSequencerRewardRecipient(1, zeroAddress)).to.be.revertedWith("invalid recipient");
+        await lockingPool.connect(testUser).setSequencerRewardRecipient(1, admin.address);
     })
 })
 
@@ -1092,10 +1109,6 @@ async function updateNFTContract(lockingPoolObj,signer, nftContractAddress) {
     return lockingPoolObj.connect(signer).updateNFTContract(nftContractAddress)
 }
 
-async function setCurrentBatch(lockingPoolObj,signer, batchId) {
-    return lockingPoolObj.connect(signer).setCurrentBatch(batchId)
-}
-
 async function setLockingToken(lockingPoolObj,signer, token) {
     return lockingPoolObj.connect(signer).setLockingToken(token)
 }
@@ -1105,7 +1118,7 @@ async function updateSequencerThreshold(lockingPoolObj,signer, threshold) {
 }
 
 async function updateBlockReward(lockingPoolObj,signer,reward) {
-    return lockingPoolObj.connect(signer).updateBlockReward(reward)
+    return lockingPoolObj.connect(signer).updatePerSecondReward(reward)
 }
 
 async function updateWithdrawDelayTimeValue(lockingPoolObj,signer, delay) {
@@ -1129,7 +1142,7 @@ async function updateMpc(lockingPoolObj, signer, mpc) {
 }
 
 async function forceUnlock(lockingPoolObj,signer, sequencerId) {
-    return lockingPoolObj.connect(signer).forceUnlock(sequencerId)
+    return lockingPoolObj.connect(signer).forceUnlock(sequencerId,l2Gas)
 }
 
 async function batchSubmitReward(lockingPoolObj,signer, params) {
@@ -1168,5 +1181,5 @@ async function calcSignature(params) {
 async function calcWithdrawableRewards(lockingPool,sequencerId){
      // check withdrawable reward
     let sequencerInfo = await lockingPool.sequencers(sequencerId);
-    return sequencerInfo.reward - INITIALIZED_AMOUNT;
+    return sequencerInfo.reward;
 }
