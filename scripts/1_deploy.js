@@ -7,7 +7,7 @@ const web3 = require("web3");
 const l1MetisToken = "0x7f49160EB9BB068101d445fe77E17ecDb37D0B47";
 const l2MetisToken = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
 const l1BridgeAddress = "0xCB22CC16329e3D7A9cAf46Dbc0Aa0a5f6D0341c2";
-const l2Gas = 200000;
+// const l2Gas = 200000;
 
 let lockingNftName = "Metis Sequencer";
 let lockingNftSymbol = "MS";
@@ -33,12 +33,11 @@ const main = async () => {
               l1BridgeAddress,
               l1MetisToken,
               l2MetisToken,
-              l2Gas,
               lockingNFTDeployed.address,
               mpcAddress
             ],
             {
-              initializer: 'initialize(address,address,address,uint32,address,address)'
+              initializer: 'initialize(address,address,address,address,address)'
             });
   await lockingPoolProxy.deployed();
   console.log("LockingPool deployed to:", lockingPoolProxy.address);
