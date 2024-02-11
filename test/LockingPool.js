@@ -72,8 +72,6 @@ describe('LockingPool', async () => {
             to: testUser5Address,
             value: ethers.utils.parseEther("1800.0"), // Sends exactly 1800.0 ether
         });
-
-
     })
 
     beforeEach('deploy contracts', async () => {
@@ -768,6 +766,7 @@ describe('LockingPool', async () => {
         // use force unlock
         await expect(forceUnlock(lockingPool, testUser2, 2)).to.be.revertedWith("Ownable: caller is not the owner");
         await forceUnlock(lockingPool, admin, 2);
+        await expect(forceUnlock(lockingPool, admin, 2)).to.be.revertedWith("invalid sequencer status");
         await forceUnlock(lockingPool, admin, 3);
         await forceUnlock(lockingPool, admin, 4);
       
@@ -814,12 +813,11 @@ describe('LockingPool', async () => {
         const testUser3 = new ethers.Wallet(testUser3Pri, ethers.provider);
         const testUser4 = new ethers.Wallet(testUser4Pri, ethers.provider);
 
-       await expect(lockingPool.connect(testUser).updateSigner(1, testUser2Pub)).to.be.revertedWith("msg sender should be in the white list");
+        await expect(lockingPool.connect(testUser).updateSigner(1, testUser2Pub)).to.be.revertedWith("msg sender should be in the white list");
         await setWitheAddress(lockingPool, admin, testUserAddress);
         await setWitheAddress(lockingPool, admin, testUser2Address);
         await setWitheAddress(lockingPool, admin, testUser3Address);
         await setWitheAddress(lockingPool, admin, testUser4Address);
-
 
         const lockAmount = ethers.utils.parseEther('2');
         // console.log("lockAmount:", lockAmount);
@@ -830,12 +828,11 @@ describe('LockingPool', async () => {
         expect(nftCounter).to.eq(2);
         let sequencerId = nftCounter - 1;
 
-       await expect(lockingPool.connect(testUser).updateSigner(2, testUser2Pub)).to.be.revertedWith("whiteAddress and boundSequencer mismatch");
-
-        await lockingPool.connect(testUser).setSequencerRewardRecipient(sequencerId, admin.address);
+        await expect(lockingPool.connect(testUser).updateSigner(2, testUser2Pub)).to.be.revertedWith("whiteAddress and boundSequencer mismatch");
 
         // set reward recipient
-        await lockingPool.connect(testUser).withdrawRewards(sequencerId, l2Gas);
+        await lockingPool.connect(testUser).setSequencerRewardRecipient(sequencerId, admin.address);
+        // await lockingPool.connect(testUser).withdrawRewards(sequencerId, l2Gas);
 
         await expect(lockingPool.connect(testUser).unlock(sequencerId,l2Gas)).to.be.revertedWith('unlock not allowed');
 
@@ -870,26 +867,53 @@ describe('LockingPool', async () => {
         // currentBatch = await lockingPool.currentBatch();
         // console.log("currentBatch:", currentBatch);
 
-    /*
-        let beforeUpdateSignerOwner = await lockingPool.ownerOf(sequencerId);
+
+        let seq2 = 2;
+    
+        let beforeUpdateSignerOwner = await lockingPool.ownerOf(seq2);
         // console.log("beforeUpdateSignerOwner:", beforeUpdateSignerOwner, "user1", testUserAddress);
-        expect(beforeUpdateSignerOwner).to.eq(testUserAddress);
-        // update signer 
-    //    await expect(lockingPool.connect(testUser1).updateSigner(sequencerId, testUser5Pub)).to.be.revertedWith("ERC721: caller is not token owner or approved");
-
-       await expect(lockingPool.connect(testUser).updateSigner(sequencerId, testUser2Pub)).to.be.revertedWith("invalid signer");
-
+        expect(beforeUpdateSignerOwner).to.eq(testUser2Address);
+    
         // NFT approve
-        let tokenId = await lockingPool.getSequencerId(testUserAddress);
+        let tokenId = await lockingPool.getSequencerId(testUser2Address);
         // console.log("tokenId:", tokenId);
-        await lockingNFT.connect(testUser).approve(lockingPool.address, tokenId);
+        await lockingNFT.connect(testUser2).approve(lockingPool.address, tokenId);
+
+        await updateSignerUpdateLimit(lockingPool, wallets[0], 1);
+
+        signerUpdateLimit = await lockingPool.signerUpdateLimit();
+        console.log("after signerUpdateLimit:", signerUpdateLimit);
+
+        let curBatchId = await lockingPool.currentBatch();
+        console.log("curBatchId:", curBatchId);
+
+        let latestSignerUpdateBatchSeq2 = await lockingPool.latestSignerUpdateBatch(seq2);
+        console.log("latestSignerUpdateBatch2:", latestSignerUpdateBatchSeq2);
+
+        let l1ChainID = await getChainId();
+        const params = {
+             chainId: l1ChainID,
+             batchId: ethers.BigNumber.from(curBatchId.toString()).add(1),
+             payeer: admin.address,
+             startEpoch: 1,
+             endEpoch: 2,
+             sequencers: [testUserAddress],
+             finishedBlocks: [10],
+             lockingPool: lockingPool.address,
+             signer: admin
+         }
+         let signature = await calcSignature(params);
+         params.signature = signature;
+         await batchSubmitReward(lockingPool, admin, params);
+
+        curBatchId = await lockingPool.currentBatch();
+        console.log("after curBatchId:", curBatchId);
 
         // update signer
-        await lockingPool.connect(testUser).updateSigner(sequencerId, testUser5Pub);
+        await lockingPool.connect(testUser2).updateSigner(seq2, testUser5Pub);
 
-        let afterUpdateSignerOwner = await lockingPool.ownerOf(sequencerId);
+        let afterUpdateSignerOwner = await lockingPool.ownerOf(seq2);
         expect(afterUpdateSignerOwner).to.eq(testUser5Address);
-    */
     })
 
     it('update nft contract', async () => {
