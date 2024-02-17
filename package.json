@@ -42,7 +42,8 @@
     "update_signer": "hardhat run scripts/update_signer.js --network ",
     "update": "hardhat run scripts/update.js --network ",
     "add_whitelist": "hardhat run scripts/add_whitelist.js --network ",
-    "update_lock_limit": "hardhat run scripts/update_lock_limit.js --network "
+    "update_lock_limit": "hardhat run scripts/update_lock_limit.js --network ",
+    "update_per_second_reward": "hardhat run scripts/update_per_second_reward.js --network "
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.6",
