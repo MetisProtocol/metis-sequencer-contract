@@ -182,7 +182,7 @@ contract LockingPool is
 
         WITHDRAWAL_DELAY = 21 days; // sequencer exit withdraw delay time
         currentBatch = 1;  // default start from batch 1
-        perSecondReward = 1 * (10**8); // per secondreward
+        perSecondReward = 1 * (10**8); // per second reward
         minLock = 20000* (10**18);  // min lock amount
         maxLock = 100000 * (10**18); // max lock amount
         signerUpdateLimit = 10; // how many batches are not allowed to update the signer
