@@ -1,15 +1,14 @@
 node_modules
-.vscode
-artifacts
-cache
-package-lock.json
-.deps
 .env
-bin
-.openzeppelin
-.DS_Store
-.history
-.VSCodeCounter
-contractAddresses.json
-coverage
-coverage.json
+
+# Hardhat files
+/cache
+/artifacts
+
+# TypeChain files
+typechain-types
+
+# solidity-coverage files
+/coverage
+/coverage.json
+/keys

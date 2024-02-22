@@ -1,22 +1,22 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.9;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract LockingInfo is Ownable {
     mapping(uint256 => uint256) public sequencerNonce;
-    address immutable public lockingPool;
+    address public immutable lockingPool;
 
     /**
-    * @dev Emitted when sequencer locks in '_lockFor()' in LockingPool.
-    * @param signer sequencer address.
-    * @param sequencerId unique integer to identify a sequencer.
-    * @param nonce to synchronize the events in themis.
-    * @param activationBatch sequencer's first epoch as proposer.
-    * @param amount locking amount.
-    * @param total total locking amount.
-    * @param signerPubkey public key of the sequencer
-    */
+     * @dev Emitted when sequencer locks in '_lockFor()' in LockingPool.
+     * @param signer sequencer address.
+     * @param sequencerId unique integer to identify a sequencer.
+     * @param nonce to synchronize the events in themis.
+     * @param activationBatch sequencer's first epoch as proposer.
+     * @param amount locking amount.
+     * @param total total locking amount.
+     * @param signerPubkey public key of the sequencer
+     */
     event Locked(
         address indexed signer,
         uint256 indexed sequencerId,
@@ -97,7 +97,10 @@ contract LockingInfo is Ownable {
      * @param newWithrawDelayTime new withdraw delay time
      * @param oldWithrawDelayTime  old withdraw delay time
      */
-    event WithrawDelayTimeChange(uint256 newWithrawDelayTime, uint256 oldWithrawDelayTime);
+    event WithrawDelayTimeChange(
+        uint256 newWithrawDelayTime,
+        uint256 oldWithrawDelayTime
+    );
 
     /**
      * @dev Emitted when the proxy update threshold in 'updateBlockReward()'.
@@ -138,28 +141,28 @@ contract LockingInfo is Ownable {
      */
     event BatchSubmitReward(uint256 _newBatchId);
 
-
     /**
      * @dev Emitted when batch update in  'updateEpochLength'
      * @param _oldEpochLength old epoch length.
      * @param _newEpochLength new epoch length.
      * @param _effectiveBatch effective batch id.
      */
-    event UpdateEpochLength(uint256 _oldEpochLength, uint256 _newEpochLength, uint256 _effectiveBatch);
-    
-   
+    event UpdateEpochLength(
+        uint256 _oldEpochLength,
+        uint256 _newEpochLength,
+        uint256 _effectiveBatch
+    );
+
     modifier onlyLockingPool() {
-        require(lockingPool == msg.sender,
-        "Invalid sender, not locking pool");
+        require(lockingPool == msg.sender, "Invalid sender, not locking pool");
         _;
     }
 
     constructor(address _lockingPool) {
-       lockingPool = _lockingPool;
+        lockingPool = _lockingPool;
     }
 
-
-     /**
+    /**
      * @dev updateNonce can update nonce for sequencrs by owner
      * @param sequencerIds the sequencer ids.
      * @param nonces the sequencer nonces
@@ -173,9 +176,9 @@ contract LockingInfo is Ownable {
         for (uint256 i = 0; i < sequencerIds.length; ++i) {
             sequencerNonce[sequencerIds[i]] = nonces[i];
         }
-    } 
+    }
 
-     /**
+    /**
      * @dev logLocked log event Locked
      */
     function logLocked(
@@ -198,7 +201,7 @@ contract LockingInfo is Ownable {
         );
     }
 
-     /**
+    /**
      * @dev logUnlocked log event logUnlocked
      */
     function logUnlocked(
@@ -210,7 +213,7 @@ contract LockingInfo is Ownable {
         emit Unlocked(user, sequencerId, amount, total);
     }
 
-     /**
+    /**
      * @dev logUnlockInit log event logUnlockInit
      */
     function logUnlockInit(
@@ -233,8 +236,7 @@ contract LockingInfo is Ownable {
         );
     }
 
-
-     /**
+    /**
      * @dev logSignerChange log event SignerChange
      */
     function logSignerChange(
@@ -256,59 +258,56 @@ contract LockingInfo is Ownable {
     /**
      * @dev logRelockd log event Relocked
      */
-    function logRelockd(uint256 sequencerId, uint256 amount, uint256 total)
-        external
-        onlyLockingPool
-    {
+    function logRelockd(
+        uint256 sequencerId,
+        uint256 amount,
+        uint256 total
+    ) external onlyLockingPool {
         emit Relocked(sequencerId, amount, total);
     }
 
-     /**
+    /**
      * @dev logThresholdChange log event ThresholdChange
      */
-    function logThresholdChange(uint256 newThreshold, uint256 oldThreshold)
-        external
-        onlyLockingPool
-    {
+    function logThresholdChange(
+        uint256 newThreshold,
+        uint256 oldThreshold
+    ) external onlyLockingPool {
         emit ThresholdChange(newThreshold, oldThreshold);
     }
 
     /**
      * @dev logWithrawDelayTimeChange log event WithrawDelayTimeChange
      */
-    function logWithrawDelayTimeChange(uint256 newWithrawDelayTime, uint256 oldWithrawDelayTime)
-        external
-        onlyLockingPool
-    {
+    function logWithrawDelayTimeChange(
+        uint256 newWithrawDelayTime,
+        uint256 oldWithrawDelayTime
+    ) external onlyLockingPool {
         emit WithrawDelayTimeChange(newWithrawDelayTime, oldWithrawDelayTime);
     }
 
     /**
      * @dev logRewardUpdate log event RewardUpdate
      */
-    function logRewardUpdate(uint256 newReward, uint256 oldReward)
-        external
-        onlyLockingPool
-    {
+    function logRewardUpdate(
+        uint256 newReward,
+        uint256 oldReward
+    ) external onlyLockingPool {
         emit RewardUpdate(newReward, oldReward);
     }
 
     /**
      * @dev logLockUpdate log event LockUpdate
      */
-    function logLockUpdate(uint256 sequencerId,uint256 totalLock)
-        external
-        onlyLockingPool()
-    {
+    function logLockUpdate(
+        uint256 sequencerId,
+        uint256 totalLock
+    ) external onlyLockingPool {
         sequencerNonce[sequencerId] = sequencerNonce[sequencerId] + 1;
-        emit LockUpdate(
-            sequencerId,
-            sequencerNonce[sequencerId],
-            totalLock
-        );
+        emit LockUpdate(sequencerId, sequencerNonce[sequencerId], totalLock);
     }
 
-     /**
+    /**
      * @dev logClaimRewards log event ClaimRewards
      */
     function logClaimRewards(
@@ -317,15 +316,13 @@ contract LockingInfo is Ownable {
         uint256 amount,
         uint256 totalAmount
     ) external onlyLockingPool {
-        emit ClaimRewards(sequencerId, recipient,amount, totalAmount);
+        emit ClaimRewards(sequencerId, recipient, amount, totalAmount);
     }
 
-     /**
+    /**
      * @dev logBatchSubmitReward log event BatchSubmitReward
      */
-    function logBatchSubmitReward(
-        uint256 newBatchId
-    ) external onlyLockingPool {
+    function logBatchSubmitReward(uint256 newBatchId) external onlyLockingPool {
         emit BatchSubmitReward(newBatchId);
     }
 
@@ -337,6 +334,6 @@ contract LockingInfo is Ownable {
         uint256 newEpochLength,
         uint256 effectiveBatch
     ) external onlyLockingPool {
-        emit UpdateEpochLength(oldEpochLength,newEpochLength,effectiveBatch);
+        emit UpdateEpochLength(oldEpochLength, newEpochLength, effectiveBatch);
     }
 }
