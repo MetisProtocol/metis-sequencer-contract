@@ -4,6 +4,7 @@ const conractName = "MetisSequencerSet";
 
 task("l2:update-mpc-address", "Update MPC address for SequencerSet contract")
   .addOptionalParam("addr", "The new MPC address")
+  .addOptionalParam("fund", "Send the Metis gas to the MPC address at last")
   .setAction(async (args, hre) => {
     if (!hre.network.tags["l2"]) {
       throw new Error(`${hre.network.name} is not an l2`);
@@ -17,8 +18,29 @@ task("l2:update-mpc-address", "Update MPC address for SequencerSet contract")
       throw new Error(`addr arg is not a valid address`);
     }
 
-    const tx = await seqset.UpdateMpcAddress(newAddr);
-    await tx.wait();
+    console.log("Updating");
+    const tx1 = await seqset.UpdateMpcAddress(newAddr);
+    console.log("Confrimed at", tx1.hash);
+
+    if (args["fund"]) {
+      const amountInWei = (() => {
+        try {
+          return hre.ethers.parseEther(args["fund"]);
+        } catch {
+          throw new Error(
+            `The amount arg ${args["fund"]} is not a valid number`,
+          );
+        }
+      })();
+
+      console.log(`Sending ${args["fund"]} Metis to the mpc address`);
+      const [signer] = await hre.ethers.getSigners();
+      const tx = await signer.sendTransaction({
+        to: newAddr,
+        value: amountInWei,
+      });
+      console.log("Confrimed at", tx.hash);
+    }
   });
 
 task("l2:update-epoch-length", "Update epoch(aka span) length")
@@ -38,5 +60,5 @@ task("l2:update-epoch-length", "Update epoch(aka span) length")
 
     console.log(`Updating the epoch length to ${length}`);
     const tx = await seqset.UpdateEpochLength(length);
-    await tx.wait();
+    console.log("Confrimed at", tx.hash);
   });
