@@ -1,11 +1,18 @@
-import { task } from "hardhat/config";
+import { task, types } from "hardhat/config";
 import fs from "fs";
+
+import { parseDuration } from "../utils/params";
 
 const lockingPoolName = "LockingPool";
 
 task("l1:whitelist", "Whitelist an sequencer address")
-  .addOptionalParam("addr", "the sequencer address")
-  .addOptionalParam("enable", "enable or remove the sequencer", "true")
+  .addParam("addr", "the sequencer address", "", types.string)
+  .addOptionalParam(
+    "enable",
+    "enable or remove the sequencer",
+    "true",
+    types.boolean,
+  )
   .setAction(async (args, hre) => {
     if (!hre.network.tags["l1"]) {
       throw new Error(`${hre.network.name} is not an l1`);
@@ -36,8 +43,13 @@ task("l1:whitelist", "Whitelist an sequencer address")
   });
 
 task("l1:lock", "Lock Metis to LockingPool contract")
-  .addOptionalParam("key", "the private key file path for the sequencer")
-  .addOptionalParam("amount", "lock amount in Metis")
+  .addParam(
+    "key",
+    "the private key file path for the sequencer",
+    "",
+    types.string,
+  )
+  .addParam("amount", "lock amount in Metis", "", types.float)
   .setAction(async (args, hre) => {
     if (!hre.network.tags["l1"]) {
       throw new Error(`${hre.network.name} is not an l1`);
@@ -48,19 +60,7 @@ task("l1:lock", "Lock Metis to LockingPool contract")
       throw new Error(`MEITS_L1_TOKEN env is not set or it's not an address`);
     }
 
-    const amountInWei = (() => {
-      if (args["amount"]) {
-        throw new Error(`amount arg should be provided`);
-      }
-
-      try {
-        return hre.ethers.parseEther(args["amount"]);
-      } catch {
-        throw new Error(
-          `The amount arg ${args["amount"]} is not a valid number`,
-        );
-      }
-    })();
+    const amountInWei = hre.ethers.parseEther(args["amount"]);
 
     const { address: lockingPoolAddress } =
       await hre.deployments.get("LockingPool");
@@ -119,8 +119,8 @@ task("l1:lock", "Lock Metis to LockingPool contract")
   });
 
 task("l1:update-lock-amount", "Update locking amount condition")
-  .addOptionalParam("min", "Min amount in Metis")
-  .addOptionalParam("max", "Max amount in Metis")
+  .addOptionalParam("min", "Min amount in Metis", "", types.float)
+  .addOptionalParam("max", "Max amount in Metis", "", types.float)
   .setAction(async (args, hre) => {
     if (!hre.network.tags["l1"]) {
       throw new Error(`${hre.network.name} is not an l1`);
@@ -134,7 +134,9 @@ task("l1:update-lock-amount", "Update locking amount condition")
       lockingPoolAddress,
     );
 
+    let actions = 0;
     if (args["min"]) {
+      actions++;
       const min = hre.ethers.parseEther(args["min"]);
       const min2 = await contract.minLock();
       if (min != min2) {
@@ -147,6 +149,7 @@ task("l1:update-lock-amount", "Update locking amount condition")
     }
 
     if (args["max"]) {
+      actions++;
       const max = hre.ethers.parseEther(args["max"]);
       const max2 = await contract.maxLock();
       if (max != max2) {
@@ -157,11 +160,20 @@ task("l1:update-lock-amount", "Update locking amount condition")
         console.log("Confrimed at", tx.hash);
       }
     }
+
+    if (!actions) {
+      console.log("You need to provide --min or --max argument");
+    }
   });
 
 task("l1:update-mpc-address", "Update MPC address for LockingPool contract")
-  .addOptionalParam("addr", "The new MPC address")
-  .addOptionalParam("fund", "Send ETH gas to the MPC address at last")
+  .addParam("addr", "The new MPC address", "", types.string)
+  .addOptionalParam(
+    "fund",
+    "Send ETH gas to the MPC address at last",
+    "",
+    types.float,
+  )
   .setAction(async (args, hre) => {
     if (!hre.network.tags["l1"]) {
       throw new Error(`${hre.network.name} is not an l1`);
@@ -180,7 +192,7 @@ task("l1:update-mpc-address", "Update MPC address for LockingPool contract")
       throw new Error(`addr arg is not a valid address`);
     }
 
-    console.log("Updating");
+    console.log("Updating the MPC address to", newAddr);
     const tx = await lockingPool.updateMpc(newAddr);
     console.log("Confrimed at", tx.hash);
 
@@ -206,11 +218,12 @@ task("l1:update-mpc-address", "Update MPC address for LockingPool contract")
   });
 
 task("l1:update-exit-delay", "update exit delay time duration")
-  .addOptionalParam("duration", "time duration in second")
+  .addParam("duration", "duration string(e.g. 1d1h30m20s)", "", types.string)
   .setAction(async (args, hre) => {
     if (!hre.network.tags["l1"]) {
       throw new Error(`${hre.network.name} is not an l1`);
     }
+
     const { address: lockingPoolAddress } =
       await hre.deployments.get("LockingPool");
 
@@ -219,8 +232,8 @@ task("l1:update-exit-delay", "update exit delay time duration")
       lockingPoolAddress,
     );
 
-    const duration = parseInt(args["duration"], 0);
-    console.log(`update the delay to ${duration}s`);
+    const duration = parseDuration(args["duration"]);
+    console.log(`update the delay to ${args["duration"]}(=${duration}s)`);
     const tx = await lockingPool.updateWithdrawDelayTimeValue(duration);
     console.log("Confrimed at", tx.hash);
   });

@@ -1,10 +1,15 @@
-import { task } from "hardhat/config";
+import { task, types } from "hardhat/config";
 
 const conractName = "MetisSequencerSet";
 
 task("l2:update-mpc-address", "Update MPC address for SequencerSet contract")
-  .addOptionalParam("addr", "The new MPC address")
-  .addOptionalParam("fund", "Send the Metis gas to the MPC address at last")
+  .addParam("addr", "The new MPC address")
+  .addOptionalParam(
+    "fund",
+    "Send the Metis gas to the MPC address at last",
+    "",
+    types.float,
+  )
   .setAction(async (args, hre) => {
     if (!hre.network.tags["l2"]) {
       throw new Error(`${hre.network.name} is not an l2`);
@@ -18,21 +23,12 @@ task("l2:update-mpc-address", "Update MPC address for SequencerSet contract")
       throw new Error(`addr arg is not a valid address`);
     }
 
-    console.log("Updating");
+    console.log("Updating the MPC address to", newAddr);
     const tx1 = await seqset.UpdateMpcAddress(newAddr);
     console.log("Confrimed at", tx1.hash);
 
     if (args["fund"]) {
-      const amountInWei = (() => {
-        try {
-          return hre.ethers.parseEther(args["fund"]);
-        } catch {
-          throw new Error(
-            `The amount arg ${args["fund"]} is not a valid number`,
-          );
-        }
-      })();
-
+      const amountInWei = hre.ethers.parseEther(args["fund"]);
       console.log(`Sending ${args["fund"]} Metis to the mpc address`);
       const [signer] = await hre.ethers.getSigners();
       const tx = await signer.sendTransaction({
@@ -44,7 +40,7 @@ task("l2:update-mpc-address", "Update MPC address for SequencerSet contract")
   });
 
 task("l2:update-epoch-length", "Update epoch(aka span) length")
-  .addOptionalParam("length", "The new epoch length")
+  .addParam("length", "The new epoch length", "", types.int)
   .setAction(async (args, hre) => {
     if (!hre.network.tags["l2"]) {
       throw new Error(`${hre.network.name} is not an l2`);
