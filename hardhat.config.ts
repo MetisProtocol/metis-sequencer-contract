@@ -77,7 +77,7 @@ const config: HardhatUserConfig = {
       verify: {
         etherscan: {
           apiKey: "placeholder",
-          apiUrl: "https://explorer.holesky.metisdevops.link",
+          apiUrl: "https://explorer-api.holesky.metisdevops.link",
         },
       },
     },
