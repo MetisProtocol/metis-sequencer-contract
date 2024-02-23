@@ -1,11 +1,6 @@
 import { ethers, deployments } from "hardhat";
 import { expect } from "chai";
-import {
-  loadFixture,
-  time,
-  mineUpTo,
-  reset,
-} from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 const zeroAddress = ethers.ZeroAddress;
 const l2MetisAddr = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000";

@@ -1,8 +1,9 @@
 import { ethers, deployments } from "hardhat";
 import { expect } from "chai";
-import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
-
-import { mineUpTo } from "@nomicfoundation/hardhat-network-helpers";
+import {
+  loadFixture,
+  mineUpTo,
+} from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 const initStartBlock = 1n;
 const initEndBlock = 599n;
