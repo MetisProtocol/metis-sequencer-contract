@@ -12,3 +12,5 @@ typechain-types
 /coverage
 /coverage.json
 /keys
+/exports
+/deployments
