@@ -1,7 +1,7 @@
 import { task, types } from "hardhat/config";
 import fs from "fs";
 
-import { parseDuration } from "../utils/params";
+import { parseDuration, trimPubKeyPrefix } from "../utils/params";
 import {
   LockingEscrowContractName,
   LockingManagerContractName,
@@ -12,7 +12,7 @@ task("l1:whitelist", "Whitelist an sequencer address")
   .addOptionalParam(
     "enable",
     "enable or remove the sequencer",
-    "true",
+    true,
     types.boolean,
   )
   .setAction(async (args, hre) => {
@@ -60,12 +60,30 @@ task("l1:lock", "Lock Metis to LockingPool contract")
 
     const amountInWei = hre.ethers.parseEther(args["amount"]);
 
-    const { address: LockingManagerAddress } = await hre.deployments.get(
-      LockingManagerContractName,
-    );
-
     const { address: LockingEscrowAddress } = await hre.deployments.get(
       LockingEscrowContractName,
+    );
+
+    const lockingEscrow = await hre.ethers.getContractAt(
+      LockingEscrowContractName,
+      LockingEscrowAddress,
+    );
+
+    // min/max lock check
+    const [minLock, maxLock] = await Promise.all([
+      lockingEscrow.minLock(),
+      lockingEscrow.maxLock(),
+    ]);
+
+    if (amountInWei < minLock) {
+      throw new Error(`minLock is ${hre.ethers.formatEther(minLock)}`);
+    }
+    if (amountInWei > maxLock) {
+      throw new Error(`maxLock is ${hre.ethers.formatEther(maxLock)}`);
+    }
+
+    const { address: LockingManagerAddress } = await hre.deployments.get(
+      LockingManagerContractName,
     );
 
     const [signer] = await hre.ethers.getSigners();
@@ -90,11 +108,11 @@ task("l1:lock", "Lock Metis to LockingPool contract")
     }
 
     const metis = await hre.ethers.getContractAt("TestERC20", metisL1Addr);
-    console.log("checking the balance");
-    const balance = await metis.balanceOf(seqWallet.address);
-    if (balance < amountInWei) {
+    console.log("checking the Metis balance");
+    const metisBalance = await metis.balanceOf(seqWallet.address);
+    if (metisBalance < amountInWei) {
       throw new Error(
-        `Insufficient Metis balance, current balance ${hre.ethers.formatEther(balance)}, required balance ${args["amount"]}`,
+        `Insufficient Metis balance, current balance ${hre.ethers.formatEther(metisBalance)}, required balance ${args["amount"]}`,
       );
     }
 
@@ -104,20 +122,20 @@ task("l1:lock", "Lock Metis to LockingPool contract")
       LockingEscrowAddress,
     );
     if (allowance < amountInWei) {
-      console.log("approving Metis to LockingPool");
+      console.log("approving Metis to LockingEscrow");
       const tx = await metis
         .connect(seqWallet)
         .approve(LockingEscrowAddress, amountInWei);
       await tx.wait(2);
     }
 
-    console.log("locking...");
+    console.log(`locking ${args["amount"]}`);
     const tx = await lockingManager
       .connect(seqWallet)
       .lockFor(
         seqWallet.address,
         amountInWei,
-        Buffer.from(seqKey.publicKey.slice(4), "hex"),
+        trimPubKeyPrefix(seqKey.publicKey),
       );
     console.log("Confrimed at", tx.hash);
   });
@@ -240,5 +258,33 @@ task("l1:update-exit-delay", "update exit delay time duration")
     const duration = parseDuration(args["duration"]);
     console.log(`update the delay to ${args["duration"]}(=${duration}s)`);
     const tx = await lockingManager.updateWithdrawDelayTimeValue(duration);
+    console.log("Confrimed at", tx.hash);
+  });
+
+task("l1:update-reward-per-block", "update reward per block")
+  .addParam("value", "the reward per block", "", types.string)
+  .addParam("unit", "ether", "wei/gwei/ether", types.string)
+  .setAction(async (args, hre) => {
+    if (!hre.network.tags["l1"]) {
+      throw new Error(`${hre.network.name} is not an l1`);
+    }
+
+    const { address: LockingManagerAddress } = await hre.deployments.get(
+      LockingManagerContractName,
+    );
+
+    const lockingManager = await hre.ethers.getContractAt(
+      LockingManagerContractName,
+      LockingManagerAddress,
+    );
+
+    console.log(
+      `update the reward per block value to ${args["value"]}${args["unit"]}`,
+    );
+
+    const tx = await lockingManager.updateBlockReward(
+      hre.ethers.parseUnits(args["value"], args["unit"]),
+    );
+
     console.log("Confrimed at", tx.hash);
   });
