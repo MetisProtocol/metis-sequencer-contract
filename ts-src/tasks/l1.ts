@@ -2,8 +2,10 @@ import { task, types } from "hardhat/config";
 import fs from "fs";
 
 import { parseDuration } from "../utils/params";
-
-const lockingPoolName = "LockingPool";
+import {
+  LockingEscrowContractName,
+  LockingManagerContractName,
+} from "../utils/constant";
 
 task("l1:whitelist", "Whitelist an sequencer address")
   .addParam("addr", "the sequencer address", "", types.string)
@@ -18,12 +20,13 @@ task("l1:whitelist", "Whitelist an sequencer address")
       throw new Error(`${hre.network.name} is not an l1`);
     }
 
-    const { address: lockingPoolAddress } =
-      await hre.deployments.get("LockingPool");
+    const { address: LockingManagerAddress } = await hre.deployments.get(
+      LockingManagerContractName,
+    );
 
-    const LockingPool = await hre.ethers.getContractAt(
-      lockingPoolName,
-      lockingPoolAddress,
+    const lockingManager = await hre.ethers.getContractAt(
+      LockingManagerContractName,
+      LockingManagerAddress,
     );
 
     const addr = args["addr"];
@@ -38,18 +41,13 @@ task("l1:whitelist", "Whitelist an sequencer address")
       console.log(`Removing addr from whitelist`);
     }
 
-    const tx = await LockingPool.setWhiteListAddress(addr, enable);
+    const tx = await lockingManager.setWhitelist(addr, enable);
     console.log("Confrimed at", tx.hash);
   });
 
 task("l1:lock", "Lock Metis to LockingPool contract")
-  .addParam(
-    "key",
-    "the private key file path for the sequencer",
-    "",
-    types.string,
-  )
-  .addParam("amount", "lock amount in Metis", "", types.float)
+  .addParam("key", "the private key file path for the sequencer")
+  .addParam("amount", "lock amount in Metis", "", types.string)
   .setAction(async (args, hre) => {
     if (!hre.network.tags["l1"]) {
       throw new Error(`${hre.network.name} is not an l1`);
@@ -62,8 +60,9 @@ task("l1:lock", "Lock Metis to LockingPool contract")
 
     const amountInWei = hre.ethers.parseEther(args["amount"]);
 
-    const { address: lockingPoolAddress } =
-      await hre.deployments.get("LockingPool");
+    const { address: LockingManagerAddress } = await hre.deployments.get(
+      LockingManagerContractName,
+    );
 
     const [signer] = await hre.ethers.getSigners();
 
@@ -74,13 +73,14 @@ task("l1:lock", "Lock Metis to LockingPool contract")
     const seqWallet = new hre.ethers.Wallet(seqKey, hre.ethers.provider);
 
     console.log("Locking Metis for", seqWallet.address);
-    const pool = await hre.ethers.getContractAt(
-      lockingPoolName,
-      lockingPoolAddress,
+
+    const lockingManager = await hre.ethers.getContractAt(
+      LockingManagerContractName,
+      LockingManagerAddress,
     );
 
     console.log("checking whitelist status");
-    const isWhitelisted = await pool.whiteListAddresses(seqWallet.address);
+    const isWhitelisted = await lockingManager.whitelist(seqWallet.address);
     if (!isWhitelisted) {
       throw new Error(`Your address ${signer.address} is not whitelisted`);
     }
@@ -97,18 +97,18 @@ task("l1:lock", "Lock Metis to LockingPool contract")
     console.log("checking the allowance");
     const allowance = await metis.allowance(
       seqWallet.address,
-      lockingPoolAddress,
+      LockingManagerAddress,
     );
     if (allowance < amountInWei) {
       console.log("approving Metis to LockingPool");
       const tx = await metis
         .connect(seqWallet)
-        .approve(await pool.getAddress(), amountInWei);
+        .approve(LockingManagerAddress, amountInWei);
       await tx.wait(2);
     }
 
     console.log("locking...");
-    const tx = await pool
+    const tx = await lockingManager
       .connect(seqWallet)
       .lockFor(
         seqWallet.address,
@@ -119,31 +119,32 @@ task("l1:lock", "Lock Metis to LockingPool contract")
   });
 
 task("l1:update-lock-amount", "Update locking amount condition")
-  .addOptionalParam("min", "Min amount in Metis", "", types.float)
-  .addOptionalParam("max", "Max amount in Metis", "", types.float)
+  .addOptionalParam("min", "Min amount in Metis", "", types.string)
+  .addOptionalParam("max", "Max amount in Metis", "", types.string)
   .setAction(async (args, hre) => {
     if (!hre.network.tags["l1"]) {
       throw new Error(`${hre.network.name} is not an l1`);
     }
 
-    const { address: lockingPoolAddress } =
-      await hre.deployments.get("LockingPool");
+    const { address: LockingEscrowAddress } = await hre.deployments.get(
+      LockingEscrowContractName,
+    );
 
-    const contract = await hre.ethers.getContractAt(
-      lockingPoolName,
-      lockingPoolAddress,
+    const lockingEscrow = await hre.ethers.getContractAt(
+      LockingEscrowContractName,
+      LockingEscrowAddress,
     );
 
     let actions = 0;
     if (args["min"]) {
       actions++;
       const min = hre.ethers.parseEther(args["min"]);
-      const min2 = await contract.minLock();
+      const min2 = await lockingEscrow.minLock();
       if (min != min2) {
         console.log(
           `setting min lock to ${args["min"]}, the previous is ${hre.ethers.formatEther(min2)}`,
         );
-        const tx = await contract.updateMinAmounts(min);
+        const tx = await lockingEscrow.setMinLock(min);
         await tx.wait(2);
       }
     }
@@ -151,12 +152,12 @@ task("l1:update-lock-amount", "Update locking amount condition")
     if (args["max"]) {
       actions++;
       const max = hre.ethers.parseEther(args["max"]);
-      const max2 = await contract.maxLock();
+      const max2 = await lockingEscrow.maxLock();
       if (max != max2) {
         console.log(
           `setting min lock to ${args["max"]}, the previous is ${hre.ethers.formatEther(max2)}`,
         );
-        const tx = await contract.updateMaxAmounts(max);
+        const tx = await lockingEscrow.setMaxLock(max);
         console.log("Confrimed at", tx.hash);
       }
     }
@@ -168,12 +169,7 @@ task("l1:update-lock-amount", "Update locking amount condition")
 
 task("l1:update-mpc-address", "Update MPC address for LockingPool contract")
   .addParam("addr", "The new MPC address", "", types.string)
-  .addOptionalParam(
-    "fund",
-    "Send ETH gas to the MPC address at last",
-    "",
-    types.float,
-  )
+  .addOptionalParam("fund", "Send ETH gas to the MPC address at last")
   .setAction(async (args, hre) => {
     if (!hre.network.tags["l1"]) {
       throw new Error(`${hre.network.name} is not an l1`);
@@ -182,9 +178,13 @@ task("l1:update-mpc-address", "Update MPC address for LockingPool contract")
     const { address: lockingPoolAddress } =
       await hre.deployments.get("LockingPool");
 
-    const lockingPool = await hre.ethers.getContractAt(
-      lockingPoolName,
-      lockingPoolAddress,
+    const { address: LockingManagerAddress } = await hre.deployments.get(
+      LockingManagerContractName,
+    );
+
+    const lockingManager = await hre.ethers.getContractAt(
+      LockingManagerContractName,
+      LockingManagerAddress,
     );
 
     const newAddr = args["addr"];
@@ -193,7 +193,7 @@ task("l1:update-mpc-address", "Update MPC address for LockingPool contract")
     }
 
     console.log("Updating the MPC address to", newAddr);
-    const tx = await lockingPool.updateMpc(newAddr);
+    const tx = await lockingManager.updateMpc(newAddr);
     console.log("Confrimed at", tx.hash);
 
     if (args["fund"]) {
@@ -224,16 +224,17 @@ task("l1:update-exit-delay", "update exit delay time duration")
       throw new Error(`${hre.network.name} is not an l1`);
     }
 
-    const { address: lockingPoolAddress } =
-      await hre.deployments.get("LockingPool");
+    const { address: LockingManagerAddress } = await hre.deployments.get(
+      LockingManagerContractName,
+    );
 
-    const lockingPool = await hre.ethers.getContractAt(
-      lockingPoolName,
-      lockingPoolAddress,
+    const lockingManager = await hre.ethers.getContractAt(
+      LockingManagerContractName,
+      LockingManagerAddress,
     );
 
     const duration = parseDuration(args["duration"]);
     console.log(`update the delay to ${args["duration"]}(=${duration}s)`);
-    const tx = await lockingPool.updateWithdrawDelayTimeValue(duration);
+    const tx = await lockingManager.updateWithdrawDelayTimeValue(duration);
     console.log("Confrimed at", tx.hash);
   });

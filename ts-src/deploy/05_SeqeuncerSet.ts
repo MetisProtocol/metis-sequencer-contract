@@ -60,6 +60,7 @@ const func: DeployFunction = async function (hre) {
   );
 
   await hre.deployments.deploy(ctName, {
+    contract: "MetisSequencerSet",
     from: deployer,
     proxy: {
       proxyContract: "OpenZeppelinTransparentProxy",

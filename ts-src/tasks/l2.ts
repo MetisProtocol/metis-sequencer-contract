@@ -4,12 +4,7 @@ const conractName = "MetisSequencerSet";
 
 task("l2:update-mpc-address", "Update MPC address for SequencerSet contract")
   .addParam("addr", "The new MPC address")
-  .addOptionalParam(
-    "fund",
-    "Send the Metis gas to the MPC address at last",
-    "",
-    types.float,
-  )
+  .addOptionalParam("fund", "Send the Metis gas to the MPC address at last")
   .setAction(async (args, hre) => {
     if (!hre.network.tags["l2"]) {
       throw new Error(`${hre.network.name} is not an l2`);

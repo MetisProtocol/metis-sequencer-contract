@@ -1,6 +1,6 @@
 import { DeployFunction } from "hardhat-deploy/types";
 
-const ctName = "LockingPool";
+const ctName = "LockingEscrow";
 
 const func: DeployFunction = async function (hre) {
   if (!hre.network.tags["l1"]) {
@@ -19,8 +19,6 @@ const func: DeployFunction = async function (hre) {
     throw new Error(`MEITS_L1_TOKEN env is not set or it's not an address`);
   }
 
-  const { address: LockingNFTAddress } =
-    await hre.deployments.get("LockingNFT");
   const l2Chainid = parseInt(process.env.METIS_L2_CHAINID as string, 0);
   if (!l2Chainid) {
     throw new Error(`METIS_L2_CHAINID env should be valid chainId`);
@@ -45,14 +43,7 @@ const func: DeployFunction = async function (hre) {
       execute: {
         init: {
           methodName: "initialize",
-          args: [
-            bridge,
-            l1Metis,
-            l2Metis,
-            LockingNFTAddress,
-            deployer,
-            l2Chainid,
-          ],
+          args: [bridge, l1Metis, l2Metis, l2Chainid],
         },
       },
     },

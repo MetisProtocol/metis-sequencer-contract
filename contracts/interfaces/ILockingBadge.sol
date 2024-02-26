@@ -1,0 +1,83 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
+
+interface ILockingBadge {
+    error OwnedSequencer();
+    error OwnedBadge();
+    error ThresholdExceed();
+    error NullAddress();
+    error SeqNotActive();
+    error NotSeqOwner();
+    error NotSeq();
+    error NoRewardRecipient();
+    error NotWhitelisted();
+
+    // the sequencer status
+    enum Status {
+        Unavailabe, // placeholder for default value
+        Inactive, // the sequencer will be Inactive if its owner
+        Active,
+        Unlocked // Unlocked means sequencer exist
+    }
+
+    struct Sequencer {
+        uint256 amount; // sequencer current locked
+        uint256 reward; // sequencer current reward
+        uint256 activationBatch; // sequencer activation batch id
+        uint256 updatingBatch; // batch id of the last updating
+        uint256 deactivationBatch; // sequencer deactivation batch id
+        uint256 deactivationTime; // sequencer deactivation timestamp
+        uint256 unlockClaimTime; // timestamp that sequencer can claim unlocked token, it's equal to deactivationTime + WITHDRAWAL_DELAY
+        uint256 nonce; // sequencer operations number, starts from 1, and used internally by the Metis consencus client
+        address owner; // the operator address, owns this sequencer ndoe, it controls lock/relock/unlock/cliam
+        address signer; // sequencer signer, an address for a sequencer node, it can change signer address
+        bytes pubkey; // sequencer signer pubkey
+        address rewardRecipient; // seqeuncer rewarder recipient address
+        Status status; // sequencer status
+    }
+
+    /**
+     * @dev Emitted if owner call 'setThreshold'
+     * @param _threshold the new threshold
+     */
+    event SetThreshold(uint256 _threshold);
+
+    /**
+     * @dev Emitted if owner call 'setWhitelist'
+     * @param _user the address who can lock token
+     * @param _yes white address state
+     */
+    event SetWhitelist(address _user, bool _yes);
+
+    /**
+     * @dev Emitted when reward recipient address update in 'setSequencerRewardRecipient'
+     * @param _seqId the sequencerId
+     * @param _recipient the address receive reward token
+     */
+    event SequencerRewardRecipientChanged(uint256 _seqId, address _recipient);
+
+    /**
+     * @dev Emitted when sequencer owner is changed
+     * @param _seqId the sequencerId
+     * @param _owner the sequencer owner
+     */
+    event SequencerOwnerChanged(uint256 _seqId, address _owner);
+
+    /**
+     * @dev Emitted when the sequencer public key is updated in 'updateSigner()'.
+     * @param sequencerId unique integer to identify a sequencer.
+     * @param oldSigner oldSigner old address of the sequencer.
+     * @param newSigner newSigner new address of the sequencer.
+     * @param nonce to synchronize the events in themis.
+     * @param signerPubkey signerPubkey public key of the sequencer.
+     */
+    event SignerChange(
+        uint256 indexed sequencerId,
+        address indexed oldSigner,
+        address indexed newSigner,
+        uint256 nonce,
+        bytes signerPubkey
+    );
+
+    function seqOwners(address owner) external returns (uint256 seqId);
+}

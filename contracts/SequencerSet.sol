@@ -32,6 +32,7 @@ contract MetisSequencerSet is OwnableUpgradeable {
     event ReCommitEpoch(
         uint256 indexed oldEpochId,
         uint256 indexed newEpochId,
+        uint256 curEpochId,
         uint256 startBlock,
         uint256 endBlock,
         address newSigner
@@ -102,14 +103,16 @@ contract MetisSequencerSet is OwnableUpgradeable {
 
     // get epoch number by block
     function getEpochByBlock(uint256 number) public view returns (uint256) {
-        for (uint256 i = epochNumbers.length; i > 0; ) {
-            Epoch memory epoch = epochs[epochNumbers[i - 1]];
+        uint256 lastIndex = epochNumbers.length - 1;
+        for (uint256 i = lastIndex; i >= 0; i--) {
+            Epoch memory epoch = epochs[epochNumbers[i]];
             if (epoch.startBlock <= number && number <= epoch.endBlock) {
                 return epoch.number;
             }
 
-            unchecked {
-                --i;
+            // not in the last epoch
+            if (i == lastIndex && number > epoch.endBlock) {
+                return type(uint256).max;
             }
         }
 
@@ -233,6 +236,7 @@ contract MetisSequencerSet is OwnableUpgradeable {
         emit ReCommitEpoch(
             oldEpochId,
             newEpochId,
+            currentEpochId,
             startBlock,
             endBlock,
             newSigner

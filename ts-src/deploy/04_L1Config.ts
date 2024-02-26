@@ -5,34 +5,21 @@ const func: DeployFunction = async function (hre) {
     throw new Error(`current network ${hre.network.name} is not an L1`);
   }
 
-  const { address: LockingPoolAddress } =
-    await hre.deployments.get("LockingPool");
-  const { address: LockingNFTAddress } =
-    await hre.deployments.get("LockingNFT");
-  const { address: LockingInfoAddress } =
-    await hre.deployments.get("LockingInfo");
+  const { address: LockingEscrowAddress } =
+    await hre.deployments.get("LockingEscrow");
 
-  const lockingNFT = await hre.ethers.getContractAt(
-    "LockingNFT",
-    LockingNFTAddress,
+  const { address: LockingManagerAddress } =
+    await hre.deployments.get("LockingEscrow");
+
+  const lockingEscrow = await hre.ethers.getContractAt(
+    "LockingEscrow",
+    LockingEscrowAddress,
   );
 
-  // update the owner
-  if ((await lockingNFT.owner()) != LockingPoolAddress) {
-    console.log("transfering owner of LockingNFT to LockingPool");
-    const tx = await lockingNFT.transferOwnership(LockingPoolAddress);
-    await tx.wait(3);
-  }
-
-  const lockingPool = await hre.ethers.getContractAt(
-    "LockingPool",
-    LockingPoolAddress,
-  );
-
-  if ((await lockingPool.logger()) !== LockingInfoAddress) {
-    console.log("setting logger address");
-    const tx = await lockingPool.updateLockingInfo(LockingInfoAddress);
-    await tx.wait(3);
+  console.log("updating manager address for LockingEscrow");
+  if ((await lockingEscrow.manager()) != hre.ethers.ZeroAddress) {
+    const tx = await lockingEscrow.initManager(LockingManagerAddress);
+    console.log(`done block=${tx.blockNumber} tx=${tx.hash}`);
   }
 };
 

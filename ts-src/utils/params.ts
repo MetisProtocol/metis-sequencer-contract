@@ -30,3 +30,13 @@ export const parseDuration = (durationString: string) => {
 
   return totalSeconds;
 };
+
+export const trimPubKeyPrefix = (key: string) => {
+  if (key.startsWith("0x")) {
+    key = key.slice(2);
+  }
+  if (key.startsWith("04")) {
+    key = key.slice(2);
+  }
+  return Buffer.from(key, "hex");
+};
