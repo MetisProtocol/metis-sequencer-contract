@@ -3,13 +3,14 @@ pragma solidity 0.8.20;
 
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
-import {LockingBadge} from "./LockingBadge.sol";
-
 import {ILockingEscrow} from "./interfaces/ILockingEscrow.sol";
 import {ILockingManager} from "./interfaces/ILockingManager.sol";
 
-contract LockingManager is PausableUpgradeable, LockingBadge, ILockingManager {
+import {SeqeuncerInfo} from "./SeqeuncerInfo.sol";
+
+contract LockingManager is ILockingManager, PausableUpgradeable, SeqeuncerInfo {
     error NotMpc();
+    error BFTFail();
 
     struct BatchState {
         uint256 id; // current batch id
@@ -30,14 +31,14 @@ contract LockingManager is PausableUpgradeable, LockingBadge, ILockingManager {
     address public mpcAddress;
 
     // current batch state
-    BatchState public batchState;
+    BatchState public currentBatch;
 
     function initialize(address _escorow) external initializer {
         WITHDRAWAL_DELAY = 21 days;
         BLOCK_REWARD = 761000 gwei;
 
         // init batch state
-        batchState = BatchState({
+        currentBatch = BatchState({
             id: 1,
             number: block.number,
             startEpoch: 0,
@@ -61,16 +62,14 @@ contract LockingManager is PausableUpgradeable, LockingBadge, ILockingManager {
 
     /**
      * @dev setPause
+     * @param _yes pause or not
      */
-    function setPause() external onlyOwner {
-        _pause();
-    }
-
-    /**
-     * @dev setUnpause
-     */
-    function setUnpause() external onlyOwner {
-        _unpause();
+    function setPause(bool _yes) external onlyOwner {
+        if (_yes) {
+            _pause();
+        } else {
+            _unpause();
+        }
     }
 
     /**
@@ -96,6 +95,49 @@ contract LockingManager is PausableUpgradeable, LockingBadge, ILockingManager {
     }
 
     /**
+     * @dev updateSigner Allow sqeuencer to update new signers to replace old signer addresses，and NFT holder will be transfer driectly
+     * @param _seqId unique integer to identify a sequencer.
+     * @param _signerPubkey the new signer pubkey address
+     */
+    function updateSigner(
+        uint256 _seqId,
+        bytes calldata _signerPubkey
+    ) external whitelistRequired {
+        Sequencer storage seq = sequencers[_seqId];
+        if (seq.status != Status.Active) {
+            revert SeqNotActive();
+        }
+
+        // only update by the signer
+        address signer = seq.signer;
+        if (signer != msg.sender) {
+            revert NotSeqSigner();
+        }
+
+        require(_signerPubkey.length == 64, "invalid pubkey");
+        address newSigner = address(uint160(uint256(keccak256(_signerPubkey))));
+        require(newSigner != address(0), "empty address");
+
+        // the new signer should not be a signer before
+        if (seqSigners[newSigner] != 0) {
+            revert OwnedSigner();
+        }
+        seq.signer = newSigner;
+        seqSigners[newSigner] = _seqId;
+
+        // invalid it
+        seqSigners[signer] = type(uint256).max;
+
+        // set signer updating batch id
+        seq.updatingBatch = currentBatch.id;
+
+        uint256 nonce = seq.nonce + 1;
+        seq.nonce = nonce;
+
+        emit SignerChange(_seqId, signer, newSigner, nonce, _signerPubkey);
+    }
+
+    /**
      * @dev lockFor lock Metis and participate in the sequencer node
      * @param _signer Sequencer signer address
      * @param _amount Amount of L1 metis token to lock for.
@@ -106,8 +148,8 @@ contract LockingManager is PausableUpgradeable, LockingBadge, ILockingManager {
         uint256 _amount,
         bytes calldata _signerPubkey
     ) external whenNotPaused whitelistRequired {
-        uint256 seqId = _mintFor(msg.sender, _signer);
-        uint256 batchId = batchState.id;
+        uint256 seqId = _lockFor(msg.sender, _signer);
+        uint256 batchId = currentBatch.id;
 
         sequencers[seqId] = Sequencer({
             amount: _amount,
@@ -125,7 +167,7 @@ contract LockingManager is PausableUpgradeable, LockingBadge, ILockingManager {
             status: Status.Active
         });
 
-        escorow.newSequencer(seqId, _signer, batchId, _amount, _signerPubkey);
+        escorow.newSequencer(seqId, _signer, _amount, batchId, _signerPubkey);
     }
 
     /**
@@ -170,11 +212,10 @@ contract LockingManager is PausableUpgradeable, LockingBadge, ILockingManager {
     }
 
     /**
-     * @dev unlock your Metis and exit the sequencer node
+     * @dev unlock your metis and exit the sequencer node
      *      the reward will be arrived by L1Bridge first
      *      and you need to wait the exit period and call
-     *
-     *
+     *      unlockClaim to cliam your locked token
      * @param _seqId sequencer id
      * @param _l2Gas the L2 gas limit for L1Bridge.
      *       the reward is distributed by bridge
@@ -188,10 +229,19 @@ contract LockingManager is PausableUpgradeable, LockingBadge, ILockingManager {
     }
 
     /**
+     * @dev forceUnlock Allow owner to force a sequencer node to exit
+     * @param _seqId the sequencer id
+     * @param _l2Gas l2 gas limit, see above for the detail
+     */
+    function forceUnlock(uint256 _seqId, uint32 _l2Gas) external onlyOwner {
+        _unlock(_seqId, true, _l2Gas);
+    }
+
+    /**
      * @dev unlockClaim claim your locked tokens after the waiting period is passed
      *
      * @param _seqId sequencer id
-     * @param _l2Gas bridge reward to L2 gasLimit
+     * @param _l2Gas l2 gas limit
      */
     function unlockClaim(
         uint256 _seqId,
@@ -222,8 +272,14 @@ contract LockingManager is PausableUpgradeable, LockingBadge, ILockingManager {
         seq.reward = 0;
         // seq.nonce = nonce;
         seq.status = Status.Unlocked;
+        seqStatuses[Status.Inactive]--;
+        seqStatuses[Status.Unlocked]++;
 
-        _burn(_seqId);
+        delete seqOwners[seq.owner];
+
+        // invalid it
+        seqSigners[seq.signer] = type(uint256).max;
+
         escorow.finalizeUnlock{value: msg.value}(
             msg.sender,
             _seqId,
@@ -245,9 +301,14 @@ contract LockingManager is PausableUpgradeable, LockingBadge, ILockingManager {
         uint32 _l2Gas
     ) external payable whenNotPaused whitelistRequired {
         Sequencer storage seq = sequencers[_seqId];
+        if (seq.status != Status.Active) {
+            revert SeqNotActive();
+        }
+
         if (seq.owner != msg.sender) {
             revert NotSeqOwner();
         }
+
         address recipient = seq.rewardRecipient;
         if (recipient == address(0)) {
             revert NoRewardRecipient();
@@ -287,7 +348,7 @@ contract LockingManager is PausableUpgradeable, LockingBadge, ILockingManager {
             "mismatch length"
         );
 
-        BatchState storage bs = batchState;
+        BatchState storage bs = currentBatch;
         uint256 nextBatch = bs.id + 1;
         require(nextBatch == _batchId, "invalid batch id");
         bs.id = nextBatch;
@@ -297,8 +358,11 @@ contract LockingManager is PausableUpgradeable, LockingBadge, ILockingManager {
 
         for (uint256 i = 0; i < _seqs.length; i++) {
             uint256 reward = _blocks[i] * BLOCK_REWARD;
-            uint256 seqId = tokenOfOwnerByIndex(_seqs[i], 0);
+            uint256 seqId = seqSigners[_seqs[i]];
             Sequencer storage seq = sequencers[seqId];
+            if (seq.status == Status.Unavailabe) {
+                revert NoSuchSeq();
+            }
             seq.reward += reward;
             totalReward += reward;
         }
@@ -308,12 +372,22 @@ contract LockingManager is PausableUpgradeable, LockingBadge, ILockingManager {
 
     function _unlock(uint256 _seqId, bool _force, uint32 _l2Gas) internal {
         Sequencer storage seq = sequencers[_seqId];
+        if (seq.status != Status.Active) {
+            revert SeqNotActive();
+        }
+
+        uint256 actived = --seqStatuses[Status.Active];
+        uint256 inactived = ++seqStatuses[Status.Inactive];
 
         if (!_force) {
             if (seq.owner != msg.sender) {
                 revert NotSeqOwner();
             }
-            // todo: 1/3 check
+
+            // BFT check, actived sequencer count must be high than 2/3 of total
+            if (inactived * 3 > actived + inactived) {
+                revert("BFT check no passed");
+            }
         }
 
         address recipient = seq.rewardRecipient;
@@ -321,19 +395,15 @@ contract LockingManager is PausableUpgradeable, LockingBadge, ILockingManager {
             revert NoRewardRecipient();
         }
 
-        if (seq.status != Status.Active) {
-            revert SeqNotActive();
-        }
-
         seq.status = Status.Inactive;
-        seq.deactivationBatch = batchState.id;
+        seq.deactivationBatch = currentBatch.id;
         seq.deactivationTime = block.timestamp;
         seq.unlockClaimTime = block.timestamp + WITHDRAWAL_DELAY;
-        seq.reward = 0;
 
         uint256 nonce = seq.nonce + 1;
         seq.nonce = nonce;
 
         escorow.initializeUnlock{value: msg.value}(_seqId, _l2Gas, seq);
+        seq.reward = 0;
     }
 }

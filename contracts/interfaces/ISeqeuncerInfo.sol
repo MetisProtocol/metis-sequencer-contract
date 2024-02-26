@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-interface ILockingBadge {
+interface ISeqeuncerInfo {
     error OwnedSequencer();
-    error OwnedBadge();
-    error ThresholdExceed();
+    error OwnedSigner();
+    error NoSuchSeq();
     error NullAddress();
     error SeqNotActive();
     error NotSeqOwner();
-    error NotSeq();
+    error NotSeqSigner();
     error NoRewardRecipient();
     error NotWhitelisted();
 
     // the sequencer status
     enum Status {
         Unavailabe, // placeholder for default value
-        Inactive, // the sequencer will be Inactive if its owner
-        Active,
-        Unlocked // Unlocked means sequencer exist
+        Inactive, // the sequencer will be Inactive if its owner starts unlock
+        Active, // the sequencer is active when it locks tokens on the contract
+        Unlocked // Exited, the sequencer has no locked tokens, and it's no longer produce blocks on L2
     }
 
     struct Sequencer {
@@ -35,12 +35,6 @@ interface ILockingBadge {
         address rewardRecipient; // seqeuncer rewarder recipient address
         Status status; // sequencer status
     }
-
-    /**
-     * @dev Emitted if owner call 'setThreshold'
-     * @param _threshold the new threshold
-     */
-    event SetThreshold(uint256 _threshold);
 
     /**
      * @dev Emitted if owner call 'setWhitelist'

@@ -8,7 +8,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 
 import {IL1ERC20Bridge} from "./interfaces/IL1ERC20Bridge.sol";
 import {ILockingEscrow} from "./interfaces/ILockingEscrow.sol";
-import {ILockingBadge} from "./interfaces/ILockingBadge.sol";
+import {ISeqeuncerInfo} from "./interfaces/ISeqeuncerInfo.sol";
 
 contract LockingEscrow is ILockingEscrow, OwnableUpgradeable {
     error NotManager();
@@ -171,9 +171,10 @@ contract LockingEscrow is ILockingEscrow, OwnableUpgradeable {
     function initializeUnlock(
         uint256 _seqId,
         uint32 _l2gas,
-        ILockingBadge.Sequencer calldata _seq
+        ISeqeuncerInfo.Sequencer calldata _seq
     ) external payable override OnlyManager {
-        _liquidateReward(_seqId, _seq.reward, _seq.rewardRecipient, _l2gas);
+        uint256 reward = _seq.reward;
+        _liquidateReward(_seqId, reward, _seq.rewardRecipient, _l2gas);
         emit UnlockInit(
             _seq.signer,
             _seqId,
@@ -181,7 +182,7 @@ contract LockingEscrow is ILockingEscrow, OwnableUpgradeable {
             _seq.deactivationBatch,
             _seq.deactivationTime,
             _seq.unlockClaimTime,
-            _seq.reward
+            reward
         );
     }
 

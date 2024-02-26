@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import {ILockingBadge} from "./ILockingBadge.sol";
+import {ISeqeuncerInfo} from "./ISeqeuncerInfo.sol";
 
 interface ILockingEscrow {
     /**
@@ -136,7 +136,7 @@ interface ILockingEscrow {
     function initializeUnlock(
         uint256 _seqId,
         uint32 _l2gas,
-        ILockingBadge.Sequencer calldata _seq
+        ISeqeuncerInfo.Sequencer calldata _seq
     ) external payable;
 
     function finalizeUnlock(
