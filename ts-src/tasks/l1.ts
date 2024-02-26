@@ -64,6 +64,10 @@ task("l1:lock", "Lock Metis to LockingPool contract")
       LockingManagerContractName,
     );
 
+    const { address: LockingEscrowAddress } = await hre.deployments.get(
+      LockingEscrowContractName,
+    );
+
     const [signer] = await hre.ethers.getSigners();
 
     const seqKey = new hre.ethers.SigningKey(
@@ -97,13 +101,13 @@ task("l1:lock", "Lock Metis to LockingPool contract")
     console.log("checking the allowance");
     const allowance = await metis.allowance(
       seqWallet.address,
-      LockingManagerAddress,
+      LockingEscrowAddress,
     );
     if (allowance < amountInWei) {
       console.log("approving Metis to LockingPool");
       const tx = await metis
         .connect(seqWallet)
-        .approve(LockingManagerAddress, amountInWei);
+        .approve(LockingEscrowAddress, amountInWei);
       await tx.wait(2);
     }
 
