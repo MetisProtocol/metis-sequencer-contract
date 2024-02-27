@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.20;
 
-interface ILockingManager {
+interface ILockingPool {
     /**
      * @dev Emitted when WITHDRAWAL_DELAY is updated.
      * @param _cur current withdraw delay time

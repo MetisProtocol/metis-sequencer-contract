@@ -1,7 +1,7 @@
 import { DeployFunction } from "hardhat-deploy/types";
 import {
-  LockingEscrowContractName,
-  LockingManagerContractName,
+  LockingInfoContractName,
+  LockingPoolContractName,
 } from "../utils/constant";
 
 const func: DeployFunction = async function (hre) {
@@ -11,18 +11,18 @@ const func: DeployFunction = async function (hre) {
 
   const { deployer } = await hre.getNamedAccounts();
 
-  const { address: LockingEscrowAddress } = await hre.deployments.get(
-    LockingEscrowContractName,
+  const { address: LockingInfoAddress } = await hre.deployments.get(
+    LockingInfoContractName,
   );
 
-  await hre.deployments.deploy(LockingManagerContractName, {
+  await hre.deployments.deploy(LockingPoolContractName, {
     from: deployer,
     proxy: {
       proxyContract: "OpenZeppelinTransparentProxy",
       execute: {
         init: {
           methodName: "initialize",
-          args: [LockingEscrowAddress],
+          args: [LockingInfoAddress],
         },
       },
     },
@@ -31,6 +31,6 @@ const func: DeployFunction = async function (hre) {
   });
 };
 
-func.tags = [LockingManagerContractName, "l1"];
+func.tags = [LockingPoolContractName, "l1"];
 
 export default func;

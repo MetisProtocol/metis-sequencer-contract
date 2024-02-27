@@ -3,12 +3,12 @@ pragma solidity 0.8.20;
 
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
-import {ILockingEscrow} from "./interfaces/ILockingEscrow.sol";
-import {ILockingManager} from "./interfaces/ILockingManager.sol";
+import {ILockingInfo} from "./interfaces/ILockingInfo.sol";
+import {ILockingPool} from "./interfaces/ILockingPool.sol";
 
 import {SeqeuncerInfo} from "./SeqeuncerInfo.sol";
 
-contract LockingManager is ILockingManager, PausableUpgradeable, SeqeuncerInfo {
+contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
     error NotMpc();
     error BFTFail();
 
@@ -19,7 +19,7 @@ contract LockingManager is ILockingManager, PausableUpgradeable, SeqeuncerInfo {
         uint256 endEpoch; // end epoch number for current batch
     }
 
-    ILockingEscrow public escorow;
+    ILockingInfo public escorow;
 
     // delay time for unlock
     uint256 public WITHDRAWAL_DELAY;
@@ -45,7 +45,7 @@ contract LockingManager is ILockingManager, PausableUpgradeable, SeqeuncerInfo {
             endEpoch: 0
         });
 
-        escorow = ILockingEscrow(_escorow);
+        escorow = ILockingInfo(_escorow);
 
         __Pausable_init();
         __LockingBadge_init();
@@ -96,49 +96,20 @@ contract LockingManager is ILockingManager, PausableUpgradeable, SeqeuncerInfo {
 
     /**
      * @dev updateSigner Allow sqeuencer to update new signers to replace old signer addresses，and NFT holder will be transfer driectly
-     * @param _seqId unique integer to identify a sequencer.
+     * @param _seqId the sequencer id
      * @param _signerPubkey the new signer pubkey address
      */
     function updateSigner(
         uint256 _seqId,
         bytes calldata _signerPubkey
     ) external whitelistRequired {
-        Sequencer storage seq = sequencers[_seqId];
-        if (seq.status != Status.Active) {
-            revert SeqNotActive();
-        }
-
-        // only update by the signer
-        address signer = seq.signer;
-        if (signer != msg.sender) {
-            revert NotSeqSigner();
-        }
-
-        require(_signerPubkey.length == 64, "invalid pubkey");
-        address newSigner = address(uint160(uint256(keccak256(_signerPubkey))));
-        require(newSigner != address(0), "empty address");
-
-        // the new signer should not be a signer before
-        if (seqSigners[newSigner] != 0) {
-            revert OwnedSigner();
-        }
-        seq.signer = newSigner;
-        seqSigners[newSigner] = _seqId;
-
-        // invalid it
-        seqSigners[signer] = type(uint256).max;
-
-        // set signer updating batch id
-        seq.updatingBatch = currentBatch.id;
-
-        uint256 nonce = seq.nonce + 1;
-        seq.nonce = nonce;
-
-        emit SignerChange(_seqId, signer, newSigner, nonce, _signerPubkey);
+        _updateSigner(_seqId, currentBatch.id, _signerPubkey);
     }
 
     /**
      * @dev lockFor lock Metis and participate in the sequencer node
+     *      the msg.sender will be owner of the seqeuncer
+     *      the owner has abilities to leverage lock/relock/unlock/cliam
      * @param _signer Sequencer signer address
      * @param _amount Amount of L1 metis token to lock for.
      * @param _signerPubkey Sequencer signer pubkey, it should be uncompressed
@@ -163,7 +134,7 @@ contract LockingManager is ILockingManager, PausableUpgradeable, SeqeuncerInfo {
             owner: msg.sender,
             signer: _signer,
             pubkey: _signerPubkey,
-            rewardRecipient: address(0), // the recepient should be update afterward
+            rewardRecipient: address(0), // update it using `setSequencerRewardRecipient` after then
             status: Status.Active
         });
 
@@ -278,7 +249,7 @@ contract LockingManager is ILockingManager, PausableUpgradeable, SeqeuncerInfo {
         delete seqOwners[seq.owner];
 
         // invalid it
-        seqSigners[seq.signer] = type(uint256).max;
+        _invalidSignerAddress(seq.signer);
 
         escorow.finalizeUnlock{value: msg.value}(
             msg.sender,
@@ -404,6 +375,7 @@ contract LockingManager is ILockingManager, PausableUpgradeable, SeqeuncerInfo {
         seq.nonce = nonce;
 
         escorow.initializeUnlock{value: msg.value}(_seqId, _l2Gas, seq);
+        // clear reward at last
         seq.reward = 0;
     }
 }

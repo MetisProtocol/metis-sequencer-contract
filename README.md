@@ -14,9 +14,9 @@ Administrators can distribute rewards and update parameters related to reward di
 
 Main contract code function introduction:
 
-1. LockingManager: This contract is a main function contract, allowing users to lock tokens to apply to become a sequencer, receive rewards, unlock tokens to exit the sequencer, reward distribution, and other management functions can refer to the contract source code.
-2. LockingEscrow: This contract keeps locked tokens by LockingManager
-3. MetisSequencerSet: This contract controls blocks production
+1. LockingPool: This contract is a main function contract, allowing users to lock tokens to apply to become a sequencer, receive rewards, unlock tokens to exit the sequencer, reward distribution, and other management functions can refer to the contract source code.
+2. LockingInfo: This contract keeps locked tokens information for LockingPool
+3. MetisSequencerSet: This contract controls blocks production on metis layer2
 
 # Example
 

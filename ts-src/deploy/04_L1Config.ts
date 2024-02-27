@@ -1,7 +1,7 @@
 import { DeployFunction } from "hardhat-deploy/types";
 import {
-  LockingEscrowContractName,
-  LockingManagerContractName,
+  LockingInfoContractName,
+  LockingPoolContractName,
 } from "../utils/constant";
 
 const func: DeployFunction = async function (hre) {
@@ -9,22 +9,22 @@ const func: DeployFunction = async function (hre) {
     throw new Error(`current network ${hre.network.name} is not an L1`);
   }
 
-  const { address: LockingEscrowAddress } = await hre.deployments.get(
-    LockingEscrowContractName,
+  const { address: LockingInfoAddress } = await hre.deployments.get(
+    LockingInfoContractName,
   );
 
-  const { address: LockingManagerAddress } = await hre.deployments.get(
-    LockingManagerContractName,
+  const { address: LockingPoolAddress } = await hre.deployments.get(
+    LockingPoolContractName,
   );
 
-  const lockingEscrow = await hre.ethers.getContractAt(
-    "LockingEscrow",
-    LockingEscrowAddress,
+  const lockingInfo = await hre.ethers.getContractAt(
+    LockingInfoContractName,
+    LockingInfoAddress,
   );
 
-  if ((await lockingEscrow.manager()) == hre.ethers.ZeroAddress) {
+  if ((await lockingInfo.manager()) == hre.ethers.ZeroAddress) {
     console.log("updating manager address for LockingEscrow");
-    const tx = await lockingEscrow.initManager(LockingManagerAddress);
+    const tx = await lockingInfo.initManager(LockingPoolAddress);
     console.log(`done block=${tx.blockNumber} tx=${tx.hash}`);
   }
 };

@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import {ISeqeuncerInfo} from "./ISeqeuncerInfo.sol";
 
-interface ILockingEscrow {
+interface ILockingInfo {
     /**
      * @dev Emitted when min lock amount update in 'UpdateMinAmounts'
      * @param _newMinLock new min lock.
@@ -89,11 +89,11 @@ interface ILockingEscrow {
     event UnlockInit(
         address indexed user,
         uint256 indexed sequencerId,
+        uint256 amount,
         uint256 nonce,
         uint256 deactivationBatch,
         uint256 deactivationTime,
-        uint256 unlockClaimTime,
-        uint256 indexed amount
+        uint256 unlockClaimTime
     );
 
     /**

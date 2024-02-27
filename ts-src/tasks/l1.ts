@@ -3,8 +3,8 @@ import fs from "fs";
 
 import { parseDuration, trimPubKeyPrefix } from "../utils/params";
 import {
-  LockingEscrowContractName,
-  LockingManagerContractName,
+  LockingInfoContractName,
+  LockingPoolContractName,
 } from "../utils/constant";
 
 task("l1:whitelist", "Whitelist an sequencer address")
@@ -20,13 +20,13 @@ task("l1:whitelist", "Whitelist an sequencer address")
       throw new Error(`${hre.network.name} is not an l1`);
     }
 
-    const { address: LockingManagerAddress } = await hre.deployments.get(
-      LockingManagerContractName,
+    const { address: LockingPoolAddress } = await hre.deployments.get(
+      LockingPoolContractName,
     );
 
     const lockingManager = await hre.ethers.getContractAt(
-      LockingManagerContractName,
-      LockingManagerAddress,
+      LockingPoolContractName,
+      LockingPoolAddress,
     );
 
     const addr = args["addr"];
@@ -60,13 +60,13 @@ task("l1:lock", "Lock Metis to LockingPool contract")
 
     const amountInWei = hre.ethers.parseEther(args["amount"]);
 
-    const { address: LockingEscrowAddress } = await hre.deployments.get(
-      LockingEscrowContractName,
+    const { address: LockingInfoAddress } = await hre.deployments.get(
+      LockingInfoContractName,
     );
 
     const lockingEscrow = await hre.ethers.getContractAt(
-      LockingEscrowContractName,
-      LockingEscrowAddress,
+      LockingInfoContractName,
+      LockingInfoAddress,
     );
 
     // min/max lock check
@@ -82,8 +82,8 @@ task("l1:lock", "Lock Metis to LockingPool contract")
       throw new Error(`maxLock is ${hre.ethers.formatEther(maxLock)}`);
     }
 
-    const { address: LockingManagerAddress } = await hre.deployments.get(
-      LockingManagerContractName,
+    const { address: LockingPoolAddress } = await hre.deployments.get(
+      LockingPoolContractName,
     );
 
     const [signer] = await hre.ethers.getSigners();
@@ -97,8 +97,8 @@ task("l1:lock", "Lock Metis to LockingPool contract")
     console.log("Locking Metis for", seqWallet.address);
 
     const lockingManager = await hre.ethers.getContractAt(
-      LockingManagerContractName,
-      LockingManagerAddress,
+      LockingPoolContractName,
+      LockingPoolAddress,
     );
 
     console.log("checking whitelist status");
@@ -119,13 +119,13 @@ task("l1:lock", "Lock Metis to LockingPool contract")
     console.log("checking the allowance");
     const allowance = await metis.allowance(
       seqWallet.address,
-      LockingEscrowAddress,
+      LockingInfoAddress,
     );
     if (allowance < amountInWei) {
       console.log("approving Metis to LockingEscrow");
       const tx = await metis
         .connect(seqWallet)
-        .approve(LockingEscrowAddress, amountInWei);
+        .approve(LockingInfoAddress, amountInWei);
       await tx.wait(2);
     }
 
@@ -148,13 +148,13 @@ task("l1:update-lock-amount", "Update locking amount condition")
       throw new Error(`${hre.network.name} is not an l1`);
     }
 
-    const { address: LockingEscrowAddress } = await hre.deployments.get(
-      LockingEscrowContractName,
+    const { address: LockingInfoAddress } = await hre.deployments.get(
+      LockingInfoContractName,
     );
 
     const lockingEscrow = await hre.ethers.getContractAt(
-      LockingEscrowContractName,
-      LockingEscrowAddress,
+      LockingInfoContractName,
+      LockingInfoAddress,
     );
 
     let actions = 0;
@@ -200,13 +200,13 @@ task("l1:update-mpc-address", "Update MPC address for LockingPool contract")
     const { address: lockingPoolAddress } =
       await hre.deployments.get("LockingPool");
 
-    const { address: LockingManagerAddress } = await hre.deployments.get(
-      LockingManagerContractName,
+    const { address: LockingPoolAddress } = await hre.deployments.get(
+      LockingPoolContractName,
     );
 
     const lockingManager = await hre.ethers.getContractAt(
-      LockingManagerContractName,
-      LockingManagerAddress,
+      LockingPoolContractName,
+      LockingPoolAddress,
     );
 
     const newAddr = args["addr"];
@@ -246,13 +246,13 @@ task("l1:update-exit-delay", "update exit delay time duration")
       throw new Error(`${hre.network.name} is not an l1`);
     }
 
-    const { address: LockingManagerAddress } = await hre.deployments.get(
-      LockingManagerContractName,
+    const { address: LockingPoolAddress } = await hre.deployments.get(
+      LockingPoolContractName,
     );
 
     const lockingManager = await hre.ethers.getContractAt(
-      LockingManagerContractName,
-      LockingManagerAddress,
+      LockingPoolContractName,
+      LockingPoolAddress,
     );
 
     const duration = parseDuration(args["duration"]);
@@ -269,13 +269,13 @@ task("l1:update-reward-per-block", "update reward per block")
       throw new Error(`${hre.network.name} is not an l1`);
     }
 
-    const { address: LockingManagerAddress } = await hre.deployments.get(
-      LockingManagerContractName,
+    const { address: LockingPoolAddress } = await hre.deployments.get(
+      LockingPoolContractName,
     );
 
     const lockingManager = await hre.ethers.getContractAt(
-      LockingManagerContractName,
-      LockingManagerAddress,
+      LockingPoolContractName,
+      LockingPoolAddress,
     );
 
     console.log(

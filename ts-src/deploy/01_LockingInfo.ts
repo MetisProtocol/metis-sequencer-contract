@@ -1,5 +1,5 @@
 import { DeployFunction } from "hardhat-deploy/types";
-import { LockingEscrowContractName } from "../utils/constant";
+import { LockingInfoContractName } from "../utils/constant";
 
 const func: DeployFunction = async function (hre) {
   if (!hre.network.tags["l1"]) {
@@ -35,7 +35,7 @@ const func: DeployFunction = async function (hre) {
     l2Chainid,
   );
 
-  await hre.deployments.deploy(LockingEscrowContractName, {
+  await hre.deployments.deploy(LockingInfoContractName, {
     from: deployer,
     proxy: {
       proxyContract: "OpenZeppelinTransparentProxy",
@@ -51,6 +51,6 @@ const func: DeployFunction = async function (hre) {
   });
 };
 
-func.tags = [LockingEscrowContractName, "l1"];
+func.tags = [LockingInfoContractName, "l1"];
 
 export default func;

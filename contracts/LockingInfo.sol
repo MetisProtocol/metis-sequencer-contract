@@ -7,10 +7,10 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import {IL1ERC20Bridge} from "./interfaces/IL1ERC20Bridge.sol";
-import {ILockingEscrow} from "./interfaces/ILockingEscrow.sol";
+import {ILockingInfo} from "./interfaces/ILockingInfo.sol";
 import {ISeqeuncerInfo} from "./interfaces/ISeqeuncerInfo.sol";
 
-contract LockingEscrow is ILockingEscrow, OwnableUpgradeable {
+contract LockingInfo is ILockingInfo, OwnableUpgradeable {
     error NotManager();
 
     using SafeERC20 for IERC20;
@@ -178,11 +178,11 @@ contract LockingEscrow is ILockingEscrow, OwnableUpgradeable {
         emit UnlockInit(
             _seq.signer,
             _seqId,
+            reward,
             _seq.nonce,
             _seq.deactivationBatch,
             _seq.deactivationTime,
-            _seq.unlockClaimTime,
-            reward
+            _seq.unlockClaimTime
         );
     }
 

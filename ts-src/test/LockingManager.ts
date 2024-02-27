@@ -2,12 +2,11 @@ import { ethers, deployments } from "hardhat";
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import {
-  LockingEscrowContractName,
-  LockingManagerContractName,
+  LockingInfoContractName,
+  LockingPoolContractName,
+  l2MetisAddr,
 } from "../utils/constant";
 import { trimPubKeyPrefix } from "../utils/params";
-
-const l2MetisAddr = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000";
 
 describe("lockingManager", async () => {
   async function fixture() {
@@ -35,7 +34,7 @@ describe("lockingManager", async () => {
     }
 
     const lockingEscrowProxy = await deployments.deploy(
-      LockingEscrowContractName,
+      LockingInfoContractName,
       {
         from: admin.address,
         proxy: {
@@ -56,12 +55,12 @@ describe("lockingManager", async () => {
     );
 
     const lockingEscrow = await ethers.getContractAt(
-      LockingEscrowContractName,
+      LockingInfoContractName,
       lockingEscrowProxy.address,
     );
 
     const lockingManagerProxy = await deployments.deploy(
-      LockingManagerContractName,
+      LockingPoolContractName,
       {
         from: admin.address,
         proxy: {
@@ -77,7 +76,7 @@ describe("lockingManager", async () => {
     );
 
     const lockingManager = await ethers.getContractAt(
-      LockingManagerContractName,
+      LockingPoolContractName,
       lockingManagerProxy.address,
     );
 
@@ -161,13 +160,12 @@ describe("lockingManager", async () => {
     ).to.be.revertedWith("invalid pubkey");
 
     await expect(
-      lockingManager
-        .connect(wallet0)
-        .lockFor(
-          wallet0,
-          minLock,
-          trimPubKeyPrefix(wallet1.signingKey.publicKey),
-        ),
+      lockingManager.connect(wallet0).lockFor(
+        wallet0,
+
+        minLock,
+        trimPubKeyPrefix(wallet1.signingKey.publicKey),
+      ),
     ).to.be.revertedWith("pubkey and address mismatch");
   });
 
