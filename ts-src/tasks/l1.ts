@@ -1,6 +1,9 @@
 import { task, types } from "hardhat/config";
 import fs from "fs";
 
+import readline from "node:readline/promises";
+import { stdin, stdout } from "node:process";
+
 import { parseDuration, trimPubKeyPrefix } from "../utils/params";
 import {
   LockingInfoContractName,
@@ -36,9 +39,9 @@ task("l1:whitelist", "Whitelist an sequencer address")
 
     const enable = Boolean(args["enable"]);
     if (enable) {
-      console.log(`Adding addr to whitelist`);
+      console.log(`Adding ${args["addr"]} to whitelist`);
     } else {
-      console.log(`Removing addr from whitelist`);
+      console.log(`Removing ${args["addr"]} from whitelist`);
     }
 
     const tx = await lockingManager.setWhitelist(addr, enable);
@@ -46,8 +49,21 @@ task("l1:whitelist", "Whitelist an sequencer address")
   });
 
 task("l1:lock", "Lock Metis to LockingPool contract")
-  .addParam("key", "the private key file path for the sequencer")
-  .addParam("amount", "lock amount in Metis", "", types.string)
+  .addParam(
+    "ownerPrivkeyPath",
+    `the private key file path of the owner of the sequencer, the address should be whitelisted first and have Metis to lock and Eth to pay gas fee`,
+    "",
+    types.inputFile,
+  )
+  .addParam(
+    "nodePubkey",
+    "the uncompressed public key file path of sequencer node",
+  )
+  .addParam("amount", "lock amount in Metis")
+  .addOptionalParam(
+    "rewardRecipient",
+    "reward recipient, default is the owner address",
+  )
   .setAction(async (args, hre) => {
     if (!hre.network.tags["l1"]) {
       throw new Error(`${hre.network.name} is not an l1`);
@@ -58,21 +74,42 @@ task("l1:lock", "Lock Metis to LockingPool contract")
       throw new Error(`MEITS_L1_TOKEN env is not set or it's not an address`);
     }
 
+    console.log(`Reading key from ${args["ownerPrivkeyPath"]}`);
+    const seqOwnerWallet = new hre.ethers.Wallet(
+      new hre.ethers.SigningKey(
+        fs.readFileSync(args["ownerPrivkeyPath"]).toString("utf8").trim(),
+      ),
+      hre.ethers.provider,
+    );
+
+    const nodePubkey = <string>args["nodePubkey"];
+    if (nodePubkey.length != 132 || !nodePubkey.startsWith("0x04")) {
+      throw new Error("the node key should be an uncompressed public key");
+    }
+    const nodeAddress = hre.ethers.computeAddress(nodePubkey);
+
+    // if the reward receipt is not provided, use the owner address instread
+    const rewardReceipt =
+      <string>args["rewardRecipient"] ?? seqOwnerWallet.address;
+    if (!hre.ethers.isAddress(rewardReceipt)) {
+      throw new Error(`reward recipient is not a valid address`);
+    }
+
     const amountInWei = hre.ethers.parseEther(args["amount"]);
 
     const { address: LockingInfoAddress } = await hre.deployments.get(
       LockingInfoContractName,
     );
 
-    const lockingEscrow = await hre.ethers.getContractAt(
+    const lockingInfo = await hre.ethers.getContractAt(
       LockingInfoContractName,
       LockingInfoAddress,
     );
 
-    // min/max lock check
+    // min/max restriction check
     const [minLock, maxLock] = await Promise.all([
-      lockingEscrow.minLock(),
-      lockingEscrow.maxLock(),
+      lockingInfo.minLock(),
+      lockingInfo.maxLock(),
     ]);
 
     if (amountInWei < minLock) {
@@ -86,15 +123,19 @@ task("l1:lock", "Lock Metis to LockingPool contract")
       LockingPoolContractName,
     );
 
-    const [signer] = await hre.ethers.getSigners();
+    console.log("Sequencer owner", seqOwnerWallet.address);
+    console.log("Sequencer signer(Node address)", nodeAddress);
+    console.log("Reward recipient", rewardReceipt);
+    console.log("Locking amount", hre.ethers.formatEther(amountInWei));
 
-    const seqKey = new hre.ethers.SigningKey(
-      fs.readFileSync(args["key"]).toString("utf8").trim(),
+    const prompt = readline.createInterface({ input: stdin, output: stdout });
+    const answer = await prompt.question(
+      "Do you want to continue? (Only 'yes' will be accepted to approve) ",
     );
-
-    const seqWallet = new hre.ethers.Wallet(seqKey, hre.ethers.provider);
-
-    console.log("Locking Metis for", seqWallet.address);
+    if (answer !== "yes") {
+      console.log("Okay, I will exit");
+      return;
+    }
 
     const lockingManager = await hre.ethers.getContractAt(
       LockingPoolContractName,
@@ -102,14 +143,18 @@ task("l1:lock", "Lock Metis to LockingPool contract")
     );
 
     console.log("checking whitelist status");
-    const isWhitelisted = await lockingManager.whitelist(seqWallet.address);
+    const isWhitelisted = await lockingManager.whitelist(
+      seqOwnerWallet.address,
+    );
     if (!isWhitelisted) {
-      throw new Error(`Your address ${signer.address} is not whitelisted`);
+      throw new Error(
+        `Your address ${seqOwnerWallet.address} is not whitelisted`,
+      );
     }
 
     const metis = await hre.ethers.getContractAt("TestERC20", metisL1Addr);
     console.log("checking the Metis balance");
-    const metisBalance = await metis.balanceOf(seqWallet.address);
+    const metisBalance = await metis.balanceOf(seqOwnerWallet.address);
     if (metisBalance < amountInWei) {
       throw new Error(
         `Insufficient Metis balance, current balance ${hre.ethers.formatEther(metisBalance)}, required balance ${args["amount"]}`,
@@ -118,24 +163,25 @@ task("l1:lock", "Lock Metis to LockingPool contract")
 
     console.log("checking the allowance");
     const allowance = await metis.allowance(
-      seqWallet.address,
+      seqOwnerWallet.address,
       LockingInfoAddress,
     );
     if (allowance < amountInWei) {
-      console.log("approving Metis to LockingEscrow");
+      console.log("approving Metis");
       const tx = await metis
-        .connect(seqWallet)
+        .connect(seqOwnerWallet)
         .approve(LockingInfoAddress, amountInWei);
       await tx.wait(2);
     }
 
     console.log(`locking ${args["amount"]}`);
     const tx = await lockingManager
-      .connect(seqWallet)
-      .lockFor(
-        seqWallet.address,
+      .connect(seqOwnerWallet)
+      .lockWithRewardRecipient(
+        nodeAddress,
+        rewardReceipt,
         amountInWei,
-        trimPubKeyPrefix(seqKey.publicKey),
+        trimPubKeyPrefix(nodePubkey),
       );
     console.log("Confrimed at", tx.hash);
   });
@@ -196,9 +242,6 @@ task("l1:update-mpc-address", "Update MPC address for LockingPool contract")
     if (!hre.network.tags["l1"]) {
       throw new Error(`${hre.network.name} is not an l1`);
     }
-
-    const { address: lockingPoolAddress } =
-      await hre.deployments.get("LockingPool");
 
     const { address: LockingPoolAddress } = await hre.deployments.get(
       LockingPoolContractName,
