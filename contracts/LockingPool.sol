@@ -9,9 +9,6 @@ import {ILockingPool} from "./interfaces/ILockingPool.sol";
 import {SeqeuncerInfo} from "./SeqeuncerInfo.sol";
 
 contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
-    error NotMpc();
-    error BFTFail();
-
     struct BatchState {
         uint256 id; // current batch id
         uint256 number; // current batch block number
@@ -31,14 +28,14 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
     address public mpcAddress;
 
     // current batch state
-    BatchState public currentBatch;
+    BatchState public curBatchState;
 
     function initialize(address _escorow) external initializer {
         WITHDRAWAL_DELAY = 21 days;
         BLOCK_REWARD = 761000 gwei;
 
         // init batch state
-        currentBatch = BatchState({
+        curBatchState = BatchState({
             id: 1,
             number: block.number,
             startEpoch: 0,
@@ -49,6 +46,13 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
 
         __Pausable_init();
         __LockingBadge_init();
+    }
+
+    /**
+     * @dev currentBatch returns current batch id
+     */
+    function currentBatch() external view returns (uint256) {
+        return curBatchState.id;
     }
 
     /**
@@ -103,13 +107,48 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
         uint256 _seqId,
         bytes calldata _signerPubkey
     ) external whitelistRequired {
-        _updateSigner(_seqId, currentBatch.id, _signerPubkey);
+        Sequencer storage seq = sequencers[_seqId];
+        if (seq.status != Status.Active) {
+            revert SeqNotActive();
+        }
+
+        // only update by the signer
+        address signer = seq.signer;
+        if (signer != msg.sender) {
+            revert NotSeqSigner();
+        }
+
+        address newSigner = _getAddrByPubkey(_signerPubkey);
+        // the new signer should not be a signer before
+        if (seqSigners[newSigner] != 0) {
+            revert OwnedSigner();
+        }
+        seq.signer = newSigner;
+        seqSigners[newSigner] = _seqId;
+
+        // invalid it
+        _invalidSignerAddress(signer);
+
+        // set signer updating batch id
+        seq.updatingBatch = curBatchState.id;
+
+        uint256 nonce = seq.nonce + 1;
+        seq.nonce = nonce;
+        escorow.logSignerChange(
+            _seqId,
+            signer,
+            newSigner,
+            nonce,
+            _signerPubkey
+        );
     }
 
     /**
      * @dev lockFor lock Metis and participate in the sequencer node
      *      the msg.sender will be owner of the seqeuncer
      *      the owner has abilities to leverage lock/relock/unlock/cliam
+     *      the default reward recipient is empty address
+     *      you need to update it using setSequencerRewardRecipient
      * @param _signer Sequencer signer address
      * @param _amount Amount of L1 metis token to lock for.
      * @param _signerPubkey Sequencer signer pubkey, it should be uncompressed
@@ -119,26 +158,48 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
         uint256 _amount,
         bytes calldata _signerPubkey
     ) external whenNotPaused whitelistRequired {
-        uint256 seqId = _lockFor(msg.sender, _signer);
-        uint256 batchId = currentBatch.id;
-
-        sequencers[seqId] = Sequencer({
-            amount: _amount,
-            reward: 0,
-            activationBatch: 0,
-            deactivationBatch: 0,
-            updatingBatch: batchId,
-            deactivationTime: 0,
-            unlockClaimTime: 0,
-            nonce: 1,
-            owner: msg.sender,
-            signer: _signer,
-            pubkey: _signerPubkey,
-            rewardRecipient: address(0), // update it using `setSequencerRewardRecipient` after then
-            status: Status.Active
-        });
-
+        uint256 batchId = curBatchState.id;
+        uint256 seqId = _lockFor(
+            batchId,
+            msg.sender,
+            _signer,
+            _signerPubkey,
+            _amount,
+            address(0)
+        );
         escorow.newSequencer(seqId, _signer, _amount, batchId, _signerPubkey);
+        emit SequencerOwnerChanged(seqId, msg.sender);
+        emit SequencerRewardRecipientChanged(seqId, address(0));
+    }
+
+    /**
+     * @dev lockWithRewardRecipient is the same with lockFor, but you can provide reward receipent
+     * @param _signer Sequencer signer address
+     * @param _rewardRecipient Sequencer reward receiptent
+     *        you can use an empty address if you haven't choose an address
+     *        you can update it using `setSequencerRewardRecipient` after then
+     * @param _amount Amount of L1 metis token to lock for.
+     * @param _signerPubkey Sequencer signer pubkey
+     *         it should be uncompressed and matched with signer address
+     */
+    function lockWithRewardRecipient(
+        address _signer,
+        address _rewardRecipient,
+        uint256 _amount,
+        bytes calldata _signerPubkey
+    ) external whenNotPaused whitelistRequired {
+        uint256 batchId = curBatchState.id;
+        uint256 seqId = _lockFor(
+            batchId,
+            msg.sender,
+            _signer,
+            _signerPubkey,
+            _amount,
+            _rewardRecipient
+        );
+        escorow.newSequencer(seqId, _signer, _amount, batchId, _signerPubkey);
+        emit SequencerOwnerChanged(seqId, msg.sender);
+        emit SequencerRewardRecipientChanged(seqId, _rewardRecipient);
     }
 
     /**
@@ -311,15 +372,13 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
         address[] calldata _seqs,
         uint256[] calldata _blocks
     ) external payable returns (uint256 totalReward) {
-        if (msg.sender != mpcAddress) {
-            revert NotMpc();
-        }
+        require(msg.sender == mpcAddress, "not MPC");
         require(
             _seqs.length == _blocks.length && _seqs.length > 0,
             "mismatch length"
         );
 
-        BatchState storage bs = currentBatch;
+        BatchState storage bs = curBatchState;
         uint256 nextBatch = bs.id + 1;
         require(nextBatch == _batchId, "invalid batch id");
         bs.id = nextBatch;
@@ -357,7 +416,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
 
             // BFT check, actived sequencer count must be high than 2/3 of total
             if (inactived * 3 > actived + inactived) {
-                revert("BFT check no passed");
+                revert("BFT restriction");
             }
         }
 
@@ -367,7 +426,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
         }
 
         seq.status = Status.Inactive;
-        seq.deactivationBatch = currentBatch.id;
+        seq.deactivationBatch = curBatchState.id;
         seq.deactivationTime = block.timestamp;
         seq.unlockClaimTime = block.timestamp + WITHDRAWAL_DELAY;
 

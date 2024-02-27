@@ -11,8 +11,6 @@ import {ILockingInfo} from "./interfaces/ILockingInfo.sol";
 import {ISeqeuncerInfo} from "./interfaces/ISeqeuncerInfo.sol";
 
 contract LockingInfo is ILockingInfo, OwnableUpgradeable {
-    error NotManager();
-
     using SafeERC20 for IERC20;
 
     address public bridge; // L1 metis bridge address
@@ -33,9 +31,7 @@ contract LockingInfo is ILockingInfo, OwnableUpgradeable {
     address public rewardPayer;
 
     modifier OnlyManager() {
-        if (msg.sender != manager) {
-            revert NotManager();
-        }
+        require(msg.sender == manager, "Not manager");
         _;
     }
 
@@ -107,12 +103,6 @@ contract LockingInfo is ILockingInfo, OwnableUpgradeable {
     ) external override OnlyManager {
         require(_amount >= minLock && _amount <= maxLock, "invalid amount");
 
-        // check if the pubkey matches the address
-        require(_signerPubkey.length == 64, "invalid pubkey");
-        address gotSigner = address(uint160(uint256(keccak256(_signerPubkey))));
-        // Note: the Manager contract ensures that the _signer can't be empty address
-        require(gotSigner == _signer, "pubkey and address mismatch");
-
         // use local variable to save gas
         uint256 _tatalLocked = totalLocked + _amount;
         totalLocked = _tatalLocked;
@@ -121,8 +111,8 @@ contract LockingInfo is ILockingInfo, OwnableUpgradeable {
         emit Locked(
             _signer,
             _id,
-            _batchId,
             1, // nocne starts from 1 for a new sequencer
+            _batchId,
             _amount,
             _tatalLocked,
             _signerPubkey
@@ -178,11 +168,11 @@ contract LockingInfo is ILockingInfo, OwnableUpgradeable {
         emit UnlockInit(
             _seq.signer,
             _seqId,
-            reward,
             _seq.nonce,
             _seq.deactivationBatch,
             _seq.deactivationTime,
-            _seq.unlockClaimTime
+            _seq.unlockClaimTime,
+            reward
         );
     }
 
@@ -238,6 +228,25 @@ contract LockingInfo is ILockingInfo, OwnableUpgradeable {
             _totalReward
         );
         emit BatchSubmitReward(_batchId);
+    }
+
+    /**
+     * @dev logSignerChange log event SignerChange
+     */
+    function logSignerChange(
+        uint256 sequencerId,
+        address oldSigner,
+        address newSigner,
+        uint256 nonce,
+        bytes calldata signerPubkey
+    ) external OnlyManager {
+        emit SignerChange(
+            sequencerId,
+            nonce,
+            oldSigner,
+            newSigner,
+            signerPubkey
+        );
     }
 
     function _liquidateReward(

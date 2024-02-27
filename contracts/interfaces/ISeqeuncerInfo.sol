@@ -57,21 +57,5 @@ interface ISeqeuncerInfo {
      */
     event SequencerOwnerChanged(uint256 _seqId, address _owner);
 
-    /**
-     * @dev Emitted when the sequencer public key is updated in 'updateSigner()'.
-     * @param sequencerId unique integer to identify a sequencer.
-     * @param oldSigner oldSigner old address of the sequencer.
-     * @param newSigner newSigner new address of the sequencer.
-     * @param nonce to synchronize the events in themis.
-     * @param signerPubkey signerPubkey public key of the sequencer.
-     */
-    event SignerChange(
-        uint256 indexed sequencerId,
-        address indexed oldSigner,
-        address indexed newSigner,
-        uint256 nonce,
-        bytes signerPubkey
-    );
-
     function seqOwners(address owner) external returns (uint256 seqId);
 }

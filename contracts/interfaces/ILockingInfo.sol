@@ -35,8 +35,8 @@ interface ILockingInfo {
     event Locked(
         address indexed signer,
         uint256 indexed sequencerId,
-        uint256 indexed activationBatch,
         uint256 nonce,
+        uint256 indexed activationBatch,
         uint256 amount,
         uint256 total,
         bytes signerPubkey
@@ -44,36 +44,36 @@ interface ILockingInfo {
 
     /**
      * @dev Emitted when the sequencer increase lock amoun in 'relock()'.
-     * @param _seqId unique integer to identify a sequencer.
-     * @param _amount locking new amount
-     * @param _total the total locking amount
+     * @param sequencerId unique integer to identify a sequencer.
+     * @param amount locking new amount
+     * @param total the total locking amount
      */
-    event Relocked(uint256 indexed _seqId, uint256 _amount, uint256 _total);
+    event Relocked(uint256 indexed sequencerId, uint256 amount, uint256 total);
 
     /**
      * @dev Emitted when sequencer relocking in 'relock()'.
-     * @param _seqId unique integer to identify a sequencer.
-     * @param _nonce to synchronize the events in themis.
-     * @param _amount the updated lock amount.
+     * @param sequencerId unique integer to identify a sequencer.
+     * @param nonce to synchronize the events in themis.
+     * @param newAmount the updated lock amount.
      */
     event LockUpdate(
-        uint256 indexed _seqId,
-        uint256 indexed _nonce,
-        uint256 indexed _amount
+        uint256 indexed sequencerId,
+        uint256 indexed nonce,
+        uint256 indexed newAmount
     );
 
     /**
      * @dev Emitted when sequencer withdraw rewards in 'withdrawRewards' or 'unlockClaim'
-     * @param _seqId unique integer to identify a sequencer.
-     * @param _recipient the address receive reward tokens
-     * @param _amount the reward amount.
-     * @param _totalAmount total rewards has liquidated
+     * @param sequencerId unique integer to identify a sequencer.
+     * @param recipient the address receive reward tokens
+     * @param amount the reward amount.
+     * @param totalAmount total rewards has liquidated
      */
     event ClaimRewards(
-        uint256 indexed _seqId,
-        address indexed _recipient,
-        uint256 _amount,
-        uint256 _totalAmount
+        uint256 indexed sequencerId,
+        address recipient,
+        uint256 indexed amount,
+        uint256 indexed totalAmount
     );
 
     /**
@@ -89,11 +89,11 @@ interface ILockingInfo {
     event UnlockInit(
         address indexed user,
         uint256 indexed sequencerId,
-        uint256 amount,
         uint256 nonce,
         uint256 deactivationBatch,
         uint256 deactivationTime,
-        uint256 unlockClaimTime
+        uint256 unlockClaimTime,
+        uint256 indexed amount
     );
 
     /**
@@ -115,6 +115,22 @@ interface ILockingInfo {
      * @param _newBatchId new batchId.
      */
     event BatchSubmitReward(uint256 _newBatchId);
+
+    /**
+     * @dev Emitted when the sequencer public key is updated in 'updateSigner()'.
+     * @param sequencerId unique integer to identify a sequencer.
+     * @param nonce to synchronize the events in themis.
+     * @param oldSigner oldSigner old address of the sequencer.
+     * @param newSigner newSigner new address of the sequencer.
+     * @param signerPubkey signerPubkey public key of the sequencer.
+     */
+    event SignerChange(
+        uint256 indexed sequencerId,
+        uint256 nonce,
+        address indexed oldSigner,
+        address indexed newSigner,
+        bytes signerPubkey
+    );
 
     function newSequencer(
         uint256 _id,
@@ -156,4 +172,12 @@ interface ILockingInfo {
     ) external payable;
 
     function distributeReward(uint256 _batchId, uint256 _totalReward) external;
+
+    function logSignerChange(
+        uint256 sequencerId,
+        address oldSigner,
+        address newSigner,
+        uint256 nonce,
+        bytes calldata signerPubkey
+    ) external;
 }
