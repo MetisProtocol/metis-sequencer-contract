@@ -24,7 +24,6 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       saveDeployments: false,
-      tags: ["l1", "l2"], // testing only
     },
     mainnet: {
       url: process.env.MAINNET_RPC || "https://eth.llamarpc.com",
