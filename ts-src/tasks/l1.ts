@@ -44,6 +44,12 @@ task("l1:whitelist", "Whitelist an sequencer address")
       console.log(`Removing ${args["addr"]} from whitelist`);
     }
 
+    const whitelisted = await lockingManager.whitelist(addr);
+    if (whitelisted == enable) {
+      console.log("No changes");
+      return;
+    }
+
     const tx = await lockingManager.setWhitelist(addr, enable);
     console.log("Confrimed at", tx.hash);
   });
