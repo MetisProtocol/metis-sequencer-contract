@@ -18,9 +18,15 @@ task("l2:update-mpc-address", "Update MPC address for SequencerSet contract")
       throw new Error(`addr arg is not a valid address`);
     }
 
+    if ((await seqset.mpcAddress()) === newAddr) {
+      console.log("No changes");
+      return;
+    }
+
     console.log("Updating the MPC address to", newAddr);
-    const tx1 = await seqset.UpdateMpcAddress(newAddr);
-    console.log("Confrimed at", tx1.hash);
+    const tx = await seqset.UpdateMpcAddress(newAddr);
+    console.log("Confirmed at", tx.hash);
+    await tx.wait(3);
 
     if (args["fund"]) {
       const amountInWei = hre.ethers.parseEther(args["fund"]);

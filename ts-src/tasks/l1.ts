@@ -263,9 +263,15 @@ task("l1:update-mpc-address", "Update MPC address for LockingPool contract")
       throw new Error(`addr arg is not a valid address`);
     }
 
+    if ((await lockingManager.mpcAddress()) === newAddr) {
+      console.log("No changes");
+      return;
+    }
+
     console.log("Updating the MPC address to", newAddr);
     const tx = await lockingManager.updateMpc(newAddr);
-    console.log("Confrimed at", tx.hash);
+    console.log("Confirmed at", tx.hash);
+    await tx.wait(3);
 
     if (args["fund"]) {
       const amountInWei = (() => {
