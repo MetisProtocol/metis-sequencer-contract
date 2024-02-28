@@ -47,6 +47,18 @@ const func: DeployFunction = async function (hre) {
     );
   }
 
+  if (startBlock > endblock) {
+    throw new Error(`startBlock(${startBlock}) > endBlock(${endblock}) `);
+  }
+
+  if (epochLength < 1) {
+    throw new Error(`epoch length(${epochLength}) < 1`);
+  }
+
+  if ((endblock - startBlock + 1) % epochLength !== 0) {
+    throw new Error(`epoch length not match with startBlock and endBlock`);
+  }
+
   console.log(
     "using params:",
     "seq",
