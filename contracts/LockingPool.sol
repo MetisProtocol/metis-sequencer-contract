@@ -414,7 +414,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         uint256 _endEpoch,
         address[] calldata _seqs,
         uint256[] calldata _blocks
-    ) external payable returns (uint256 totalReward) {
+    ) external returns (uint256 totalReward) {
         require(msg.sender == mpcAddress, "not MPC");
         require(
             _seqs.length == _blocks.length && _seqs.length > 0,
