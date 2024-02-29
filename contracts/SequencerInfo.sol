@@ -15,7 +15,7 @@ contract SequencerInfo is OwnableUpgradeable, ISequencerInfo {
 
     // sequencer owner address => sequencerId
     // Note: sequencerId starts from 1
-    // sequncer does not exist if the seqId is 0
+    // sequencer does not exist if the seqId is 0
     mapping(address owner => uint256 seqId) public seqOwners;
 
     // sequencer signer address => sequencerId

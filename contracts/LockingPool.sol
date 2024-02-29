@@ -11,7 +11,7 @@ import {SequencerInfo} from "./SequencerInfo.sol";
 contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
     struct BatchState {
         uint256 id; // current batch id
-        uint256 number; // current batch block number
+        uint256 number; // L1 block number when current batch is submitted
         uint256 startEpoch; // start epoch number for current batch
         uint256 endEpoch; // end epoch number for current batch
     }
@@ -205,8 +205,8 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
      * @dev lockWithRewardRecipient is the same with lockFor, but you can provide a reward receipent
      * @param _signer Sequencer signer address
      * @param _rewardRecipient Sequencer reward receiptent
-     *        you can use an empty address if you haven't choose an address
-     *        you can update it using `setSequencerRewardRecipient` after then
+     *        you can use an empty address if you haven't choosed an address
+     *        and update it using `setSequencerRewardRecipient` after then
      * @param _amount Amount of L1 metis token to lock for.
      * @param _signerPubkey Sequencer signer pubkey
      *         it should be uncompressed and matched with signer address
@@ -311,6 +311,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
 
     /**
      * @dev unlockClaim claim your locked tokens after the waiting period is passed
+     *      l2 fee is required if you have unclaimed reward
      *
      * @param _seqId sequencer id
      * @param _l2Gas l2 gas limit
@@ -356,13 +357,14 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
             _seqId,
             amount,
             reward,
-            seq.rewardRecipient,
+            recipient,
             _l2Gas
         );
     }
 
     /**
      * @dev withdrawRewards withdraw current rewards
+     *      l2 fee is required
      *
      * @param _seqId unique integer to identify a sequencer.
      * @param _l2Gas bridge reward to L2 gasLimit
