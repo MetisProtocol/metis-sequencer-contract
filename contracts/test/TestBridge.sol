@@ -3,6 +3,8 @@ pragma solidity 0.8.20;
 
 import {IL1ERC20Bridge} from "../interfaces/IL1ERC20Bridge.sol";
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 contract TestBridge is IL1ERC20Bridge {
     event ERC20DepositInitiated(
         address indexed _l1Token,
@@ -22,6 +24,8 @@ contract TestBridge is IL1ERC20Bridge {
         uint32,
         bytes calldata _data
     ) external payable override {
+        IERC20(_l1Token).transferFrom(msg.sender, address(this), _amount);
+
         emit ERC20DepositInitiated(
             _l1Token,
             _l2Token,

@@ -152,6 +152,7 @@ interface ILockingInfo {
 
     function initializeUnlock(
         uint256 _seqId,
+        uint256 _reward,
         uint32 _l2gas,
         ISequencerInfo.Sequencer calldata _seq
     ) external payable;

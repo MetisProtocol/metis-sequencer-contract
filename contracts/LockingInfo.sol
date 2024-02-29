@@ -157,16 +157,17 @@ contract LockingInfo is ILockingInfo, OwnableUpgradeable {
      * @dev initializeUnlock the first step to unlock
      *      current reward will be distributed
      * @param _seqId the sequencer id
+     * @param _reward the reward to withdraw
      * @param _seq the current sequencer state
      * @param _l2gas the l2gas for L1bridge
      */
     function initializeUnlock(
         uint256 _seqId,
+        uint256 _reward,
         uint32 _l2gas,
         ISequencerInfo.Sequencer calldata _seq
     ) external payable override OnlyManager {
-        uint256 reward = _seq.reward;
-        _liquidateReward(_seqId, reward, _seq.rewardRecipient, _l2gas);
+        _liquidateReward(_seqId, _reward, _seq.rewardRecipient, _l2gas);
         emit UnlockInit(
             _seq.signer,
             _seqId,
@@ -174,7 +175,7 @@ contract LockingInfo is ILockingInfo, OwnableUpgradeable {
             _seq.deactivationBatch,
             _seq.deactivationTime,
             _seq.unlockClaimTime,
-            reward
+            _reward
         );
     }
 

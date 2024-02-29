@@ -267,6 +267,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         uint256 _fromReward = 0;
         if (_lockReward) {
             _fromReward = seq.reward;
+            seq.reward = 0;
         }
 
         uint256 locked = seq.amount + _amount + _fromReward;
@@ -438,7 +439,9 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
             seq.reward += reward;
             totalReward += reward;
         }
-
+        bs.number = block.number;
+        bs.startEpoch = _startEpoch;
+        bs.endEpoch = _endEpoch;
         escorow.distributeReward(_batchId, totalReward);
     }
 
@@ -474,9 +477,14 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
 
         uint256 nonce = seq.nonce + 1;
         seq.nonce = nonce;
-
-        escorow.initializeUnlock{value: msg.value}(_seqId, _l2Gas, seq);
-        // clear reward at last
+        uint256 unclaimed = seq.reward;
         seq.reward = 0;
+
+        escorow.initializeUnlock{value: msg.value}(
+            _seqId,
+            unclaimed,
+            _l2Gas,
+            seq
+        );
     }
 }
