@@ -48,9 +48,6 @@ describe("MetisSequencerSet", async () => {
 
     expect(await seqset.owner()).to.be.eq(admin.address);
     expect(await seqset.mpcAddress()).to.be.eq(mpc.address);
-    expect(await seqset.initialSequencer()).to.be.eq(seq0.address);
-    expect(await seqset.firstStartBlock()).to.be.eq(initStartBlock);
-    expect(await seqset.firstEndBlock()).to.be.eq(initEndBlock);
     expect(await seqset.epochLength()).to.be.eq(initEpochLen);
 
     {

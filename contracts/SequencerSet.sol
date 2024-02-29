@@ -6,9 +6,6 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 
 contract MetisSequencerSet is OwnableUpgradeable {
     uint256 public epochLength;
-    uint256 public firstStartBlock;
-    uint256 public firstEndBlock;
-    address public initialSequencer;
     address public mpcAddress;
 
     // epoch details
@@ -20,7 +17,9 @@ contract MetisSequencerSet is OwnableUpgradeable {
     }
 
     mapping(uint256 => Epoch) public epochs; // epoch number => epoch
-    uint256[] public epochNumbers; // recent epoch numbers
+    uint256[] internal reversedFor; // recent epoch numbers
+
+    uint256 internal currentEpochId;
 
     // event
     event NewEpoch(
@@ -29,6 +28,7 @@ contract MetisSequencerSet is OwnableUpgradeable {
         uint256 endBlock,
         address signer
     );
+
     event ReCommitEpoch(
         uint256 indexed oldEpochId,
         uint256 indexed newEpochId,
@@ -60,12 +60,7 @@ contract MetisSequencerSet is OwnableUpgradeable {
         uint256 _firstEndBlock,
         uint256 _epochLength
     ) external initializer {
-        __Ownable_init();
-
-        initialSequencer = _initialSequencer;
         mpcAddress = _mpcAddress;
-        firstStartBlock = _firstStartBlock;
-        firstEndBlock = _firstEndBlock;
         epochLength = _epochLength;
 
         // initial epoch
@@ -74,19 +69,19 @@ contract MetisSequencerSet is OwnableUpgradeable {
         // initial epoch item
         epochs[epochId] = Epoch({
             number: epochId,
-            signer: initialSequencer,
-            startBlock: firstStartBlock,
-            endBlock: firstEndBlock
+            signer: _initialSequencer,
+            startBlock: _firstStartBlock,
+            endBlock: _firstEndBlock
         });
-
-        epochNumbers.push(epochId);
 
         emit NewEpoch(
             epochId,
-            firstStartBlock,
-            firstEndBlock,
-            initialSequencer
+            _firstStartBlock,
+            _firstEndBlock,
+            _initialSequencer
         );
+
+        __Ownable_init();
     }
 
     function UpdateMpcAddress(address _newMpc) public onlyOwner {
@@ -103,9 +98,9 @@ contract MetisSequencerSet is OwnableUpgradeable {
 
     // get epoch number by block
     function getEpochByBlock(uint256 number) public view returns (uint256) {
-        uint256 lastIndex = epochNumbers.length - 1;
+        uint256 lastIndex = currentEpochId;
         for (uint256 i = lastIndex; i >= 0; i--) {
-            Epoch memory epoch = epochs[epochNumbers[i]];
+            Epoch memory epoch = epochs[i];
             if (epoch.startBlock <= number && number <= epoch.endBlock) {
                 return epoch.number;
             }
@@ -121,26 +116,26 @@ contract MetisSequencerSet is OwnableUpgradeable {
     }
 
     function currentEpochNumber() public view returns (uint256) {
-        return epochNumbers[epochNumbers.length - 1];
+        return currentEpochId;
     }
 
     function currentEpoch() public view returns (Epoch memory epoch) {
-        uint256 currentEpochId = epochNumbers[epochNumbers.length - 1];
         epoch = epochs[currentEpochId];
     }
 
     // get metis sequencer
     function getMetisSequencer(uint256 number) public view returns (address) {
-        if (number <= firstEndBlock) {
-            return initialSequencer;
+        if (number <= epochs[0].endBlock) {
+            return epochs[0].signer;
         }
 
         // epoch number by block
         uint256 epochId = getEpochByBlock(number);
-        Epoch storage epoch = epochs[epochId];
-        if (epoch.number == 0) {
+        if (epochId == type(uint256).max) {
             return address(0);
         }
+
+        Epoch memory epoch = epochs[epochId];
         return epoch.signer;
     }
 
@@ -150,9 +145,9 @@ contract MetisSequencerSet is OwnableUpgradeable {
         uint256 endBlock,
         address signer
     ) external onlyMpc {
-        uint256 currentEpochId = currentEpochNumber();
+        uint256 curEpochId = currentEpochId;
         // check conditions
-        require(newEpoch == currentEpochId + 1, "Invalid epoch id");
+        require(newEpoch == curEpochId + 1, "Invalid epoch id");
         require(
             endBlock > startBlock,
             "End block must be greater than start block"
@@ -162,7 +157,7 @@ contract MetisSequencerSet is OwnableUpgradeable {
             "Mismatch epoch length and block length"
         );
 
-        Epoch storage epoch = epochs[currentEpochId];
+        Epoch storage epoch = epochs[curEpochId];
         require(
             epoch.endBlock + 1 == startBlock,
             "Start block must be greater than currentEpoch.endBlock by 1"
@@ -175,7 +170,7 @@ contract MetisSequencerSet is OwnableUpgradeable {
             endBlock: endBlock
         });
 
-        epochNumbers.push(newEpoch);
+        currentEpochId = newEpoch;
         emit NewEpoch(newEpoch, startBlock, endBlock, signer);
     }
 
@@ -190,16 +185,16 @@ contract MetisSequencerSet is OwnableUpgradeable {
         require(startBlock == block.number, "Invalid start block");
 
         // update pre epoch info
-        uint256 currentEpochId = currentEpochNumber();
-        require(oldEpochId <= currentEpochId, "Invalid oldEpochId");
+        uint256 curEpochId = currentEpochId;
+        require(oldEpochId <= curEpochId, "Invalid oldEpochId");
 
         // recommitEpoch occurs in the latest one epoch
-        if (oldEpochId == currentEpochId) {
-            Epoch storage epoch = epochs[currentEpochId];
+        if (oldEpochId == curEpochId) {
+            Epoch storage epoch = epochs[curEpochId];
             epoch.endBlock = block.number - 1;
 
             // craete new epoch
-            require(newEpochId == currentEpochId + 1, "Invalid newEpochId");
+            require(newEpochId == curEpochId + 1, "Invalid newEpochId");
             require(
                 endBlock > startBlock,
                 "End block must be greater than start block"
@@ -211,17 +206,16 @@ contract MetisSequencerSet is OwnableUpgradeable {
                 startBlock: startBlock,
                 endBlock: endBlock
             });
-
-            epochNumbers.push(newEpochId);
+            currentEpochId = newEpochId;
         }
 
         // recommitEpoch occurs in the second latest epoch
-        if (currentEpochId > 1 && oldEpochId == currentEpochId - 1) {
+        if (curEpochId > 1 && oldEpochId == curEpochId - 1) {
             Epoch storage epoch = epochs[oldEpochId];
             epoch.endBlock = block.number - 1;
 
             // update latest epoch
-            require(newEpochId == currentEpochId, "Invalid newEpochId");
+            require(newEpochId == curEpochId, "Invalid newEpochId");
             require(
                 endBlock > startBlock,
                 "End block must be greater than start block"
@@ -236,7 +230,7 @@ contract MetisSequencerSet is OwnableUpgradeable {
         emit ReCommitEpoch(
             oldEpochId,
             newEpochId,
-            currentEpochId,
+            curEpochId,
             startBlock,
             endBlock,
             newSigner
