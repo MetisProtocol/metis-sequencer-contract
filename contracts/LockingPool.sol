@@ -16,7 +16,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         uint256 endEpoch; // end epoch number for current batch
     }
 
-    ILockingInfo public escorow;
+    ILockingInfo public escrow;
 
     // delay time for unlock
     uint256 public WITHDRAWAL_DELAY;
@@ -33,7 +33,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
     // the number of batch that signer can be updated since the last update
     uint256 public signerUpdateThrottle;
 
-    function initialize(address _escorow) external initializer {
+    function initialize(address _escrow) external initializer {
         WITHDRAWAL_DELAY = 21 days;
         BLOCK_REWARD = 761000 gwei;
 
@@ -45,7 +45,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
             endEpoch: 0
         });
 
-        escorow = ILockingInfo(_escorow);
+        escrow = ILockingInfo(_escrow);
 
         signerUpdateThrottle = 1;
 
@@ -157,13 +157,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         uint256 nonce = seq.nonce + 1;
         seq.nonce = nonce;
         // the event emits in LocingInfo is just for compatibility
-        escorow.logSignerChange(
-            _seqId,
-            signer,
-            newSigner,
-            nonce,
-            _signerPubkey
-        );
+        escrow.logSignerChange(_seqId, signer, newSigner, nonce, _signerPubkey);
     }
 
     /**
@@ -195,7 +189,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
             _amount,
             address(0)
         );
-        escorow.newSequencer(
+        escrow.newSequencer(
             seqId,
             owner,
             _signer,
@@ -232,7 +226,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
             _amount,
             _rewardRecipient
         );
-        escorow.newSequencer(
+        escrow.newSequencer(
             seqId,
             msg.sender,
             _signer,
@@ -276,7 +270,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         seq.nonce = nonce;
         seq.amount = locked;
 
-        escorow.increaseLocked(
+        escrow.increaseLocked(
             _seqId,
             nonce,
             msg.sender,
@@ -357,7 +351,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         // invalid it
         _invalidSignerAddress(seq.signer);
 
-        escorow.finalizeUnlock{value: msg.value}(
+        escrow.finalizeUnlock{value: msg.value}(
             msg.sender,
             _seqId,
             amount,
@@ -393,7 +387,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         uint256 reward = seq.reward;
         if (reward > 0) {
             seq.reward = 0;
-            escorow.liquidateReward{value: msg.value}(
+            escrow.liquidateReward{value: msg.value}(
                 _seqId,
                 reward,
                 recipient,
@@ -444,7 +438,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         bs.number = block.number;
         bs.startEpoch = _startEpoch;
         bs.endEpoch = _endEpoch;
-        escorow.distributeReward(_batchId, totalReward);
+        escrow.distributeReward(_batchId, totalReward);
     }
 
     function _unlock(uint256 _seqId, bool _force, uint32 _l2Gas) internal {
@@ -481,7 +475,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         uint256 unclaimed = seq.reward;
         seq.reward = 0;
 
-        escorow.initializeUnlock{value: msg.value}(
+        escrow.initializeUnlock{value: msg.value}(
             _seqId,
             unclaimed,
             _l2Gas,
