@@ -8,7 +8,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 
 import {IL1ERC20Bridge} from "./interfaces/IL1ERC20Bridge.sol";
 import {ILockingInfo} from "./interfaces/ILockingInfo.sol";
-import {ISeqeuncerInfo} from "./interfaces/ISeqeuncerInfo.sol";
+import {ISequencerInfo} from "./interfaces/ISequencerInfo.sol";
 
 contract LockingInfo is ILockingInfo, OwnableUpgradeable {
     using SafeERC20 for IERC20;
@@ -163,7 +163,7 @@ contract LockingInfo is ILockingInfo, OwnableUpgradeable {
     function initializeUnlock(
         uint256 _seqId,
         uint32 _l2gas,
-        ISeqeuncerInfo.Sequencer calldata _seq
+        ISequencerInfo.Sequencer calldata _seq
     ) external payable override OnlyManager {
         uint256 reward = _seq.reward;
         _liquidateReward(_seqId, reward, _seq.rewardRecipient, _l2gas);

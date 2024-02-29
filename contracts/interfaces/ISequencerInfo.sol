@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-interface ISeqeuncerInfo {
+interface ISequencerInfo {
     error OwnedSequencer();
     error OwnedSigner();
     error NoSuchSeq();
@@ -32,7 +32,7 @@ interface ISeqeuncerInfo {
         address owner; // the operator address, owns this sequencer ndoe, it controls lock/relock/unlock/cliam
         address signer; // sequencer signer, an address for a sequencer node, it can change signer address
         bytes pubkey; // sequencer signer pubkey
-        address rewardRecipient; // seqeuncer rewarder recipient address
+        address rewardRecipient; // sequencer rewarder recipient address
         Status status; // sequencer status
     }
 

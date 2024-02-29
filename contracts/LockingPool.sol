@@ -6,9 +6,9 @@ import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/
 import {ILockingInfo} from "./interfaces/ILockingInfo.sol";
 import {ILockingPool} from "./interfaces/ILockingPool.sol";
 
-import {SeqeuncerInfo} from "./SeqeuncerInfo.sol";
+import {SequencerInfo} from "./SequencerInfo.sol";
 
-contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
+contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
     struct BatchState {
         uint256 id; // current batch id
         uint256 number; // current batch block number
@@ -168,7 +168,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
 
     /**
      * @dev lockFor lock Metis and participate in the sequencer node
-     *      the msg.sender will be owner of the seqeuncer
+     *      the msg.sender will be owner of the sequencer
      *      the owner has abilities to leverage lock/relock/unlock/cliam
      *      **Note**: the locking amount will be trasnfered from msg.sender
      *      and you need to approve the Metis of msg.sender to **LockingInfo** contract
