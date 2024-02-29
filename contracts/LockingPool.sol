@@ -474,9 +474,8 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         seq.deactivationBatch = curBatchState.id;
         seq.deactivationTime = block.timestamp;
         seq.unlockClaimTime = block.timestamp + WITHDRAWAL_DELAY;
+        seq.nonce++;
 
-        uint256 nonce = seq.nonce + 1;
-        seq.nonce = nonce;
         uint256 unclaimed = seq.reward;
         seq.reward = 0;
 
