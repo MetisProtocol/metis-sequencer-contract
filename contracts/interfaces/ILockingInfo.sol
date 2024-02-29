@@ -134,6 +134,7 @@ interface ILockingInfo {
 
     function newSequencer(
         uint256 _id,
+        address _owner,
         address _signer,
         uint256 _amount,
         uint256 _batchId,

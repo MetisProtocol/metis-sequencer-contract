@@ -141,9 +141,9 @@ contract SeqeuncerInfo is OwnableUpgradeable, ISeqeuncerInfo {
         sequencers[_seqId] = Sequencer({
             amount: _amount,
             reward: 0,
-            activationBatch: 0,
+            activationBatch: _batchId,
             deactivationBatch: 0,
-            updatingBatch: _batchId,
+            updatedBatch: _batchId,
             deactivationTime: 0,
             unlockClaimTime: 0,
             nonce: 1,

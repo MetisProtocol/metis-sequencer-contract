@@ -24,7 +24,7 @@ contract LockingInfo is ILockingInfo, OwnableUpgradeable {
     uint256 public totalLocked; // the total locked amount
     uint256 public totalRewardsLiquidated;
 
-    // Locking manager address
+    // Locking pool address
     address public manager;
 
     // the reward payer
@@ -89,13 +89,15 @@ contract LockingInfo is ILockingInfo, OwnableUpgradeable {
     /**
      * @dev newSequencer register a new sequencer, it can only be called from manager contract
      * @param _id the sequencer id
-     * @param _signer the sequencer node address, it can not be empty address
+     * @param _owner the sequencer owenr
+     * @param _signer the sequencer node address
      * @param _amount the amount to lock in
      * @param _batchId current batch id
      * @param _signerPubkey the sequencer public key
      */
     function newSequencer(
         uint256 _id,
+        address _owner,
         address _signer,
         uint256 _amount,
         uint256 _batchId,
@@ -107,7 +109,7 @@ contract LockingInfo is ILockingInfo, OwnableUpgradeable {
         uint256 _tatalLocked = totalLocked + _amount;
         totalLocked = _tatalLocked;
 
-        IERC20(l1Token).safeTransferFrom(_signer, address(this), _amount);
+        IERC20(l1Token).safeTransferFrom(_owner, address(this), _amount);
         emit Locked(
             _signer,
             _id,

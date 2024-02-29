@@ -30,6 +30,9 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
     // current batch state
     BatchState public curBatchState;
 
+    // the number of batch that signer can be updated since the last update
+    uint256 public signerUpdateThrottle;
+
     function initialize(address _escorow) external initializer {
         WITHDRAWAL_DELAY = 21 days;
         BLOCK_REWARD = 761000 gwei;
@@ -43,6 +46,8 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
         });
 
         escorow = ILockingInfo(_escorow);
+
+        signerUpdateThrottle = 1;
 
         __Pausable_init();
         __LockingBadge_init();
@@ -99,6 +104,16 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
     }
 
     /**
+     * @dev setSignerUpdateThrottle  set signerUpdateThrottle
+     * @param _n the new value of the throttle
+     *        Note: it can be 0
+     */
+    function setSignerUpdateThrottle(uint256 _n) external onlyOwner {
+        signerUpdateThrottle = _n;
+        emit SetSignerUpdateThrottle(_n);
+    }
+
+    /**
      * @dev updateSigner Allow sqeuencer to update new signers to replace old signer addresses，and NFT holder will be transfer driectly
      * @param _seqId the sequencer id
      * @param _signerPubkey the new signer pubkey address
@@ -112,28 +127,36 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
             revert SeqNotActive();
         }
 
-        // only update by the signer
+        // can be updated by the signer
         address signer = seq.signer;
         if (signer != msg.sender) {
             revert NotSeqSigner();
         }
+
+        require(
+            curBatchState.id >= seq.updatedBatch + signerUpdateThrottle,
+            "signer updating throttle"
+        );
 
         address newSigner = _getAddrByPubkey(_signerPubkey);
         // the new signer should not be a signer before
         if (seqSigners[newSigner] != 0) {
             revert OwnedSigner();
         }
+        seq.pubkey = _signerPubkey;
+
         seq.signer = newSigner;
         seqSigners[newSigner] = _seqId;
 
-        // invalid it
+        // the previous signer address can'be used again
         _invalidSignerAddress(signer);
 
-        // set signer updating batch id
-        seq.updatingBatch = curBatchState.id;
+        // set signer updated batch id
+        seq.updatedBatch = curBatchState.id;
 
         uint256 nonce = seq.nonce + 1;
         seq.nonce = nonce;
+        // the event emits in LocingInfo is just for compatibility
         escorow.logSignerChange(
             _seqId,
             signer,
@@ -147,8 +170,12 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
      * @dev lockFor lock Metis and participate in the sequencer node
      *      the msg.sender will be owner of the seqeuncer
      *      the owner has abilities to leverage lock/relock/unlock/cliam
-     *      the default reward recipient is empty address
-     *      you need to update it using setSequencerRewardRecipient
+     *      **Note**: the locking amount will be trasnfered from msg.sender
+     *      and you need to approve the Metis of msg.sender to **LockingInfo** contract
+     *      instead of this LockingPool contract
+     *
+     *      the default reward recipient is an empty address
+     *      you need to update it using setSequencerRewardRecipient afterward
      * @param _signer Sequencer signer address
      * @param _amount Amount of L1 metis token to lock for.
      * @param _signerPubkey Sequencer signer pubkey, it should be uncompressed
@@ -159,21 +186,29 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
         bytes calldata _signerPubkey
     ) external whenNotPaused whitelistRequired {
         uint256 batchId = curBatchState.id;
+        address owner = msg.sender;
         uint256 seqId = _lockFor(
             batchId,
-            msg.sender,
+            owner,
             _signer,
             _signerPubkey,
             _amount,
             address(0)
         );
-        escorow.newSequencer(seqId, _signer, _amount, batchId, _signerPubkey);
+        escorow.newSequencer(
+            seqId,
+            owner,
+            _signer,
+            _amount,
+            batchId,
+            _signerPubkey
+        );
         emit SequencerOwnerChanged(seqId, msg.sender);
         emit SequencerRewardRecipientChanged(seqId, address(0));
     }
 
     /**
-     * @dev lockWithRewardRecipient is the same with lockFor, but you can provide reward receipent
+     * @dev lockWithRewardRecipient is the same with lockFor, but you can provide a reward receipent
      * @param _signer Sequencer signer address
      * @param _rewardRecipient Sequencer reward receiptent
      *        you can use an empty address if you haven't choose an address
@@ -197,7 +232,14 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SeqeuncerInfo {
             _amount,
             _rewardRecipient
         );
-        escorow.newSequencer(seqId, _signer, _amount, batchId, _signerPubkey);
+        escorow.newSequencer(
+            seqId,
+            msg.sender,
+            _signer,
+            _amount,
+            batchId,
+            _signerPubkey
+        );
         emit SequencerOwnerChanged(seqId, msg.sender);
         emit SequencerRewardRecipientChanged(seqId, _rewardRecipient);
     }

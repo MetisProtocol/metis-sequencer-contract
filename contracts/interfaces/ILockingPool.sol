@@ -21,4 +21,10 @@ interface ILockingPool {
      * @param _newMpc new min lock.
      */
     event UpdateMpc(address _newMpc);
+
+    /**
+     * @dev Emitted when SignerUpdateThrottle is updated
+     * @param _n new min value
+     */
+    event SetSignerUpdateThrottle(uint256 _n);
 }

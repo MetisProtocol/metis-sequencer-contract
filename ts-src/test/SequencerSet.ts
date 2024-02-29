@@ -37,8 +37,6 @@ describe("MetisSequencerSet", async () => {
       deploy.address,
     );
 
-    console.log("Addresses", others.length);
-
     return { seqset, admin, seq0, seq1, mpc, others };
   }
 
