@@ -24,6 +24,7 @@ contract TestBridge is IL1ERC20Bridge {
         uint32,
         bytes calldata _data
     ) external payable override {
+        require(msg.value > 0, "bridge fee required");
         IERC20(_l1Token).transferFrom(msg.sender, address(this), _amount);
 
         emit ERC20DepositInitiated(

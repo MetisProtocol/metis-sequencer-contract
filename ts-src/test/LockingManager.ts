@@ -1,6 +1,5 @@
 import { ethers, deployments } from "hardhat";
 import { expect } from "chai";
-import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import {
   LockingInfoContractName,
   LockingPoolContractName,
@@ -8,9 +7,14 @@ import {
 } from "../utils/constant";
 import { trimPubKeyPrefix } from "../utils/params";
 
+import {
+  loadFixture,
+  time as timeHelper,
+} from "@nomicfoundation/hardhat-toolbox/network-helpers";
+
 describe("locking", async () => {
   async function fixture() {
-    const wallets = new Array(5)
+    const wallets = new Array(10)
       .fill(null)
       .map(() => ethers.Wallet.createRandom(ethers.provider));
 
@@ -83,14 +87,14 @@ describe("locking", async () => {
         .connect(wallet)
         .approve(lockingEscrowProxy.address, ethers.MaxUint256);
 
-      // first 3 addresses are whitelisted
-      if (index < 3) {
+      if (index < wallets.length / 2) {
         await lockingPool.setWhitelist(wallet.address, true);
       }
     }
 
     return {
-      wallets,
+      whitelised: wallets.slice(0, wallets.length / 2),
+      unwhitelist: wallets.slice(wallets.length / 2),
       lockingInfo,
       lockingPool,
       metisToken,
@@ -246,9 +250,12 @@ describe("locking", async () => {
   });
 
   it("lockFor/validation", async () => {
-    const { lockingInfo, lockingPool, wallets } = await loadFixture(fixture);
+    const { lockingInfo, lockingPool, whitelised, unwhitelist } =
+      await loadFixture(fixture);
 
-    const [wallet0, wallet1, wallet2, wallet3] = wallets;
+    const [wallet0, wallet1] = whitelised;
+    const [wallet3] = unwhitelist;
+
     const minLock = 1n;
     await lockingInfo.setMinLock(minLock);
     const maxLock = 10n;
@@ -309,10 +316,10 @@ describe("locking", async () => {
   });
 
   it("lockFor", async () => {
-    const { lockingInfo, lockingPool, metisToken, wallets } =
+    const { lockingInfo, lockingPool, metisToken, whitelised, unwhitelist } =
       await loadFixture(fixture);
 
-    const [wallet0, wallet1, wallet2] = wallets;
+    const [wallet0, wallet1, wallet2] = whitelised;
     const toLock = 1n;
     await lockingInfo.setMinLock(toLock);
 
@@ -341,8 +348,8 @@ describe("locking", async () => {
 
     await expect(
       lockingPool.connect(wallet2).lockFor(wallet1, toLock, wallet1Pubkey),
-      "OwnedSigner",
-    ).revertedWithCustomError(lockingPool, "OwnedSigner");
+      "SignerExisted",
+    ).revertedWithCustomError(lockingPool, "SignerExisted");
 
     {
       const curBatchId = await lockingPool.currentBatch();
@@ -398,10 +405,10 @@ describe("locking", async () => {
   });
 
   it("lockWithRewardRecipient", async () => {
-    const { lockingInfo, lockingPool, metisToken, wallets } =
+    const { lockingInfo, lockingPool, metisToken, whitelised } =
       await loadFixture(fixture);
 
-    const [wallet0, wallet1] = wallets;
+    const [wallet0, wallet1] = whitelised;
     const minLock = 1n;
     await lockingInfo.setMinLock(minLock);
 
@@ -476,9 +483,9 @@ describe("locking", async () => {
   });
 
   it("updateSigner", async () => {
-    const { lockingInfo, lockingPool, wallets } = await loadFixture(fixture);
+    const { lockingInfo, lockingPool, whitelised } = await loadFixture(fixture);
 
-    const [wallet0, wallet1, wallet2] = wallets;
+    const [wallet0, wallet1, wallet2] = whitelised;
     const minLock = 1n;
     await lockingInfo.setMinLock(minLock);
 
@@ -538,9 +545,11 @@ describe("locking", async () => {
   });
 
   it("relock/withoutReward", async () => {
-    const { lockingInfo, lockingPool, wallets } = await loadFixture(fixture);
+    const { lockingInfo, lockingPool, whitelised, unwhitelist } =
+      await loadFixture(fixture);
 
-    const [wallet0, wallet1, _, wallet3] = wallets;
+    const [wallet0, wallet1] = whitelised;
+    const [wallet3] = unwhitelist;
     const minLock = 1n;
     await lockingInfo.setMinLock(minLock);
 
@@ -592,10 +601,10 @@ describe("locking", async () => {
   });
 
   it("relock/withReward", async () => {
-    const { admin, lockingInfo, lockingPool, wallets, metisToken, mpc } =
+    const { admin, lockingInfo, lockingPool, whitelised, metisToken, mpc } =
       await loadFixture(fixture);
 
-    const [wallet0, wallet1] = wallets;
+    const [wallet0, wallet1] = whitelised;
     const firstLocked = 1n;
     await lockingInfo.setMinLock(firstLocked);
     await lockingPool.updateMpc(mpc);
@@ -674,10 +683,10 @@ describe("locking", async () => {
   });
 
   it("batchSubmitRewards/validation", async () => {
-    const { lockingInfo, lockingPool, mpc, wallets } =
+    const { lockingInfo, lockingPool, mpc, whitelised } =
       await loadFixture(fixture);
 
-    const [wallet0, wallet1, _, wallet3] = wallets;
+    const [wallet0, wallet1, _, wallet3] = whitelised;
     const minLock = 1n;
     await lockingInfo.setMinLock(minLock);
     await lockingPool.updateMpc(mpc);
@@ -772,10 +781,10 @@ describe("locking", async () => {
   });
 
   it("batchSubmitRewards", async () => {
-    const { lockingInfo, lockingPool, mpc, metisToken, wallets, admin } =
+    const { lockingInfo, lockingPool, mpc, metisToken, whitelised, admin } =
       await loadFixture(fixture);
 
-    const [wallet0] = wallets;
+    const [wallet0] = whitelised;
     const minLock = 1n;
     await lockingInfo.setMinLock(minLock);
     await lockingPool.updateMpc(mpc);
@@ -836,12 +845,12 @@ describe("locking", async () => {
     }
   });
 
-  it("withdrawReward", async () => {
+  it("withdrawRewards", async () => {
     const {
       lockingInfo,
       lockingPool,
       mpc,
-      wallets,
+      whitelised,
       admin,
       metisToken,
       l1Bridge,
@@ -854,7 +863,7 @@ describe("locking", async () => {
     await lockingInfo.setRewardPayer(admin);
     await metisToken.approve(await lockingInfo.getAddress(), ethers.MaxUint256);
 
-    const [wallet0, wallet1] = wallets;
+    const [wallet0, wallet1] = whitelised;
 
     await expect(lockingPool.withdrawRewards(1, 0)).to.revertedWithCustomError(
       lockingPool,
@@ -901,7 +910,9 @@ describe("locking", async () => {
       );
     const reward = blocks * rpb;
 
-    await expect(lockingPool.connect(wallet0).withdrawRewards(1, 0))
+    await expect(
+      lockingPool.connect(wallet0).withdrawRewards(1, 0, { value: 1 }),
+    )
       .to.emit(lockingInfo, "ClaimRewards")
       .withArgs(1, wallet1.address, reward, tatalLiquidated + reward)
       .and.emit(metisToken, "Approval")
@@ -923,5 +934,236 @@ describe("locking", async () => {
 
     const { reward: unclaimed } = await lockingPool.sequencers(1);
     expect(unclaimed, "unclaimed").to.eq(0);
+
+    expect(
+      await admin.provider.getBalance(await l1Bridge.getAddress()),
+      "bridge should receive the bridge fee",
+    ).to.eq(1);
+  });
+
+  it("unlock", async () => {
+    const {
+      lockingInfo,
+      lockingPool,
+      mpc,
+      whitelised,
+      admin,
+      others,
+      metisToken,
+      l1Bridge,
+    } = await loadFixture(fixture);
+
+    const toLock = 1n;
+    await lockingInfo.setMinLock(toLock);
+    await lockingPool.updateMpc(mpc);
+
+    await lockingInfo.setRewardPayer(admin);
+    await metisToken.approve(await lockingInfo.getAddress(), ethers.MaxUint256);
+    const rpb = 1n;
+    await lockingPool.updateBlockReward(rpb);
+
+    const theDelay = 1000n;
+    await lockingPool.updateWithdrawDelayTimeValue(1000n);
+
+    const [wallet0, wallet1] = whitelised;
+
+    await expect(
+      lockingPool.unlock(1, 0),
+      "NotWhitelisted",
+    ).revertedWithCustomError(lockingPool, "NotWhitelisted");
+
+    await expect(
+      lockingPool.connect(wallet1).unlock(1, 0),
+      "unlock seq not exists",
+    ).revertedWithCustomError(lockingPool, "SeqNotActive");
+
+    // seq1
+    await lockingPool
+      .connect(wallet0)
+      .lockFor(wallet0, toLock, trimPubKeyPrefix(wallet0.signingKey.publicKey));
+
+    await expect(
+      lockingPool.connect(wallet1).unlock(1, 0),
+      "use wallet1 to unlock seq1",
+    ).revertedWithCustomError(lockingPool, "NotSeqOwner");
+
+    await expect(
+      lockingPool.connect(wallet1).unlock(1, 0),
+      "use wallet1 to unlock seq1",
+    ).revertedWithCustomError(lockingPool, "NotSeqOwner");
+
+    await expect(
+      lockingPool.connect(wallet0).unlock(1, 0),
+      "use wallet0 to unlock seq1 but failing bft check",
+    ).revertedWith("BFT restriction");
+
+    // seq2..5
+    for (let i = 1; i < whitelised.length; i++) {
+      const wallet = whitelised[i];
+      await lockingPool
+        .connect(wallet)
+        .lockFor(wallet, toLock, trimPubKeyPrefix(wallet.signingKey.publicKey));
+    }
+
+    await expect(
+      lockingPool.connect(wallet0).unlock(1, 0),
+      "use wallet0 to unlock seq1 but reward recipient not set",
+    ).revertedWithCustomError(lockingPool, "NoRewardRecipient");
+
+    const recipient = others[0];
+
+    // update reward recipient
+    await lockingPool
+      .connect(wallet0)
+      .setSequencerRewardRecipient(1, recipient);
+
+    const blocks = 1n;
+
+    await lockingPool
+      .connect(mpc)
+      .batchSubmitRewards(2n, 1n, 2n, [wallet0], [blocks]);
+
+    const l2Fee = 1n;
+
+    const reward = blocks * rpb;
+
+    const blockInfo = await admin.provider.getBlock("latest");
+    const nextBlockTime = blockInfo!.timestamp + 1000;
+
+    await timeHelper.setNextBlockTimestamp(nextBlockTime);
+
+    expect(
+      await lockingPool.connect(wallet0).unlock(1, 0, { value: l2Fee }),
+      "unlock",
+    )
+      .emit(lockingInfo, "ClaimRewards")
+      .withArgs(1, recipient, reward, reward)
+      .and.emit(l1Bridge, "Transfer")
+      .withArgs(
+        await lockingInfo.getAddress(),
+        await l1Bridge.getAddress(),
+        reward,
+      )
+      .and.emit(lockingInfo, "UnlockInit")
+      .withArgs(
+        wallet0.address,
+        1,
+        1,
+        nextBlockTime,
+        nextBlockTime + Number(theDelay),
+        0,
+      );
+
+    expect(await lockingPool.seqStatuses(2), "active").eq(
+      whitelised.length - 1,
+    );
+    expect(await lockingPool.seqStatuses(1), "inactive").eq(1);
+
+    expect(
+      await admin.provider.getBalance(await l1Bridge.getAddress()),
+      "bridge should receive the bridge fee",
+    ).to.eq(l2Fee);
+
+    expect(
+      await lockingInfo.totalRewardsLiquidated(),
+      "totalRewardsLiquidated",
+    ).to.eq(reward);
+
+    {
+      const {
+        amount,
+        status,
+        deactivationBatch,
+        deactivationTime,
+        unlockClaimTime,
+        nonce,
+        reward,
+      } = await lockingPool.sequencers(1);
+      expect(amount, "amount").eq(toLock);
+      expect(status, "status").eq(1);
+      expect(deactivationBatch, "deactivationBatch").eq(2);
+      expect(deactivationTime, "deactivationTime").eq(nextBlockTime);
+      expect(unlockClaimTime, "unlockClaimTime").eq(
+        BigInt(nextBlockTime) + theDelay,
+      );
+      expect(nonce, "nonce").eq(2);
+      expect(reward, "reward").eq(0);
+    }
+  });
+
+  it("forceUnlkock", async () => {
+    const {
+      lockingInfo,
+      lockingPool,
+      mpc,
+      whitelised,
+      admin,
+      others,
+      metisToken,
+      l1Bridge,
+    } = await loadFixture(fixture);
+
+    const toLock = 1n;
+    await lockingInfo.setMinLock(toLock);
+    await lockingPool.updateMpc(mpc);
+
+    await lockingInfo.setRewardPayer(admin);
+    await metisToken.approve(await lockingInfo.getAddress(), ethers.MaxUint256);
+    const rpb = 1n;
+    await lockingPool.updateBlockReward(rpb);
+
+    const theDelay = 1000n;
+    await lockingPool.updateWithdrawDelayTimeValue(1000n);
+
+    const [wallet0] = whitelised;
+
+    // seq1
+    await lockingPool
+      .connect(wallet0)
+      .lockFor(wallet0, toLock, trimPubKeyPrefix(wallet0.signingKey.publicKey));
+
+    // update reward recipient
+    const recipient = others[0];
+    await lockingPool
+      .connect(wallet0)
+      .setSequencerRewardRecipient(1, recipient);
+
+    const blockInfo = await admin.provider.getBlock("latest");
+    const nextBlockTime = blockInfo!.timestamp + 1000;
+
+    await timeHelper.setNextBlockTimestamp(nextBlockTime);
+
+    expect(await lockingPool.connect(admin).forceUnlock(1, 0), "forceUnlock")
+      .emit(lockingInfo, "ClaimRewards")
+      .withArgs(1, recipient, 0, 0);
+
+    expect(await lockingPool.seqStatuses(2), "active").eq(0);
+    expect(await lockingPool.seqStatuses(1), "inactive").eq(1);
+
+    expect(
+      await lockingInfo.totalRewardsLiquidated(),
+      "totalRewardsLiquidated",
+    ).to.eq(0);
+
+    {
+      const {
+        amount,
+        status,
+        deactivationBatch,
+        deactivationTime,
+        unlockClaimTime,
+        nonce,
+        reward,
+      } = await lockingPool.sequencers(1);
+      expect(amount, "amount").eq(toLock);
+      expect(status, "status").eq(1);
+      expect(deactivationBatch, "deactivationBatch").eq(1);
+      expect(deactivationTime, "deactivationTime").eq(nextBlockTime);
+      expect(unlockClaimTime, "unlockClaimTime").eq(
+        BigInt(nextBlockTime) + theDelay,
+      );
+      expect(nonce, "nonce").eq(2);
+      expect(reward, "reward").eq(0);
+    }
   });
 });
