@@ -22,9 +22,9 @@ interface ISequencerInfo {
 
     struct Sequencer {
         uint256 amount; // sequencer current locked
-        uint256 reward; // sequencer current reward
+        uint256 reward; // sequencer current reward that have not cleamed
         uint256 activationBatch; // sequencer activation batch id
-        uint256 updatedBatch; // batch id of the last updated
+        uint256 updatedBatch; // batch id of the last
         uint256 deactivationBatch; // sequencer deactivation batch id
         uint256 deactivationTime; // sequencer deactivation timestamp
         uint256 unlockClaimTime; // timestamp that sequencer can claim unlocked token, it's equal to deactivationTime + WITHDRAWAL_DELAY
