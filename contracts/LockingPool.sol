@@ -141,7 +141,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         address newSigner = _getAddrByPubkey(_signerPubkey);
         // the new signer should not be a signer before
         if (seqSigners[newSigner] != 0) {
-            revert OwnedSigner();
+            revert SignerExisted();
         }
         seq.pubkey = _signerPubkey;
 

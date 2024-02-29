@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 interface ISequencerInfo {
     error OwnedSequencer();
-    error OwnedSigner();
+    error SignerExisted();
     error NoSuchSeq();
     error NullAddress();
     error SeqNotActive();

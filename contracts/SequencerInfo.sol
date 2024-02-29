@@ -114,6 +114,7 @@ contract SequencerInfo is OwnableUpgradeable, ISequencerInfo {
         uint256 _amount,
         address _rewardRecipient
     ) internal returns (uint256 _seqId) {
+        // it will check the _signer must not be empty address
         require(
             _getAddrByPubkey(_signerPubkey) == _signer,
             "pubkey and address mismatch"
@@ -124,15 +125,14 @@ contract SequencerInfo is OwnableUpgradeable, ISequencerInfo {
         }
 
         if (seqSigners[_signer] != 0) {
-            revert OwnedSigner();
+            revert SignerExisted();
         }
 
         uint256 seqs = totalSequencers;
 
-        // tokenId starts from 1
+        // seqId starts from 1
         _seqId = seqs + 1;
 
-        // it will check the _to must not be empty address
         seqOwners[_owner] = _seqId;
         seqSigners[_signer] = _seqId;
         seqStatuses[Status.Active]++;
