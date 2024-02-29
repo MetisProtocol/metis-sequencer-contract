@@ -308,7 +308,10 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
      * @param _seqId the sequencer id
      * @param _l2Gas l2 gas limit, see above for the detail
      */
-    function forceUnlock(uint256 _seqId, uint32 _l2Gas) external onlyOwner {
+    function forceUnlock(
+        uint256 _seqId,
+        uint32 _l2Gas
+    ) external payable onlyOwner {
         _unlock(_seqId, true, _l2Gas);
     }
 
