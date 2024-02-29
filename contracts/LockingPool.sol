@@ -344,11 +344,10 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
 
         uint256 amount = seq.amount;
         uint256 reward = seq.reward;
-        // uint256 nonce = seq.nonce + 1;
 
         seq.amount = 0;
         seq.reward = 0;
-        // seq.nonce = nonce;
+        seq.nonce++;
         seq.status = Status.Unlocked;
         seqStatuses[Status.Inactive]--;
         seqStatuses[Status.Unlocked]++;

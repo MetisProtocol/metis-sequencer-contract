@@ -963,7 +963,7 @@ describe("locking", async () => {
     await lockingPool.updateBlockReward(rpb);
 
     const theDelay = 1000n;
-    await lockingPool.updateWithdrawDelayTimeValue(1000n);
+    await lockingPool.updateWithdrawDelayTimeValue(theDelay);
 
     const [wallet0, wallet1] = whitelised;
 
@@ -1032,13 +1032,13 @@ describe("locking", async () => {
 
     await timeHelper.setNextBlockTimestamp(nextBlockTime);
 
-    expect(
+    await expect(
       await lockingPool.connect(wallet0).unlock(1, 0, { value: l2Fee }),
       "unlock",
     )
       .emit(lockingInfo, "ClaimRewards")
       .withArgs(1, recipient, reward, reward)
-      .and.emit(l1Bridge, "Transfer")
+      .and.emit(metisToken, "Transfer")
       .withArgs(
         await lockingInfo.getAddress(),
         await l1Bridge.getAddress(),
@@ -1048,10 +1048,11 @@ describe("locking", async () => {
       .withArgs(
         wallet0.address,
         1,
-        1,
+        2,
+        2,
         nextBlockTime,
         nextBlockTime + Number(theDelay),
-        0,
+        1,
       );
 
     expect(await lockingPool.seqStatuses(2), "active").eq(
@@ -1068,6 +1069,11 @@ describe("locking", async () => {
       await lockingInfo.totalRewardsLiquidated(),
       "totalRewardsLiquidated",
     ).to.eq(reward);
+
+    expect(
+      await metisToken.balanceOf(await l1Bridge.getAddress()),
+      "l1bridge.balance",
+    ).to.eq(1);
 
     {
       const {
@@ -1164,6 +1170,99 @@ describe("locking", async () => {
       );
       expect(nonce, "nonce").eq(2);
       expect(reward, "reward").eq(0);
+    }
+  });
+
+  it("unlockClaim", async () => {
+    const {
+      lockingInfo,
+      lockingPool,
+      mpc,
+      whitelised,
+      admin,
+      others,
+      metisToken,
+      l1Bridge,
+    } = await loadFixture(fixture);
+
+    const toLock = 1n;
+    await lockingInfo.setMinLock(toLock);
+    await lockingPool.updateMpc(mpc);
+
+    await lockingInfo.setRewardPayer(admin);
+    await metisToken.approve(await lockingInfo.getAddress(), ethers.MaxUint256);
+    const rpb = 1n;
+    await lockingPool.updateBlockReward(rpb);
+
+    const theDelay = 1000n;
+    await lockingPool.updateWithdrawDelayTimeValue(theDelay);
+
+    // seq1..5
+    const recipient = others[0];
+    for (const [index, wallet] of whitelised.entries()) {
+      await lockingPool
+        .connect(wallet)
+        .lockFor(wallet, toLock, trimPubKeyPrefix(wallet.signingKey.publicKey));
+      await lockingPool
+        .connect(wallet)
+        .setSequencerRewardRecipient(index + 1, recipient);
+    }
+
+    const [wallet0] = whitelised;
+    const blockInfo = await admin.provider.getBlock("latest");
+    await timeHelper.setNextBlockTimestamp(blockInfo!.timestamp + 1);
+
+    await lockingPool.connect(whitelised[0]).unlock(1, 0);
+    await timeHelper.setNextBlockTimestamp(blockInfo!.timestamp + 2);
+
+    await expect(
+      lockingPool.connect(whitelised[0]).unlockClaim(1, 0),
+      "Not allowed to cliam",
+    ).revertedWith("Not allowed to cliam");
+
+    await timeHelper.setNextBlockTimestamp(
+      blockInfo!.timestamp + Number(theDelay),
+    );
+
+    const blocks = 1n;
+
+    await lockingPool
+      .connect(mpc)
+      .batchSubmitRewards(2n, 1n, 2n, [wallet0], [blocks]);
+
+    const l2fee = 1n;
+
+    await expect(
+      await lockingPool.connect(wallet0).unlockClaim(1, 0, { value: l2fee }),
+      "unlockClaim",
+    )
+      .to.emit(lockingInfo, "Unlocked")
+      .withArgs(
+        wallet0.address,
+        1,
+        toLock,
+        toLock * BigInt(whitelised.length - 1),
+      )
+      .and.emit(metisToken, "Transfer")
+      .withArgs(await lockingInfo.getAddress(), wallet0.address, toLock)
+      .and.emit(metisToken, "Transfer")
+      .withArgs(
+        await lockingInfo.getAddress(),
+        await l1Bridge.getAddress(),
+        blocks * rpb,
+      );
+
+    expect(await lockingPool.seqStatuses(1), "Inactive").eq(0);
+    expect(await lockingPool.seqStatuses(2), "Active").eq(
+      whitelised.length - 1,
+    );
+    expect(await lockingPool.seqStatuses(3), "Unlocked").eq(1);
+    {
+      const { amount, status, nonce, reward } = await lockingPool.sequencers(1);
+      expect(status, "status").eq(3);
+      expect(nonce, "nonce").eq(3);
+      expect(reward, "reward").eq(0);
+      expect(amount, "amount").eq(0);
     }
   });
 });

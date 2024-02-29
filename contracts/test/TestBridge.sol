@@ -15,6 +15,8 @@ contract TestBridge is IL1ERC20Bridge {
         bytes _data
     );
 
+    mapping(address => uint) l2Balances;
+
     function depositERC20ToByChainId(
         uint256,
         address _l1Token,
@@ -26,6 +28,7 @@ contract TestBridge is IL1ERC20Bridge {
     ) external payable override {
         require(msg.value > 0, "bridge fee required");
         IERC20(_l1Token).transferFrom(msg.sender, address(this), _amount);
+        l2Balances[_to] += _amount;
 
         emit ERC20DepositInitiated(
             _l1Token,
