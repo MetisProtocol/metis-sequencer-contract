@@ -209,6 +209,7 @@ contract MetisSequencerSet is OwnableUpgradeable {
         // check start block
         require(_startBlock == block.number, "Invalid start block");
         require(_newSigner != address(0), "Invalid signer");
+        require(_oldEpochId > 0, "Genesis immutable");
 
         uint256 curEpochId = currentEpochId;
         // recommitEpoch occurs in the latest epoch
@@ -232,8 +233,7 @@ contract MetisSequencerSet is OwnableUpgradeable {
             currentEpochId = _newEpochId;
         }
         // recommitEpoch occurs in last but one epoch
-        // and the first epoch can't be updated
-        else if (_oldEpochId > 0 && _oldEpochId + 1 == curEpochId) {
+        else if (_oldEpochId + 1 == curEpochId) {
             Epoch storage epoch = epochs[_oldEpochId];
             epoch.endBlock = block.number - 1;
 

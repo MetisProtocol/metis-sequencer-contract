@@ -160,13 +160,14 @@ describe("MetisSequencerSet", async () => {
       seqset.connect(mpc).commitEpoch(currentEpochNumber + 1n, 600, 699, seq1),
     ).to.revertedWith("Mismatch epoch length and block length");
 
+    // epoch 1
     await expect(
       seqset.connect(mpc).commitEpoch(currentEpochNumber + 1n, 601, 800, seq1),
     ).to.revertedWith(
       "Start block must be greater than currentEpoch.endBlock by 1",
     );
 
-    const nextEpochNumber = currentEpochNumber + 1n;
+    let nextEpochNumber = currentEpochNumber + 1n;
 
     await expect(
       seqset
@@ -194,6 +195,29 @@ describe("MetisSequencerSet", async () => {
       expect(endBlock).to.be.equal(799n);
       expect(signer).to.be.equal(seq1.address);
     }
+
+    nextEpochNumber += 1n;
+    // epoch 2
+    await expect(
+      await seqset.connect(mpc).commitEpoch(nextEpochNumber, 800, 999, seq1),
+    )
+      .with.emit(seqset, "NewEpoch")
+      .withArgs(nextEpochNumber, 800, 999, seq1.address);
+
+    // epoch 3 should wait for ending of epoch 1
+    nextEpochNumber += 1n;
+    await expect(
+      seqset.connect(mpc).commitEpoch(nextEpochNumber, 1000, 1199, seq1),
+      "epoch 3 can't be committed since the epoch 1 is not finished",
+    ).revertedWith("The last epoch not finished");
+
+    mineUpTo(810);
+    await expect(
+      await seqset.connect(mpc).commitEpoch(nextEpochNumber, 1000, 1199, seq1),
+      "epoch 3 can be committed after block 810",
+    )
+      .with.emit(seqset, "NewEpoch")
+      .withArgs(nextEpochNumber, 1000, 1199, seq1.address);
   });
 
   it("recommit epoch", async () => {
@@ -207,7 +231,7 @@ describe("MetisSequencerSet", async () => {
     // block 595
     await expect(
       seqset.connect(mpc).recommitEpoch(0, 1, 595, 799, seq1),
-    ).to.revertedWith("Invalid oldEpochId");
+    ).to.revertedWith("Genesis immutable");
 
     // block 596
     await expect(seqset.recommitEpoch(1, 2, 596, 799, seq1)).to.revertedWith(
