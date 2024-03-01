@@ -11,7 +11,7 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.8.20",
+        version: "0.8.24",
         settings: {
           optimizer: {
             enabled: true,
@@ -20,6 +20,7 @@ const config: HardhatUserConfig = {
           evmVersion: "shanghai",
           metadata: {
             bytecodeHash: "none",
+            useLiteralContent: true,
           },
         },
       },
@@ -36,6 +37,7 @@ const config: HardhatUserConfig = {
           evmVersion: "berlin",
           metadata: {
             bytecodeHash: "none",
+            useLiteralContent: true,
           },
         },
       },
