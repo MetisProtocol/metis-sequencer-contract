@@ -51,6 +51,7 @@ task("l1:whitelist", "Whitelist an sequencer address")
     }
 
     const tx = await lockingManager.setWhitelist(addr, enable);
+    await tx.wait(1);
     console.log("Confrimed at", tx.hash);
   });
 
@@ -189,6 +190,7 @@ task("l1:lock", "Lock Metis to LockingPool contract")
         amountInWei,
         trimPubKeyPrefix(nodePubkey),
       );
+    await tx.wait(1);
     console.log("Confrimed at", tx.hash);
   });
 
@@ -232,6 +234,7 @@ task("l1:update-lock-amount", "Update locking amount condition")
           `setting min lock to ${args["max"]}, the previous is ${hre.ethers.formatEther(max2)}`,
         );
         const tx = await lockingEscrow.setMaxLock(max);
+        await tx.wait(1);
         console.log("Confrimed at", tx.hash);
       }
     }
@@ -290,6 +293,7 @@ task("l1:update-mpc-address", "Update MPC address for LockingPool contract")
         to: newAddr,
         value: amountInWei,
       });
+      await tx.wait(1);
       console.log("Confrimed at", tx.hash);
     }
   });
@@ -313,6 +317,7 @@ task("l1:update-exit-delay", "update exit delay time duration")
     const duration = parseDuration(args["duration"]);
     console.log(`update the delay to ${args["duration"]}(=${duration}s)`);
     const tx = await lockingManager.updateWithdrawDelayTimeValue(duration);
+    await tx.wait(1);
     console.log("Confrimed at", tx.hash);
   });
 
@@ -340,6 +345,6 @@ task("l1:update-reward-per-block", "update reward per block")
     const tx = await lockingManager.updateBlockReward(
       hre.ethers.parseUnits(args["value"], args["unit"]),
     );
-
+    await tx.wait(1);
     console.log("Confrimed at", tx.hash);
   });
