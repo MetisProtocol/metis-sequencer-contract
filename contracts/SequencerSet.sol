@@ -97,6 +97,7 @@ contract MetisSequencerSet is OwnableUpgradeable {
     }
 
     // get epoch number by block
+    // It returns Max(uint256) if the height doesn't exist in any epoches
     function getEpochByBlock(uint256 number) public view returns (uint256) {
         uint256 lastIndex = currentEpochId;
         for (uint256 i = lastIndex; i >= 0; i--) {
@@ -107,6 +108,11 @@ contract MetisSequencerSet is OwnableUpgradeable {
 
             // not in the last epoch
             if (i == lastIndex && number > epoch.endBlock) {
+                return type(uint256).max;
+            }
+
+            // not in the first epoch
+            if (i == 0 && number < epoch.startBlock) {
                 return type(uint256).max;
             }
         }
