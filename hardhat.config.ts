@@ -9,15 +9,35 @@ import "dotenv/config";
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.20",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 800,
+    compilers: [
+      {
+        version: "0.8.20",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 800,
+          },
+          evmVersion: "shanghai",
+          metadata: {
+            bytecodeHash: "none",
+          },
+        },
       },
-      evmVersion: "berlin",
-      metadata: {
-        bytecodeHash: "none",
+    ],
+    overrides: {
+      // Metis is berlin now
+      "contracts/SequencerSet.sol": {
+        version: "0.8.20",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 800,
+          },
+          evmVersion: "berlin",
+          metadata: {
+            bytecodeHash: "none",
+          },
+        },
       },
     },
   },
