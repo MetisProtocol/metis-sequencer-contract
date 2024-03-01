@@ -97,22 +97,22 @@ contract MetisSequencerSet is OwnableUpgradeable {
     }
 
     // get epoch number by block
-    // It returns Max(uint256) if the height doesn't exist in any epoches
-    function getEpochByBlock(uint256 number) public view returns (uint256) {
+    // It returns Max(uint256) if the height doesn't exist in any epochs
+    function getEpochByBlock(uint256 _number) public view returns (uint256) {
         uint256 lastIndex = currentEpochId;
         for (uint256 i = lastIndex; i >= 0; i--) {
             Epoch memory epoch = epochs[i];
-            if (epoch.startBlock <= number && number <= epoch.endBlock) {
+            if (epoch.startBlock <= _number && _number <= epoch.endBlock) {
                 return epoch.number;
             }
 
             // not in the last epoch
-            if (i == lastIndex && number > epoch.endBlock) {
+            if (i == lastIndex && _number > epoch.endBlock) {
                 return type(uint256).max;
             }
 
             // not in the first epoch
-            if (i == 0 && number < epoch.startBlock) {
+            if (i == 0 && _number < epoch.startBlock) {
                 return type(uint256).max;
             }
         }
@@ -125,18 +125,29 @@ contract MetisSequencerSet is OwnableUpgradeable {
         return currentEpochId;
     }
 
+    // currentEpoch returns the latest epoch
     function currentEpoch() public view returns (Epoch memory epoch) {
         epoch = epochs[currentEpochId];
     }
 
-    // get metis sequencer
-    function getMetisSequencer(uint256 number) public view returns (address) {
-        if (number <= epochs[0].endBlock) {
+    // finalizedEpoch returns the finalized epoch
+    // the epoch won't be recommitted by `recommitEpoch`
+    // It will returns zero-value epoch if the epoch doesn't exist
+    function finalizedEpoch() public view returns (Epoch memory epoch) {
+        uint256 curEpochId = currentEpochId;
+        if (curEpochId > 2) {
+            epoch = epochs[curEpochId - 2];
+        }
+    }
+
+    // get metis sequencer by block number
+    function getMetisSequencer(uint256 _number) public view returns (address) {
+        if (_number <= epochs[0].endBlock) {
             return epochs[0].signer;
         }
 
         // epoch number by block
-        uint256 epochId = getEpochByBlock(number);
+        uint256 epochId = getEpochByBlock(_number);
         if (epochId == type(uint256).max) {
             return address(0);
         }
@@ -146,100 +157,100 @@ contract MetisSequencerSet is OwnableUpgradeable {
     }
 
     function commitEpoch(
-        uint256 newEpoch,
-        uint256 startBlock,
-        uint256 endBlock,
-        address signer
+        uint256 _newEpoch,
+        uint256 _startBlock,
+        uint256 _endBlock,
+        address _signer
     ) external onlyMpc {
         uint256 curEpochId = currentEpochId;
         // check conditions
-        require(newEpoch == curEpochId + 1, "Invalid epoch id");
+        require(_newEpoch == curEpochId + 1, "Invalid epoch id");
         require(
-            endBlock > startBlock,
+            _endBlock > _startBlock,
             "End block must be greater than start block"
         );
         require(
-            (endBlock - startBlock + 1) % epochLength == 0,
+            (_endBlock - _startBlock + 1) % epochLength == 0,
             "Mismatch epoch length and block length"
         );
-
-        Epoch storage epoch = epochs[curEpochId];
         require(
-            epoch.endBlock + 1 == startBlock,
+            epochs[curEpochId].endBlock + 1 == _startBlock,
             "Start block must be greater than currentEpoch.endBlock by 1"
         );
+        require(_signer != address(0), "Invalid signer");
 
-        epochs[newEpoch] = Epoch({
-            number: newEpoch,
-            signer: signer,
-            startBlock: startBlock,
-            endBlock: endBlock
+        epochs[_newEpoch] = Epoch({
+            number: _newEpoch,
+            signer: _signer,
+            startBlock: _startBlock,
+            endBlock: _endBlock
         });
 
-        currentEpochId = newEpoch;
-        emit NewEpoch(newEpoch, startBlock, endBlock, signer);
+        currentEpochId = _newEpoch;
+        emit NewEpoch(_newEpoch, _startBlock, _endBlock, _signer);
     }
 
     function recommitEpoch(
-        uint256 oldEpochId,
-        uint256 newEpochId,
-        uint256 startBlock,
-        uint256 endBlock,
-        address newSigner
+        uint256 _oldEpochId,
+        uint256 _newEpochId,
+        uint256 _startBlock,
+        uint256 _endBlock,
+        address _newSigner
     ) external onlyMpc {
         // check start block
-        require(startBlock == block.number, "Invalid start block");
+        require(_startBlock == block.number, "Invalid start block");
+        require(_newSigner != address(0), "Invalid signer");
 
-        // update pre epoch info
         uint256 curEpochId = currentEpochId;
-        require(oldEpochId <= curEpochId, "Invalid oldEpochId");
+        require(_oldEpochId <= curEpochId, "Invalid oldEpochId");
+        require(_newEpochId <= curEpochId + 1, "Insane newEpochId");
 
-        // recommitEpoch occurs in the latest one epoch
-        if (oldEpochId == curEpochId) {
+        // recommitEpoch occurs in the latest epoch
+        if (_oldEpochId == curEpochId) {
             Epoch storage epoch = epochs[curEpochId];
             epoch.endBlock = block.number - 1;
 
             // craete new epoch
-            require(newEpochId == curEpochId + 1, "Invalid newEpochId");
+            require(_newEpochId == curEpochId + 1, "Invalid newEpochId");
             require(
-                endBlock > startBlock,
+                _endBlock > _startBlock,
                 "End block must be greater than start block"
             );
 
-            epochs[newEpochId] = Epoch({
-                number: newEpochId,
-                signer: newSigner,
-                startBlock: startBlock,
-                endBlock: endBlock
+            epochs[_newEpochId] = Epoch({
+                number: _newEpochId,
+                signer: _newSigner,
+                startBlock: _startBlock,
+                endBlock: _endBlock
             });
-            currentEpochId = newEpochId;
+            currentEpochId = _newEpochId;
         }
 
-        // recommitEpoch occurs in the second latest epoch
-        if (curEpochId > 1 && oldEpochId == curEpochId - 1) {
-            Epoch storage epoch = epochs[oldEpochId];
+        // recommitEpoch occurs in last but one epoch
+        if (curEpochId > 1 && _oldEpochId == curEpochId - 1) {
+            Epoch storage epoch = epochs[_oldEpochId];
             epoch.endBlock = block.number - 1;
 
             // update latest epoch
-            require(newEpochId == curEpochId, "Invalid newEpochId");
+            require(_newEpochId == curEpochId, "Invalid newEpochId");
             require(
-                endBlock > startBlock,
+                _endBlock > _startBlock,
                 "End block must be greater than start block"
             );
 
-            Epoch storage existNewEpoch = epochs[newEpochId];
-            existNewEpoch.signer = newSigner;
-            existNewEpoch.startBlock = startBlock;
-            existNewEpoch.endBlock = endBlock;
+            Epoch storage existNewEpoch = epochs[_newEpochId];
+            existNewEpoch.signer = _newSigner;
+            existNewEpoch.startBlock = _startBlock;
+            existNewEpoch.endBlock = _endBlock;
         }
 
         emit ReCommitEpoch(
-            oldEpochId,
-            newEpochId,
+            _oldEpochId,
+            _newEpochId,
             curEpochId,
-            startBlock,
-            endBlock,
-            newSigner
+            _startBlock,
+            _endBlock,
+            _newSigner
         );
     }
 }

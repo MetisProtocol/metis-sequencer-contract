@@ -93,6 +93,48 @@ describe("MetisSequencerSet", async () => {
     expect(await seqset.epochLength()).to.equal(200);
   });
 
+  it("finalizedEpoch", async () => {
+    const { seqset, mpc, seq1, seq0 } = await loadFixture(fixture);
+
+    // current epoch
+    const currentEpochNumber = await seqset.currentEpochNumber();
+    let nextEpochNumber = currentEpochNumber + 1n;
+
+    await seqset.connect(mpc).commitEpoch(nextEpochNumber, 600, 799, seq1);
+
+    {
+      const { number, startBlock, endBlock, signer } =
+        await seqset.finalizedEpoch();
+      expect(number).eq(0);
+      expect(startBlock).eq(0);
+      expect(endBlock).eq(0);
+      expect(signer).eq(ethers.ZeroAddress);
+    }
+
+    nextEpochNumber++;
+    await seqset.connect(mpc).commitEpoch(nextEpochNumber, 800, 999, seq0);
+
+    {
+      const { number, startBlock, endBlock, signer } =
+        await seqset.finalizedEpoch();
+      expect(number).eq(0);
+      expect(startBlock).eq(0);
+      expect(endBlock).eq(0);
+      expect(signer).eq(ethers.ZeroAddress);
+    }
+
+    nextEpochNumber++;
+    await seqset.connect(mpc).commitEpoch(nextEpochNumber, 1000, 1999, seq1);
+    {
+      const { number, startBlock, endBlock, signer } =
+        await seqset.finalizedEpoch();
+      expect(number).eq(nextEpochNumber - 2n);
+      expect(startBlock).eq(600);
+      expect(endBlock).eq(799);
+      expect(signer).eq(seq1.address);
+    }
+  });
+
   it("commitEpoch", async () => {
     const { seqset, mpc, seq1 } = await loadFixture(fixture);
 
@@ -122,23 +164,30 @@ describe("MetisSequencerSet", async () => {
       "Start block must be greater than currentEpoch.endBlock by 1",
     );
 
-    const latestEpochNumber = currentEpochNumber + 1n;
-    expect(
-      await seqset.connect(mpc).commitEpoch(latestEpochNumber, 600, 799, seq1),
+    const nextEpochNumber = currentEpochNumber + 1n;
+
+    await expect(
+      seqset
+        .connect(mpc)
+        .commitEpoch(nextEpochNumber, 600, 799, ethers.ZeroAddress),
+    ).to.revertedWith("Invalid signer");
+
+    await expect(
+      await seqset.connect(mpc).commitEpoch(nextEpochNumber, 600, 799, seq1),
     )
       .with.emit(seqset, "NewEpoch")
-      .withArgs(latestEpochNumber, 600, 799);
+      .withArgs(nextEpochNumber, 600, 799, seq1.address);
 
     // new epoch
-    expect(await seqset.currentEpochNumber()).to.equal(latestEpochNumber);
-    expect(await seqset.getEpochByBlock(650)).to.equal(latestEpochNumber);
+    expect(await seqset.currentEpochNumber()).to.equal(nextEpochNumber);
+    expect(await seqset.getEpochByBlock(650)).to.equal(nextEpochNumber);
     expect(await seqset.getMetisSequencer(650)).to.equal(seq1.address);
 
     // assert epoch value
     {
       const { number, startBlock, endBlock, signer } =
-        await seqset.epochs(latestEpochNumber);
-      expect(number).to.be.equal(latestEpochNumber);
+        await seqset.epochs(nextEpochNumber);
+      expect(number).to.be.equal(nextEpochNumber);
       expect(startBlock).to.be.equal(600n);
       expect(endBlock).to.be.equal(799n);
       expect(signer).to.be.equal(seq1.address);
@@ -146,7 +195,7 @@ describe("MetisSequencerSet", async () => {
   });
 
   it("recommit epoch", async () => {
-    const { seqset, mpc, seq1 } = await loadFixture(fixture);
+    const { seqset, mpc, seq0, seq1 } = await loadFixture(fixture);
 
     // commit
     await seqset.connect(mpc).commitEpoch(1, 600, 799, seq1);
@@ -158,24 +207,29 @@ describe("MetisSequencerSet", async () => {
       "Not Mpc",
     );
 
+    // block 597
+    await expect(
+      seqset.connect(mpc).recommitEpoch(1, 2, 597, 800, ethers.ZeroAddress),
+    ).to.revertedWith("Invalid signer");
+
     await mineUpTo(598);
 
     // block 599
     await expect(
       seqset.connect(mpc).recommitEpoch(1, 3, 599, 799, seq1),
-    ).to.revertedWith("Invalid newEpochId");
+    ).to.revertedWith("Insane newEpochId");
 
     // block 600
     await expect(
       seqset.connect(mpc).recommitEpoch(1, 2, 600, 598, seq1),
     ).to.revertedWith("End block must be greater than start block");
 
-    // block 601 / set epoch 2
+    // block 601 / set epoch 2, block 800-999
     await seqset.connect(mpc).commitEpoch(2, 800, 999, seq1);
 
     await mineUpTo(699);
 
-    // block 699
+    // block 700
     await expect(
       seqset.connect(mpc).recommitEpoch(1, 2, 699, 898, seq1),
     ).to.revertedWith("Invalid start block");
@@ -195,16 +249,56 @@ describe("MetisSequencerSet", async () => {
     ).to.revertedWith("End block must be greater than start block");
 
     await mineUpTo(899);
-    await seqset.connect(mpc).recommitEpoch(2, 3, 900, 1099, seq1);
 
-    // check block epoch
-    expect(await seqset.getEpochByBlock(899)).to.equal(2);
-    expect(await seqset.getEpochByBlock(900)).to.equal(3);
+    // block 900, recommit on epoch 2, the latest epoch, should update epoch 2 add new epoch 3
+    {
+      await expect(
+        await seqset.connect(mpc).recommitEpoch(2, 3, 900, 1099, seq0),
+        "recommitEpoch at block 900",
+      )
+        .emit(seqset, "ReCommitEpoch")
+        .withArgs(2, 3, 2, 900, 1099, seq0.address);
+
+      expect(
+        await seqset.currentEpochNumber(),
+        "current epoch id is 3 after recommitting epoch 2",
+      ).eq(3);
+      const {
+        signer: epoch2Signer,
+        startBlock: epoc2StartBlock,
+        endBlock: epoch2EndBlock,
+      } = await seqset.epochs(2);
+      expect(epoch2Signer, "epoch2Signer").eq(seq1.address);
+      expect(epoc2StartBlock, "epoc2StartBlock").eq(800);
+      expect(epoch2EndBlock, "epoch2EndBlock").eq(899);
+
+      const {
+        signer: epoch3Signer,
+        startBlock: epoc3StartBlock,
+        endBlock: epoch3EndBlock,
+      } = await seqset.epochs(3);
+      expect(epoch3Signer, "epoch3Signer").eq(seq0.address);
+      expect(epoc3StartBlock, "epoc3StartBlock").eq(900);
+      expect(epoch3EndBlock, "epoch3EndBlock").eq(1099);
+
+      // check block epoch
+      expect(
+        await seqset.getEpochByBlock(899),
+        "epoch id of block 899 is 2",
+      ).to.equal(2);
+      expect(
+        await seqset.getEpochByBlock(900),
+        "epoch id of block 900 is 3",
+      ).to.equal(3);
+    }
 
     // commit
     await mineUpTo(999);
+    // block 1000, add epoch 4, 1100-1299
     await seqset.connect(mpc).commitEpoch(4, 1100, 1299, seq1);
+    // block 1001, add epoch 5, 1300-1499
     await seqset.connect(mpc).commitEpoch(5, 1300, 1499, seq1);
+    // block 1002, add epoch 5, 1500-1699
     await seqset.connect(mpc).commitEpoch(6, 1500, 1699, seq1);
 
     await mineUpTo(1349);
@@ -218,6 +312,37 @@ describe("MetisSequencerSet", async () => {
     ).to.be.revertedWith("End block must be greater than start block");
 
     await mineUpTo(1360);
-    await seqset.connect(mpc).recommitEpoch(5, 6, 1361, 1700, seq1);
+    // block 1361, recommit on epoch 5, the last but one epoch
+    // and the epoch 5 and 6 should be updated
+    {
+      await expect(
+        await seqset.connect(mpc).recommitEpoch(5, 6, 1361, 1700, seq0),
+        "recommitEpoch at block 1361",
+      )
+        .emit(seqset, "ReCommitEpoch")
+        .withArgs(5, 6, 6, 1361, 1700, seq0.address);
+
+      expect(
+        await seqset.currentEpochNumber(),
+        "current epoch id is 6 after recommitting epoch 5",
+      ).eq(6);
+      const {
+        signer: epoch5Signer,
+        startBlock: epoc5StartBlock,
+        endBlock: epoch5EndBlock,
+      } = await seqset.epochs(5);
+      expect(epoch5Signer, "epoch5Signer").eq(seq1.address);
+      expect(epoc5StartBlock, "epoc5StartBlock").eq(1300);
+      expect(epoch5EndBlock, "epoch5EndBlock").eq(1360);
+
+      const {
+        signer: epoch6Signer,
+        startBlock: epoc6StartBlock,
+        endBlock: epoch6EndBlock,
+      } = await seqset.epochs(6);
+      expect(epoch6Signer, "epoch6Signer").eq(seq0.address);
+      expect(epoc6StartBlock, "epoc6StartBlock").eq(1361);
+      expect(epoch6EndBlock, "epoch6EndBlock").eq(1700);
+    }
   });
 });
