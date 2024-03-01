@@ -163,6 +163,15 @@ contract MetisSequencerSet is OwnableUpgradeable {
         address _signer
     ) external onlyMpc {
         uint256 curEpochId = currentEpochId;
+
+        // the last epoch should be finished
+        if (curEpochId > 1) {
+            require(
+                epochs[curEpochId - 1].endBlock < block.number,
+                "The last epoch not finished"
+            );
+        }
+
         // check conditions
         require(_newEpoch == curEpochId + 1, "Invalid epoch id");
         require(
@@ -202,9 +211,6 @@ contract MetisSequencerSet is OwnableUpgradeable {
         require(_newSigner != address(0), "Invalid signer");
 
         uint256 curEpochId = currentEpochId;
-        require(_oldEpochId <= curEpochId, "Invalid oldEpochId");
-        require(_newEpochId <= curEpochId + 1, "Insane newEpochId");
-
         // recommitEpoch occurs in the latest epoch
         if (_oldEpochId == curEpochId) {
             Epoch storage epoch = epochs[curEpochId];
@@ -225,9 +231,9 @@ contract MetisSequencerSet is OwnableUpgradeable {
             });
             currentEpochId = _newEpochId;
         }
-
         // recommitEpoch occurs in last but one epoch
-        if (curEpochId > 1 && _oldEpochId == curEpochId - 1) {
+        // and the first epoch can't be updated
+        else if (_oldEpochId > 0 && _oldEpochId + 1 == curEpochId) {
             Epoch storage epoch = epochs[_oldEpochId];
             epoch.endBlock = block.number - 1;
 
@@ -242,6 +248,8 @@ contract MetisSequencerSet is OwnableUpgradeable {
             existNewEpoch.signer = _newSigner;
             existNewEpoch.startBlock = _startBlock;
             existNewEpoch.endBlock = _endBlock;
+        } else {
+            revert("Invalid oldEpochId");
         }
 
         emit ReCommitEpoch(

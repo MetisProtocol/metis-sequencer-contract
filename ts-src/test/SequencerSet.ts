@@ -111,6 +111,7 @@ describe("MetisSequencerSet", async () => {
       expect(signer).eq(ethers.ZeroAddress);
     }
 
+    await mineUpTo(700);
     nextEpochNumber++;
     await seqset.connect(mpc).commitEpoch(nextEpochNumber, 800, 999, seq0);
 
@@ -123,6 +124,7 @@ describe("MetisSequencerSet", async () => {
       expect(signer).eq(ethers.ZeroAddress);
     }
 
+    await mineUpTo(900);
     nextEpochNumber++;
     await seqset.connect(mpc).commitEpoch(nextEpochNumber, 1000, 1999, seq1);
     {
@@ -200,7 +202,12 @@ describe("MetisSequencerSet", async () => {
     // commit
     await seqset.connect(mpc).commitEpoch(1, 600, 799, seq1);
 
-    await mineUpTo(595);
+    await mineUpTo(594);
+
+    // block 595
+    await expect(
+      seqset.connect(mpc).recommitEpoch(0, 1, 595, 799, seq1),
+    ).to.revertedWith("Invalid oldEpochId");
 
     // block 596
     await expect(seqset.recommitEpoch(1, 2, 596, 799, seq1)).to.revertedWith(
@@ -217,7 +224,7 @@ describe("MetisSequencerSet", async () => {
     // block 599
     await expect(
       seqset.connect(mpc).recommitEpoch(1, 3, 599, 799, seq1),
-    ).to.revertedWith("Insane newEpochId");
+    ).to.revertedWith("Invalid newEpochId");
 
     // block 600
     await expect(
@@ -251,6 +258,7 @@ describe("MetisSequencerSet", async () => {
     await mineUpTo(899);
 
     // block 900, recommit on epoch 2, the latest epoch, should update epoch 2 add new epoch 3
+    // epoch 3, 900...1099
     {
       await expect(
         await seqset.connect(mpc).recommitEpoch(2, 3, 900, 1099, seq0),
@@ -296,9 +304,11 @@ describe("MetisSequencerSet", async () => {
     await mineUpTo(999);
     // block 1000, add epoch 4, 1100-1299
     await seqset.connect(mpc).commitEpoch(4, 1100, 1299, seq1);
-    // block 1001, add epoch 5, 1300-1499
+    await mineUpTo(1200);
+    // block 1201, add epoch 5, 1300-1499
     await seqset.connect(mpc).commitEpoch(5, 1300, 1499, seq1);
-    // block 1002, add epoch 5, 1500-1699
+    await mineUpTo(1320);
+    // block 1321, add epoch 5, 1500-1699
     await seqset.connect(mpc).commitEpoch(6, 1500, 1699, seq1);
 
     await mineUpTo(1349);
