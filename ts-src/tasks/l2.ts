@@ -25,8 +25,8 @@ task("l2:update-mpc-address", "Update MPC address for SequencerSet contract")
 
     console.log("Updating the MPC address to", newAddr);
     const tx = await seqset.UpdateMpcAddress(newAddr);
+    await tx.wait(1);
     console.log("Confirmed at", tx.hash);
-    await tx.wait(3);
 
     if (args["fund"]) {
       const amountInWei = hre.ethers.parseEther(args["fund"]);
@@ -57,5 +57,6 @@ task("l2:update-epoch-length", "Update epoch(aka span) length")
 
     console.log(`Updating the epoch length to ${length}`);
     const tx = await seqset.UpdateEpochLength(length);
+    await tx.wait(1);
     console.log("Confrimed at", tx.hash);
   });
