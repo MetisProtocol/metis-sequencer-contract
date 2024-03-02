@@ -226,12 +226,7 @@ describe("MetisSequencerSet", async () => {
     // commit
     await seqset.connect(mpc).commitEpoch(1, 600, 799, seq1);
 
-    await mineUpTo(594);
-
-    // block 595
-    await expect(
-      seqset.connect(mpc).recommitEpoch(0, 1, 595, 799, seq1),
-    ).to.revertedWith("Genesis immutable");
+    await mineUpTo(595);
 
     // block 596
     await expect(seqset.recommitEpoch(1, 2, 596, 799, seq1)).to.revertedWith(

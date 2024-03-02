@@ -209,7 +209,8 @@ contract MetisSequencerSet is OwnableUpgradeable {
         // check start block
         require(_startBlock == block.number, "Invalid start block");
         require(_newSigner != address(0), "Invalid signer");
-        require(_oldEpochId > 0, "Genesis immutable");
+
+        // Note: We don't check if the startBlock and endBlock match with epochLength
 
         uint256 curEpochId = currentEpochId;
         // recommitEpoch occurs in the latest epoch
