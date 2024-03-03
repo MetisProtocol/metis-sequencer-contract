@@ -11,6 +11,8 @@ interface ILockingPool {
 
     /**
      * @dev Emitted when the proxy update threshold in 'updateBlockReward()'.
+     *      Note from maintainer:
+     *      for compatibility, this ambiguous event is retained
      * @param newReward new block reward
      * @param oldReward  old block reward
      */
@@ -27,4 +29,20 @@ interface ILockingPool {
      * @param _n new min value
      */
     event SetSignerUpdateThrottle(uint256 _n);
+
+    /**
+     * @dev Emitted when rewards are distributed
+     * @param batchId the current batch id
+     * @param startEpoch start epoch number
+     * @param endEpoch end epoch number
+     * @param amount the total that distributed
+     * @param rpb the current reward per block
+     */
+    event DistributeReward(
+        uint256 indexed batchId,
+        uint256 startEpoch,
+        uint256 endEpoch,
+        uint256 amount,
+        uint256 rpb
+    );
 }

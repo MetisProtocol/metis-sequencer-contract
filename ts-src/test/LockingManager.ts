@@ -129,6 +129,28 @@ describe("locking", async () => {
     expect(await lockingInfo.manager(), "default manager").eq(
       await lockingPool.getAddress(),
     );
+
+    expect(await lockingPool.escrow(), "escrow").eq(
+      await lockingInfo.getAddress(),
+    );
+    expect(await lockingPool.BLOCK_REWARD(), "rewardPerBlock").eq(
+      761000n * 10n ** 9n,
+    );
+    expect(await lockingPool.WITHDRAWAL_DELAY(), "exitDelayPeriod").eq(
+      21n * 3600n * 24n,
+    );
+    expect(await lockingPool.signerUpdateThrottle(), "signerUpdateThrottle").eq(
+      1n,
+    );
+
+    const {
+      id: curBatchId,
+      startEpoch: curStartEpoch,
+      endEpoch: curEndEpoch,
+    } = await lockingPool.curBatchState();
+    expect(curBatchId, "curBatchId").eq(1);
+    expect(curStartEpoch, "curStartEpoch").eq(0);
+    expect(curEndEpoch, "curEndEpoch").eq(0);
   });
 
   it("setMinLock", async () => {
@@ -823,9 +845,11 @@ describe("locking", async () => {
           seqs,
           blocks,
         ),
-      "Reward",
+      "distribute reward",
     )
-      .to.emit(lockingInfo, "BatchSubmitReward")
+      .to.emit(lockingPool, "DistributeReward")
+      .withArgs(newBatchId, newStartEpoch, newEndEpoch, rewards, rpb)
+      .and.to.emit(lockingInfo, "BatchSubmitReward")
       .withArgs(newBatchId)
       .and.to.emit(metisToken, "Transfer")
       .withArgs(admin.address, await lockingInfo.getAddress(), rewards);

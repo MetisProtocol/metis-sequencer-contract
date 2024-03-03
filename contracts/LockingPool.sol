@@ -19,10 +19,10 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
     ILockingInfo public escrow;
 
     // delay time for unlock
-    uint256 public WITHDRAWAL_DELAY;
+    uint256 public exitDelayPeriod;
 
     // reward per L2 block
-    uint256 public BLOCK_REWARD;
+    uint256 public rewardPerBlock;
 
     // the mpc address
     address public mpcAddress;
@@ -34,10 +34,10 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
     uint256 public signerUpdateThrottle;
 
     function initialize(address _escrow) external initializer {
-        WITHDRAWAL_DELAY = 21 days;
-        BLOCK_REWARD = 761000 gwei;
+        exitDelayPeriod = 21 days;
+        rewardPerBlock = 761000 gwei;
 
-        // init batch state
+        // init batch state, default starts from 1
         curBatchState = BatchState({
             id: 1,
             number: block.number,
@@ -58,6 +58,22 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
      */
     function currentBatch() external view returns (uint256) {
         return curBatchState.id;
+    }
+
+    /**
+     * @dev WITHDRAWAL_DELAY returns the period
+     *      just for compatibility, this ambiguous func is added
+     */
+    function WITHDRAWAL_DELAY() external view returns (uint256) {
+        return exitDelayPeriod;
+    }
+
+    /**
+     * @dev BLOCK_REWARD returns the current reward per block
+     *      just for compatibility, this ambiguous func is added
+     */
+    function BLOCK_REWARD() external view returns (uint256) {
+        return rewardPerBlock;
     }
 
     /**
@@ -87,8 +103,8 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
      */
     function updateWithdrawDelayTimeValue(uint256 _time) external onlyOwner {
         require(_time > 0, "dalayTime==0");
-        uint256 pre = WITHDRAWAL_DELAY;
-        WITHDRAWAL_DELAY = _time;
+        uint256 pre = exitDelayPeriod;
+        exitDelayPeriod = _time;
         emit WithrawDelayTimeChange(_time, pre);
     }
 
@@ -98,8 +114,8 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
      */
     function updateBlockReward(uint256 newReward) external onlyOwner {
         require(newReward != 0, "invalid newReward");
-        uint256 pre = BLOCK_REWARD;
-        BLOCK_REWARD = newReward;
+        uint256 pre = rewardPerBlock;
+        rewardPerBlock = newReward;
         emit RewardUpdate(newReward, pre);
     }
 
@@ -427,8 +443,9 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         require(bs.endEpoch + 1 == _startEpoch, "invalid startEpoch");
         require(_startEpoch < _endEpoch, "invalid endEpoch");
 
+        uint256 rpb = rewardPerBlock;
         for (uint256 i = 0; i < _seqs.length; i++) {
-            uint256 reward = _blocks[i] * BLOCK_REWARD;
+            uint256 reward = _blocks[i] * rpb;
             uint256 seqId = seqSigners[_seqs[i]];
             Sequencer storage seq = sequencers[seqId];
             if (seq.status == Status.Unavailabe) {
@@ -441,6 +458,13 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         bs.startEpoch = _startEpoch;
         bs.endEpoch = _endEpoch;
         escrow.distributeReward(_batchId, totalReward);
+        emit DistributeReward(
+            _batchId,
+            _startEpoch,
+            _endEpoch,
+            totalReward,
+            rpb
+        );
     }
 
     function _unlock(uint256 _seqId, bool _force, uint32 _l2Gas) internal {
@@ -471,7 +495,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         seq.status = Status.Inactive;
         seq.deactivationBatch = curBatchState.id;
         seq.deactivationTime = block.timestamp;
-        seq.unlockClaimTime = block.timestamp + WITHDRAWAL_DELAY;
+        seq.unlockClaimTime = block.timestamp + exitDelayPeriod;
         seq.nonce++;
 
         uint256 unclaimed = seq.reward;

@@ -113,6 +113,9 @@ interface ILockingInfo {
     /**
      * @dev Emitted when batch update in  'batchSubmitRewards'
      * @param _newBatchId new batchId.
+     *
+     *      Note from maintainer:
+     *      for compatibility, the event is retained
      */
     event BatchSubmitReward(uint256 _newBatchId);
 
