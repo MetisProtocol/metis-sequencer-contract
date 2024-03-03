@@ -22,7 +22,7 @@ interface ISequencerInfo {
 
     struct Sequencer {
         uint256 amount; // sequencer current locked
-        uint256 reward; // sequencer current reward that have not cleamed
+        uint256 reward; // sequencer current reward that have not claimed
         uint256 activationBatch; // sequencer activation batch id
         uint256 updatedBatch; // batch id of the last updated
         uint256 deactivationBatch; // sequencer deactivation batch id
