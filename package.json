@@ -12,7 +12,7 @@
     "solhint": "^4.1.1"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.9.5",
+    "@openzeppelin/contracts": "^4.9.6",
     "@openzeppelin/contracts-upgradeable": "^4.9.6"
   },
   "scripts": {
