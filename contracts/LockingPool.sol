@@ -428,7 +428,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         uint256 _endEpoch,
         address[] calldata _seqs,
         uint256[] calldata _blocks
-    ) external returns (uint256 totalReward) {
+    ) external {
         require(msg.sender == mpcAddress, "not MPC");
         require(
             _seqs.length == _blocks.length && _seqs.length > 0,
@@ -444,6 +444,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         require(_startEpoch < _endEpoch, "invalid endEpoch");
 
         uint256 rpb = rewardPerBlock;
+        uint256 totalReward = 0;
         for (uint256 i = 0; i < _seqs.length; i++) {
             uint256 reward = _blocks[i] * rpb;
             uint256 seqId = seqSigners[_seqs[i]];
