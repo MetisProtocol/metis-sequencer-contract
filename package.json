@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.9.5",
-    "@openzeppelin/contracts-upgradeable": "^4.9.5"
+    "@openzeppelin/contracts-upgradeable": "^4.9.6"
   },
   "scripts": {
     "lint": "prettier --plugin=prettier-plugin-solidity --check ts-src 'contracts/**/*.sol' && solhint 'contracts/**/*.sol'",
