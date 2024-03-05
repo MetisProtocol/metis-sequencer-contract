@@ -150,7 +150,7 @@ describe("MetisSequencerSet", async () => {
 
     await expect(
       seqset.connect(mpc).commitEpoch(currentEpochNumber + 2n, 600, 799, seq1),
-    ).to.revertedWith("Invalid epoch id");
+    ).to.revertedWith("Invalid new epoch number");
 
     await expect(
       seqset.connect(mpc).commitEpoch(currentEpochNumber + 1n, 900, 799, seq1),

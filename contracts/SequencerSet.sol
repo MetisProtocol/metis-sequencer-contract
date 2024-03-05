@@ -173,7 +173,7 @@ contract MetisSequencerSet is OwnableUpgradeable {
         }
 
         // check conditions
-        require(_newEpoch == curEpochId + 1, "Invalid epoch id");
+        require(_newEpoch == curEpochId + 1, "Invalid new epoch number");
         require(
             _endBlock > _startBlock,
             "End block must be greater than start block"
