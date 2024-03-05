@@ -348,3 +348,70 @@ task("l1:update-reward-per-block", "update reward per block")
     await tx.wait(1);
     console.log("Confrimed at", tx.hash);
   });
+
+task("l1:set-reward-payer", "Update reward payer")
+  .addParam("addr", "The new payer address", "", types.string)
+  .addParam(
+    "approve",
+    "approve if the signer is equal with the addr",
+    false,
+    types.boolean,
+  )
+  .setAction(async (args, hre) => {
+    if (!hre.network.tags["l1"]) {
+      throw new Error(`${hre.network.name} is not an l1`);
+    }
+
+    const { address: LockingInfoAddress } = await hre.deployments.get(
+      LockingInfoContractName,
+    );
+
+    const lockingInfo = await hre.ethers.getContractAt(
+      LockingInfoContractName,
+      LockingInfoAddress,
+    );
+
+    const newAddr = args["addr"];
+    if (!hre.ethers.isAddress(newAddr)) {
+      throw new Error(`addr arg is not a valid address`);
+    }
+
+    if ((await lockingInfo.rewardPayer()) !== newAddr) {
+      console.log("Updating the reward payer address to", newAddr);
+      const tx = await lockingInfo.setRewardPayer(newAddr);
+      await tx.wait(1);
+      console.log("Confirmed at", tx.hash);
+    } else {
+      console.log("No changes");
+    }
+
+    if (args["approve"]) {
+      const [signer] = await hre.ethers.getSigners();
+      if ((await signer.getAddress()) != newAddr) {
+        console.log("No the signer, can't continue to approve");
+        return;
+      }
+
+      const metisL1Addr = process.env.MEITS_L1_TOKEN;
+      if (!hre.ethers.isAddress(metisL1Addr)) {
+        throw new Error(`MEITS_L1_TOKEN env is not set or it's not an address`);
+      }
+      const metis = await hre.ethers.getContractAt("TestERC20", metisL1Addr);
+      const allowance = await metis.allowance(newAddr, LockingInfoAddress);
+      if (allowance !== hre.ethers.MaxUint256) {
+        console.log("approving Metis");
+        const tx = await metis.approve(
+          LockingInfoAddress,
+          hre.ethers.MaxUint256,
+        );
+        await tx.wait(1);
+        console.log("Confirmed at", tx.hash);
+      } else {
+        console.log("approved before");
+      }
+    } else {
+      console.log(
+        "Note: You need to approve your Metis to LockingInfo contract later",
+      );
+    }
+  });
