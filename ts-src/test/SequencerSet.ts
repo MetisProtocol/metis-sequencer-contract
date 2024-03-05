@@ -126,7 +126,7 @@ describe("MetisSequencerSet", async () => {
 
     await mineUpTo(900);
     nextEpochNumber++;
-    await seqset.connect(mpc).commitEpoch(nextEpochNumber, 1000, 1999, seq1);
+    await seqset.connect(mpc).commitEpoch(nextEpochNumber, 1000, 1199, seq1);
     {
       const { number, startBlock, endBlock, signer } =
         await seqset.finalizedEpoch();

@@ -179,7 +179,7 @@ contract MetisSequencerSet is OwnableUpgradeable {
             "End block must be greater than start block"
         );
         require(
-            (_endBlock - _startBlock + 1) % epochLength == 0,
+            _endBlock - _startBlock + 1 == epochLength,
             "Mismatch epoch length and block length"
         );
         require(
