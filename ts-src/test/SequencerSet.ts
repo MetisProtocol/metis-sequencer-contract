@@ -5,7 +5,7 @@ import {
   mineUpTo,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
-const initStartBlock = 1n;
+const initStartBlock = 400n;
 const initEndBlock = 599n;
 const initEpochLen = 200n;
 
@@ -102,38 +102,51 @@ describe("MetisSequencerSet", async () => {
 
     await seqset.connect(mpc).commitEpoch(nextEpochNumber, 600, 799, seq1);
 
+    // epoch 0 but not exists
     {
-      const { number, startBlock, endBlock, signer } =
+      const [{ number, startBlock, endBlock, signer }, valid] =
         await seqset.finalizedEpoch();
       expect(number).eq(0);
-      expect(startBlock).eq(0);
-      expect(endBlock).eq(0);
-      expect(signer).eq(ethers.ZeroAddress);
+      expect(startBlock).eq(initStartBlock);
+      expect(endBlock).eq(initEndBlock);
+      expect(signer).eq(seq0.address);
+      expect(valid).eq(false);
+
+      expect(await seqset.finalizedBlock(), "finalizedBlock-0").eq(
+        initStartBlock - 1n,
+      );
     }
 
     await mineUpTo(700);
     nextEpochNumber++;
     await seqset.connect(mpc).commitEpoch(nextEpochNumber, 800, 999, seq0);
 
+    // epoch 0 and exists
     {
-      const { number, startBlock, endBlock, signer } =
+      const [{ number, startBlock, endBlock, signer }, valid] =
         await seqset.finalizedEpoch();
       expect(number).eq(0);
-      expect(startBlock).eq(0);
-      expect(endBlock).eq(0);
-      expect(signer).eq(ethers.ZeroAddress);
+      expect(startBlock).eq(initStartBlock);
+      expect(endBlock).eq(initEndBlock);
+      expect(signer).eq(seq0.address);
+      expect(valid).eq(true);
+      expect(await seqset.finalizedBlock(), "finalizedBlock-1").eq(
+        initEndBlock,
+      );
     }
 
     await mineUpTo(900);
     nextEpochNumber++;
     await seqset.connect(mpc).commitEpoch(nextEpochNumber, 1000, 1199, seq1);
     {
-      const { number, startBlock, endBlock, signer } =
+      const [{ number, startBlock, endBlock, signer }, valid] =
         await seqset.finalizedEpoch();
       expect(number).eq(nextEpochNumber - 2n);
       expect(startBlock).eq(600);
       expect(endBlock).eq(799);
       expect(signer).eq(seq1.address);
+      expect(valid).eq(true);
+      expect(await seqset.finalizedBlock(), "finalizedBlock-2").eq(799);
     }
   });
 
@@ -326,7 +339,11 @@ describe("MetisSequencerSet", async () => {
     await mineUpTo(1200);
     // block 1201, add epoch 5, 1300-1499
     await seqset.connect(mpc).commitEpoch(5, 1300, 1499, seq1);
-    await mineUpTo(1320);
+    await mineUpTo(1319);
+    // block 1320 the epoch 4 has been finished
+    await expect(
+      seqset.connect(mpc).recommitEpoch(4, 5, 1321, 1700, seq1),
+    ).to.be.revertedWith("The last epoch is finished");
     // block 1321, add epoch 5, 1500-1699
     await seqset.connect(mpc).commitEpoch(6, 1500, 1699, seq1);
 

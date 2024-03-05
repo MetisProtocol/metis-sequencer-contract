@@ -66,6 +66,14 @@ contract MetisSequencerSet is OwnableUpgradeable {
         // initial epoch
         uint256 epochId = 0;
 
+        // We do not check if the length between the start and end block matches the epoch length
+        // the epoch length can only be used for next epoch
+        require(
+            _firstStartBlock > block.number &&
+                _firstEndBlock > _firstStartBlock,
+            "Invalid block range"
+        );
+
         // initial epoch item
         epochs[epochId] = Epoch({
             number: epochId,
@@ -99,20 +107,15 @@ contract MetisSequencerSet is OwnableUpgradeable {
     // get epoch number by block
     // It returns Max(uint256) if the height doesn't exist in any epochs
     function getEpochByBlock(uint256 _number) public view returns (uint256) {
-        uint256 lastIndex = currentEpochId;
-        for (uint256 i = lastIndex; i >= 0; i--) {
-            Epoch memory epoch = epochs[i];
+        uint256 lastIndex = currentEpochId + 1;
+        for (uint256 i = lastIndex; i > 0; i--) {
+            Epoch memory epoch = epochs[i - 1];
             if (epoch.startBlock <= _number && _number <= epoch.endBlock) {
                 return epoch.number;
             }
 
             // not in the last epoch
             if (i == lastIndex && _number > epoch.endBlock) {
-                return type(uint256).max;
-            }
-
-            // not in the first epoch
-            if (i == 0 && _number < epoch.startBlock) {
                 return type(uint256).max;
             }
         }
@@ -132,12 +135,32 @@ contract MetisSequencerSet is OwnableUpgradeable {
 
     // finalizedEpoch returns the finalized epoch
     // the epoch won't be recommitted by `recommitEpoch`
-    // It will returns zero-value epoch if the epoch doesn't exist
-    function finalizedEpoch() public view returns (Epoch memory epoch) {
-        uint256 curEpochId = currentEpochId;
-        if (curEpochId > 2) {
-            epoch = epochs[curEpochId - 2];
+    // if there is no such epoch, the second return value will be false
+    function finalizedEpoch()
+        public
+        view
+        returns (Epoch memory epoch, bool exist)
+    {
+        uint256 lastIndex = currentEpochId + 1;
+        for (uint256 i = lastIndex; i > 0; i--) {
+            epoch = epochs[i - 1];
+            if (block.number > epoch.endBlock) {
+                return (epoch, true);
+            }
         }
+        // It's epoch 0 but not exist
+        return (epoch, false);
+    }
+
+    // finalizedBlock returns the finalized block number
+    function finalizedBlock() public view returns (uint256) {
+        (Epoch memory epoch, bool exist) = finalizedEpoch();
+        if (exist) {
+            return epoch.endBlock;
+        }
+        // the last block of epoch 0
+        // since the startBlock must not be 0, so it's safe to minus 1
+        return epoch.startBlock - 1;
     }
 
     // get metis sequencer by block number
@@ -210,7 +233,7 @@ contract MetisSequencerSet is OwnableUpgradeable {
         require(_startBlock == block.number, "Invalid start block");
         require(_newSigner != address(0), "Invalid signer");
 
-        // Note: We don't check if the startBlock and endBlock match with epochLength
+        // Note: We do not check if the length between the start and end block matches the epoch length
 
         uint256 curEpochId = currentEpochId;
         // recommitEpoch occurs in the latest epoch
@@ -236,6 +259,11 @@ contract MetisSequencerSet is OwnableUpgradeable {
         // recommitEpoch occurs in last but one epoch
         else if (_oldEpochId + 1 == curEpochId) {
             Epoch storage epoch = epochs[_oldEpochId];
+            // ensure that finilized epoch can't be changed
+            require(
+                epoch.endBlock > block.number,
+                "The last epoch is finished"
+            );
             epoch.endBlock = block.number - 1;
 
             // update latest epoch
