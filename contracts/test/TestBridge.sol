@@ -15,7 +15,7 @@ contract TestBridge is IL1ERC20Bridge {
         bytes _data
     );
 
-    mapping(address => uint256) public l2Balances;
+    mapping(address addr => uint256 balance) public l2Balances;
 
     function depositERC20ToByChainId(
         uint256,

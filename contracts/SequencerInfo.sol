@@ -8,7 +8,7 @@ contract SequencerInfo is OwnableUpgradeable, ISequencerInfo {
     uint256 public totalSequencers;
 
     // whitelist
-    mapping(address => bool) public whitelist;
+    mapping(address owner => bool yes) public whitelist;
 
     // sequencerId => sequencer
     mapping(uint256 seqId => Sequencer _seq) public sequencers;

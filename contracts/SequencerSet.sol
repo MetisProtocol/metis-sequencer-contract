@@ -16,9 +16,9 @@ contract MetisSequencerSet is OwnableUpgradeable {
         uint256 endBlock;
     }
 
-    mapping(uint256 => Epoch) public epochs; // epoch number => epoch
+    mapping(uint256 number => Epoch epoch) public epochs; // epoch number => epoch
 
-    // current epoch id, starts from 0
+    // current epoch number, starts from 0
     uint256 internal currentEpochId;
 
     // event
