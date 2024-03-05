@@ -28,7 +28,7 @@ interface ISequencerInfo {
         uint256 deactivationBatch; // sequencer deactivation batch id
         uint256 deactivationTime; // sequencer deactivation timestamp
         uint256 unlockClaimTime; // timestamp that sequencer can claim unlocked token, it's equal to deactivationTime + WITHDRAWAL_DELAY
-        uint256 nonce; // sequencer operations number, starts from 1, and used internally by the Metis consencus client
+        uint256 nonce; // sequencer operations number, starts from 1, and used internally by the Metis consensus client
         address owner; // the operator address, owns this sequencer node, it controls lock/relock/unlock/claim functions
         address signer; // sequencer signer, an address to sign L2 blocks, if you want to update it, you must have the privkey of this address
         bytes pubkey; // sequencer signer pubkey
