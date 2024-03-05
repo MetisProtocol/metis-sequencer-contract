@@ -342,7 +342,7 @@ describe("MetisSequencerSet", async () => {
     await mineUpTo(1319);
     // block 1320 the epoch 4 has been finished
     await expect(
-      seqset.connect(mpc).recommitEpoch(4, 5, 1321, 1700, seq1),
+      seqset.connect(mpc).recommitEpoch(4, 5, 1320, 1700, seq1),
     ).to.be.revertedWith("The last epoch is finished");
     // block 1321, add epoch 5, 1500-1699
     await seqset.connect(mpc).commitEpoch(6, 1500, 1699, seq1);
