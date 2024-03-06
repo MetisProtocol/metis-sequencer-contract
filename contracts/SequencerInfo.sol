@@ -146,7 +146,7 @@ contract SequencerInfo is OwnableUpgradeable, ISequencerInfo {
             deactivationTime: 0,
             unlockClaimTime: 0,
             nonce: 1,
-            owner: msg.sender,
+            owner: _owner,
             signer: _signer,
             pubkey: _signerPubkey,
             rewardRecipient: _rewardRecipient,

@@ -121,8 +121,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
 
     /**
      * @dev setSignerUpdateThrottle  set signerUpdateThrottle
-     * @param _n the new value of the throttle
-     *        Note: it can be 0
+     * @param _n the new value of the throttle, it can be 0
      */
     function setSignerUpdateThrottle(uint256 _n) external onlyOwner {
         signerUpdateThrottle = _n;
@@ -130,7 +129,8 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
     }
 
     /**
-     * @dev updateSigner Allow sqeuencer to update new signers to replace old signer addresses，and NFT holder will be transfer driectly
+     * @dev updateSigner sqeuencer signer can update signer address
+     *      Note: only signer can use this, the sequencer owner doesn't have access
      * @param _seqId the sequencer id
      * @param _signerPubkey the new signer pubkey address
      */
@@ -213,7 +213,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
             batchId,
             _signerPubkey
         );
-        emit SequencerOwnerChanged(seqId, msg.sender);
+        emit SequencerOwnerChanged(seqId, owner);
         emit SequencerRewardRecipientChanged(seqId, address(0));
     }
 
@@ -234,9 +234,10 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         bytes calldata _signerPubkey
     ) external whenNotPaused whitelistRequired {
         uint256 batchId = curBatchState.id;
+        address owner = msg.sender;
         uint256 seqId = _lockFor(
             batchId,
-            msg.sender,
+            owner,
             _signer,
             _signerPubkey,
             _amount,
@@ -244,13 +245,13 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
         );
         escrow.newSequencer(
             seqId,
-            msg.sender,
+            owner,
             _signer,
             _amount,
             batchId,
             _signerPubkey
         );
-        emit SequencerOwnerChanged(seqId, msg.sender);
+        emit SequencerOwnerChanged(seqId, owner);
         emit SequencerRewardRecipientChanged(seqId, _rewardRecipient);
     }
 
