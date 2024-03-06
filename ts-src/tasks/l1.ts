@@ -322,11 +322,21 @@ task("l1:update-exit-delay", "update exit delay time duration")
   });
 
 task("l1:update-reward-per-block", "update reward per block")
-  .addParam("value", "the reward per block", "", types.string)
-  .addParam("unit", "ether", "wei/gwei/ether", types.string)
+  .addParam(
+    "value",
+    "the reward per block, use number+unit, e.g. 0.000761metis",
+    "",
+    types.string,
+  )
   .setAction(async (args, hre) => {
     if (!hre.network.tags["l1"]) {
       throw new Error(`${hre.network.name} is not an l1`);
+    }
+
+    const regexp = /^(\d+\.?\d+)\s?(metis|ether|gwei|wei)$/;
+    const matched = args["value"].match(regexp);
+    if (!matched) {
+      throw new Error(`Invalid value input ${args["value"]}`);
     }
 
     const { address: LockingPoolAddress } = await hre.deployments.get(
@@ -338,13 +348,20 @@ task("l1:update-reward-per-block", "update reward per block")
       LockingPoolAddress,
     );
 
+    const [_, value, unit] = matched;
+    const wei = hre.ethers.parseUnits(value, unit === "metis" ? "ether" : unit);
     console.log(
-      `update the reward per block value to ${args["value"]}${args["unit"]}`,
+      `update the reward per block value to ${value} ${unit} = (${wei} wei)`,
     );
-
-    const tx = await lockingManager.updateBlockReward(
-      hre.ethers.parseUnits(args["value"], args["unit"]),
+    const prompt = readline.createInterface({ input: stdin, output: stdout });
+    const answer = await prompt.question(
+      "Do you want to continue? (Only 'yes' will be accepted to approve) ",
     );
+    if (answer !== "yes") {
+      console.log("Okay, I will exit");
+      return;
+    }
+    const tx = await lockingManager.updateBlockReward(wei);
     await tx.wait(1);
     console.log("Confrimed at", tx.hash);
   });
