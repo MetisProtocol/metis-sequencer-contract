@@ -137,7 +137,7 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
     function updateSigner(
         uint256 _seqId,
         bytes calldata _signerPubkey
-    ) external whitelistRequired {
+    ) external whenNotPaused {
         Sequencer storage seq = sequencers[_seqId];
         if (seq.status != Status.Active) {
             revert SeqNotActive();
