@@ -239,31 +239,41 @@ describe("MetisSequencerSet", async () => {
     // commit
     await seqset.connect(mpc).commitEpoch(1, 600, 799, seq1);
 
-    await mineUpTo(595);
+    await mineUpTo(590);
 
-    // block 596
-    await expect(seqset.recommitEpoch(1, 2, 596, 799, seq1)).to.revertedWith(
-      "Not Mpc",
-    );
-
-    // block 597
+    // block 591
     await expect(
-      seqset.connect(mpc).recommitEpoch(1, 2, 597, 800, ethers.ZeroAddress),
+      seqset.recommitEpoch(1, 2, 591, 799, seq1),
+      "block 591",
+    ).to.revertedWith("Not Mpc");
+
+    // block 592
+    await expect(
+      seqset.connect(mpc).recommitEpoch(1, 2, 592, 799, ethers.ZeroAddress),
+      "block 592",
     ).to.revertedWith("Invalid signer");
 
-    await mineUpTo(598);
-
-    // block 599
+    // block 593
     await expect(
-      seqset.connect(mpc).recommitEpoch(1, 3, 599, 799, seq1),
-    ).to.revertedWith("Invalid newEpochId");
+      seqset.connect(mpc).recommitEpoch(1, 2, 593, 799, seq1),
+      "block 593",
+    ).to.revertedWith("Conflict on end block");
+
+    await mineUpTo(600);
 
     // block 600
     await expect(
-      seqset.connect(mpc).recommitEpoch(1, 2, 600, 598, seq1),
+      seqset.connect(mpc).recommitEpoch(1, 3, 601, 799, seq1),
+      "block 600",
+    ).to.revertedWith("Invalid newEpochId");
+
+    // block 601
+    await expect(
+      seqset.connect(mpc).recommitEpoch(1, 2, 602, 600, seq1),
+      "block 601",
     ).to.revertedWith("End block must be greater than start block");
 
-    // block 601 / set epoch 2, block 800-999
+    // block 603 / set epoch 2, block 800-999
     await seqset.connect(mpc).commitEpoch(2, 800, 999, seq1);
 
     await mineUpTo(699);
@@ -271,6 +281,7 @@ describe("MetisSequencerSet", async () => {
     // block 700
     await expect(
       seqset.connect(mpc).recommitEpoch(1, 2, 699, 898, seq1),
+      "block 700",
     ).to.revertedWith("Invalid start block");
 
     await mineUpTo(705);
@@ -278,6 +289,7 @@ describe("MetisSequencerSet", async () => {
     // block 706
     await expect(
       seqset.connect(mpc).recommitEpoch(3, 4, 706, 901, seq1),
+      "block 706",
     ).to.revertedWith("Invalid oldEpochId");
 
     await mineUpTo(710);
@@ -285,6 +297,7 @@ describe("MetisSequencerSet", async () => {
     // block 711
     await expect(
       seqset.connect(mpc).recommitEpoch(1, 2, 711, 688, seq1),
+      "block 711",
     ).to.revertedWith("End block must be greater than start block");
 
     await mineUpTo(899);
@@ -334,27 +347,33 @@ describe("MetisSequencerSet", async () => {
 
     // commit
     await mineUpTo(999);
-    // block 1000, add epoch 4, 1100-1299
+    // block 1000, epoch 4, 1100-1299
     await seqset.connect(mpc).commitEpoch(4, 1100, 1299, seq1);
     await mineUpTo(1200);
-    // block 1201, add epoch 5, 1300-1499
+    // block 1201, epoch 4, commit epoch 5, 1300-1499
     await seqset.connect(mpc).commitEpoch(5, 1300, 1499, seq1);
-    await mineUpTo(1319);
-    // block 1320 the epoch 4 has been finished
+
+    await mineUpTo(1301);
+    // block 1302, epoch 5
     await expect(
-      seqset.connect(mpc).recommitEpoch(4, 5, 1320, 1700, seq1),
-    ).to.be.revertedWith("The last epoch is finished");
-    // block 1321, add epoch 5, 1500-1699
+      seqset.connect(mpc).recommitEpoch(4, 5, 1302, 1499, seq0),
+      "block 1302",
+    ).to.be.revertedWith("The latest epoch producing");
+
+    await mineUpTo(1320);
+    // block 1321, epoch 5, commit epoch 6, 1500-1699
     await seqset.connect(mpc).commitEpoch(6, 1500, 1699, seq1);
 
-    await mineUpTo(1349);
+    // block 1322, epoch 5
     await expect(
-      seqset.connect(mpc).recommitEpoch(5, 7, 1350, 1700, seq1),
+      seqset.connect(mpc).recommitEpoch(5, 7, 1322, 1700, seq1),
+      "block 1322",
     ).to.be.revertedWith("Invalid newEpochId");
 
-    await mineUpTo(1355);
+    // block 1323, epoch 5
     await expect(
-      seqset.connect(mpc).recommitEpoch(5, 6, 1356, 1340, seq1),
+      seqset.connect(mpc).recommitEpoch(5, 6, 1323, 1240, seq1),
+      "block 1323",
     ).to.be.revertedWith("End block must be greater than start block");
 
     await mineUpTo(1360);

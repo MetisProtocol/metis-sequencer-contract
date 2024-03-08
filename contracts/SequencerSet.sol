@@ -236,9 +236,13 @@ contract MetisSequencerSet is OwnableUpgradeable {
         // Note: We do not check if the length between the start and end block matches the epoch length
 
         uint256 curEpochId = currentEpochId;
-        // recommitEpoch occurs in the latest epoch
+        // Case 1: recommitEpoch occurs in the latest epoch
         if (_oldEpochId == curEpochId) {
             Epoch storage epoch = epochs[curEpochId];
+            // Current epoch can't be updated on the first block of the epoch
+            // If the signer can't produce the first block
+            // The mpc and consensus client should use case 2 section to recommit the epoch
+            require(epoch.startBlock < block.number, "Conflict on end block");
             epoch.endBlock = block.number - 1;
 
             // craete new epoch
@@ -256,15 +260,14 @@ contract MetisSequencerSet is OwnableUpgradeable {
             });
             currentEpochId = _newEpochId;
         }
-        // recommitEpoch occurs in last but one epoch
+        // Case 2: recommitEpoch occurs in last but one epoch
         else if (_oldEpochId + 1 == curEpochId) {
             Epoch storage epoch = epochs[_oldEpochId];
-            // ensure that finilized epoch can't be changed
-            require(
-                epoch.endBlock > block.number,
-                "The last epoch is finished"
-            );
-            epoch.endBlock = block.number - 1;
+            // if the epoch is not finished then set end block to the last block
+            // if the epoch is finished, then do nothing on the epoch
+            if (epoch.endBlock >= block.number) {
+                epoch.endBlock = block.number - 1;
+            }
 
             // update latest epoch
             require(_newEpochId == curEpochId, "Invalid newEpochId");
@@ -274,6 +277,10 @@ contract MetisSequencerSet is OwnableUpgradeable {
             );
 
             Epoch storage existNewEpoch = epochs[_newEpochId];
+            require(
+                existNewEpoch.startBlock >= block.number,
+                "The latest epoch producing"
+            );
             existNewEpoch.signer = _newSigner;
             existNewEpoch.startBlock = _startBlock;
             existNewEpoch.endBlock = _endBlock;
