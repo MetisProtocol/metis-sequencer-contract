@@ -93,6 +93,40 @@ describe("MetisSequencerSet", async () => {
     expect(await seqset.epochLength()).to.equal(200);
   });
 
+  it("getMetisSequencer/getEpochByBlock", async () => {
+    const { seqset, mpc, seq1, seq0 } = await loadFixture(fixture);
+
+    expect(await seqset.getMetisSequencer(initStartBlock - 1n)).to.equal(
+      seq0.address,
+    );
+
+    expect(await seqset.getMetisSequencer(initStartBlock + 1n)).to.equal(
+      seq0.address,
+    );
+
+    expect(await seqset.getMetisSequencer(initEndBlock + 1n)).to.equal(
+      ethers.ZeroAddress,
+    );
+
+    // current epoch
+    const currentEpochNumber = await seqset.currentEpochNumber();
+    expect(await seqset.currentEpochNumber()).to.equal(currentEpochNumber);
+    expect(await seqset.getEpochByBlock(650)).to.equal(ethers.MaxUint256);
+
+    let nextEpochNumber = currentEpochNumber + 1n;
+    await seqset.connect(mpc).commitEpoch(nextEpochNumber, 600, 799, seq1);
+    expect(await seqset.currentEpochNumber()).to.equal(nextEpochNumber);
+    expect(await seqset.getEpochByBlock(650)).to.equal(nextEpochNumber);
+    expect(await seqset.getEpochByBlock(850)).to.equal(ethers.MaxUint256);
+
+    await mineUpTo(700);
+    nextEpochNumber++;
+    await seqset.connect(mpc).commitEpoch(nextEpochNumber, 800, 999, seq0);
+    expect(await seqset.currentEpochNumber()).to.equal(nextEpochNumber);
+    expect(await seqset.getEpochByBlock(850)).to.equal(nextEpochNumber);
+    expect(await seqset.getEpochByBlock(1000)).to.equal(ethers.MaxUint256);
+  });
+
   it("finalizedEpoch", async () => {
     const { seqset, mpc, seq1, seq0 } = await loadFixture(fixture);
 
