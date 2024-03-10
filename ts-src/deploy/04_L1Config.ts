@@ -25,8 +25,8 @@ const func: DeployFunction = async function (hre) {
   if ((await lockingInfo.manager()) == hre.ethers.ZeroAddress) {
     console.log("updating manager address for LockingInfo");
     const tx = await lockingInfo.initManager(LockingPoolAddress);
-    await tx.wait(1);
-    console.log(`done block=${tx.blockNumber} tx=${tx.hash}`);
+    const rec = await tx.wait(1);
+    console.log(`done block=${rec!.blockNumber} tx=${tx.hash}`);
   }
 };
 
