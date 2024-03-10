@@ -1,0 +1,511 @@
+{
+  "address": "0x7f49160EB9BB068101d445fe77E17ecDb37D0B47",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_newLength",
+          "type": "uint256"
+        }
+      ],
+      "name": "EpochUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "version",
+          "type": "uint8"
+        }
+      ],
+      "name": "Initialized",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_newMpcAddress",
+          "type": "address"
+        }
+      ],
+      "name": "MpcAddressUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "epochId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "startBlock",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "endBlock",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "signer",
+          "type": "address"
+        }
+      ],
+      "name": "NewEpoch",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "oldEpochId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "newEpochId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "curEpochId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "startBlock",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "endBlock",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "newSigner",
+          "type": "address"
+        }
+      ],
+      "name": "ReCommitEpoch",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_newLength",
+          "type": "uint256"
+        }
+      ],
+      "name": "UpdateEpochLength",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_newMpc",
+          "type": "address"
+        }
+      ],
+      "name": "UpdateMpcAddress",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_newEpoch",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_startBlock",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_endBlock",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_signer",
+          "type": "address"
+        }
+      ],
+      "name": "commitEpoch",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "currentEpoch",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "number",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "signer",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "startBlock",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "endBlock",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct MetisSequencerSet.Epoch",
+          "name": "epoch",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "currentEpochNumber",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "epochLength",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "number",
+          "type": "uint256"
+        }
+      ],
+      "name": "epochs",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "number",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "signer",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "startBlock",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "endBlock",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "finalizedBlock",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "finalizedEpoch",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "number",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "signer",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "startBlock",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "endBlock",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct MetisSequencerSet.Epoch",
+          "name": "epoch",
+          "type": "tuple"
+        },
+        {
+          "internalType": "bool",
+          "name": "exist",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_number",
+          "type": "uint256"
+        }
+      ],
+      "name": "getEpochByBlock",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_number",
+          "type": "uint256"
+        }
+      ],
+      "name": "getMetisSequencer",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_initialSequencer",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_mpcAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_firstStartBlock",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_firstEndBlock",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_epochLength",
+          "type": "uint256"
+        }
+      ],
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "mpcAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_oldEpochId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_newEpochId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_startBlock",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_endBlock",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_newSigner",
+          "type": "address"
+        }
+      ],
+      "name": "recommitEpoch",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x8e266953e235cdddfc3baa494557bf0933b0b28e699410b38a76c2a6c5e36e4b",
+  "receipt": {
+    "to": null,
+    "from": "0x0000001aB69b564959DAeF0F6dcd206dB0ACDc78",
+    "contractAddress": "0x7f49160EB9BB068101d445fe77E17ecDb37D0B47",
+    "transactionIndex": 0,
+    "gasUsed": "1285635",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x795f4f918fe725fa29e30b8fb996145db3aaf824be26e53613f561b00bc913ff",
+    "transactionHash": "0x8e266953e235cdddfc3baa494557bf0933b0b28e699410b38a76c2a6c5e36e4b",
+    "logs": [],
+    "blockNumber": 3,
+    "cumulativeGasUsed": "1285635",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "771f70c21986c7cf228a86db614cb580",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.20+commit.a1b79de6\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_newLength\",\"type\":\"uint256\"}],\"name\":\"EpochUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_newMpcAddress\",\"type\":\"address\"}],\"name\":\"MpcAddressUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"epochId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"startBlock\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"endBlock\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"signer\",\"type\":\"address\"}],\"name\":\"NewEpoch\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"oldEpochId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"newEpochId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"curEpochId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"startBlock\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"endBlock\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"newSigner\",\"type\":\"address\"}],\"name\":\"ReCommitEpoch\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_newLength\",\"type\":\"uint256\"}],\"name\":\"UpdateEpochLength\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_newMpc\",\"type\":\"address\"}],\"name\":\"UpdateMpcAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_newEpoch\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_startBlock\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_endBlock\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_signer\",\"type\":\"address\"}],\"name\":\"commitEpoch\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"currentEpoch\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"number\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"signer\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"startBlock\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"endBlock\",\"type\":\"uint256\"}],\"internalType\":\"struct MetisSequencerSet.Epoch\",\"name\":\"epoch\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"currentEpochNumber\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"epochLength\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"number\",\"type\":\"uint256\"}],\"name\":\"epochs\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"number\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"signer\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"startBlock\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"endBlock\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"finalizedBlock\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"finalizedEpoch\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"number\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"signer\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"startBlock\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"endBlock\",\"type\":\"uint256\"}],\"internalType\":\"struct MetisSequencerSet.Epoch\",\"name\":\"epoch\",\"type\":\"tuple\"},{\"internalType\":\"bool\",\"name\":\"exist\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_number\",\"type\":\"uint256\"}],\"name\":\"getEpochByBlock\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_number\",\"type\":\"uint256\"}],\"name\":\"getMetisSequencer\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_initialSequencer\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_mpcAddress\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_firstStartBlock\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_firstEndBlock\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_epochLength\",\"type\":\"uint256\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"mpcAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_oldEpochId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_newEpochId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_startBlock\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_endBlock\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_newSigner\",\"type\":\"address\"}],\"name\":\"recommitEpoch\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"events\":{\"Initialized(uint8)\":{\"details\":\"Triggered when the contract has been initialized or reinitialized.\"}},\"kind\":\"dev\",\"methods\":{\"owner()\":{\"details\":\"Returns the address of the current owner.\"},\"renounceOwnership()\":{\"details\":\"Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner.\"},\"transferOwnership(address)\":{\"details\":\"Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner.\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/SequencerSet.sol\":\"MetisSequencerSet\"},\"evmVersion\":\"berlin\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"none\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":800},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.9.0) (access/Ownable.sol)\\n\\npragma solidity ^0.8.0;\\n\\nimport \\\"../utils/ContextUpgradeable.sol\\\";\\nimport {Initializable} from \\\"../proxy/utils/Initializable.sol\\\";\\n\\n/**\\n * @dev Contract module which provides a basic access control mechanism, where\\n * there is an account (an owner) that can be granted exclusive access to\\n * specific functions.\\n *\\n * By default, the owner account will be the one that deploys the contract. This\\n * can later be changed with {transferOwnership}.\\n *\\n * This module is used through inheritance. It will make available the modifier\\n * `onlyOwner`, which can be applied to your functions to restrict their use to\\n * the owner.\\n */\\nabstract contract OwnableUpgradeable is Initializable, ContextUpgradeable {\\n    address private _owner;\\n\\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\n\\n    /**\\n     * @dev Initializes the contract setting the deployer as the initial owner.\\n     */\\n    function __Ownable_init() internal onlyInitializing {\\n        __Ownable_init_unchained();\\n    }\\n\\n    function __Ownable_init_unchained() internal onlyInitializing {\\n        _transferOwnership(_msgSender());\\n    }\\n\\n    /**\\n     * @dev Throws if called by any account other than the owner.\\n     */\\n    modifier onlyOwner() {\\n        _checkOwner();\\n        _;\\n    }\\n\\n    /**\\n     * @dev Returns the address of the current owner.\\n     */\\n    function owner() public view virtual returns (address) {\\n        return _owner;\\n    }\\n\\n    /**\\n     * @dev Throws if the sender is not the owner.\\n     */\\n    function _checkOwner() internal view virtual {\\n        require(owner() == _msgSender(), \\\"Ownable: caller is not the owner\\\");\\n    }\\n\\n    /**\\n     * @dev Leaves the contract without owner. It will not be possible to call\\n     * `onlyOwner` functions. Can only be called by the current owner.\\n     *\\n     * NOTE: Renouncing ownership will leave the contract without an owner,\\n     * thereby disabling any functionality that is only available to the owner.\\n     */\\n    function renounceOwnership() public virtual onlyOwner {\\n        _transferOwnership(address(0));\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Can only be called by the current owner.\\n     */\\n    function transferOwnership(address newOwner) public virtual onlyOwner {\\n        require(newOwner != address(0), \\\"Ownable: new owner is the zero address\\\");\\n        _transferOwnership(newOwner);\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Internal function without access restriction.\\n     */\\n    function _transferOwnership(address newOwner) internal virtual {\\n        address oldOwner = _owner;\\n        _owner = newOwner;\\n        emit OwnershipTransferred(oldOwner, newOwner);\\n    }\\n\\n    /**\\n     * @dev This empty reserved space is put in place to allow future versions to add new\\n     * variables without shifting down storage in the inheritance chain.\\n     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps\\n     */\\n    uint256[49] private __gap;\\n}\\n\",\"keccak256\":\"0x359a1ab89b46b9aba7bcad3fb651924baf4893d15153049b9976b0fc9be1358e\",\"license\":\"MIT\"},\"@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.9.0) (proxy/utils/Initializable.sol)\\n\\npragma solidity ^0.8.2;\\n\\nimport \\\"../../utils/AddressUpgradeable.sol\\\";\\n\\n/**\\n * @dev This is a base contract to aid in writing upgradeable contracts, or any kind of contract that will be deployed\\n * behind a proxy. Since proxied contracts do not make use of a constructor, it's common to move constructor logic to an\\n * external initializer function, usually called `initialize`. It then becomes necessary to protect this initializer\\n * function so it can only be called once. The {initializer} modifier provided by this contract will have this effect.\\n *\\n * The initialization functions use a version number. Once a version number is used, it is consumed and cannot be\\n * reused. This mechanism prevents re-execution of each \\\"step\\\" but allows the creation of new initialization steps in\\n * case an upgrade adds a module that needs to be initialized.\\n *\\n * For example:\\n *\\n * [.hljs-theme-light.nopadding]\\n * ```solidity\\n * contract MyToken is ERC20Upgradeable {\\n *     function initialize() initializer public {\\n *         __ERC20_init(\\\"MyToken\\\", \\\"MTK\\\");\\n *     }\\n * }\\n *\\n * contract MyTokenV2 is MyToken, ERC20PermitUpgradeable {\\n *     function initializeV2() reinitializer(2) public {\\n *         __ERC20Permit_init(\\\"MyToken\\\");\\n *     }\\n * }\\n * ```\\n *\\n * TIP: To avoid leaving the proxy in an uninitialized state, the initializer function should be called as early as\\n * possible by providing the encoded function call as the `_data` argument to {ERC1967Proxy-constructor}.\\n *\\n * CAUTION: When used with inheritance, manual care must be taken to not invoke a parent initializer twice, or to ensure\\n * that all initializers are idempotent. This is not verified automatically as constructors are by Solidity.\\n *\\n * [CAUTION]\\n * ====\\n * Avoid leaving a contract uninitialized.\\n *\\n * An uninitialized contract can be taken over by an attacker. This applies to both a proxy and its implementation\\n * contract, which may impact the proxy. To prevent the implementation contract from being used, you should invoke\\n * the {_disableInitializers} function in the constructor to automatically lock it when it is deployed:\\n *\\n * [.hljs-theme-light.nopadding]\\n * ```\\n * /// @custom:oz-upgrades-unsafe-allow constructor\\n * constructor() {\\n *     _disableInitializers();\\n * }\\n * ```\\n * ====\\n */\\nabstract contract Initializable {\\n    /**\\n     * @dev Indicates that the contract has been initialized.\\n     * @custom:oz-retyped-from bool\\n     */\\n    uint8 private _initialized;\\n\\n    /**\\n     * @dev Indicates that the contract is in the process of being initialized.\\n     */\\n    bool private _initializing;\\n\\n    /**\\n     * @dev Triggered when the contract has been initialized or reinitialized.\\n     */\\n    event Initialized(uint8 version);\\n\\n    /**\\n     * @dev A modifier that defines a protected initializer function that can be invoked at most once. In its scope,\\n     * `onlyInitializing` functions can be used to initialize parent contracts.\\n     *\\n     * Similar to `reinitializer(1)`, except that functions marked with `initializer` can be nested in the context of a\\n     * constructor.\\n     *\\n     * Emits an {Initialized} event.\\n     */\\n    modifier initializer() {\\n        bool isTopLevelCall = !_initializing;\\n        require(\\n            (isTopLevelCall && _initialized < 1) || (!AddressUpgradeable.isContract(address(this)) && _initialized == 1),\\n            \\\"Initializable: contract is already initialized\\\"\\n        );\\n        _initialized = 1;\\n        if (isTopLevelCall) {\\n            _initializing = true;\\n        }\\n        _;\\n        if (isTopLevelCall) {\\n            _initializing = false;\\n            emit Initialized(1);\\n        }\\n    }\\n\\n    /**\\n     * @dev A modifier that defines a protected reinitializer function that can be invoked at most once, and only if the\\n     * contract hasn't been initialized to a greater version before. In its scope, `onlyInitializing` functions can be\\n     * used to initialize parent contracts.\\n     *\\n     * A reinitializer may be used after the original initialization step. This is essential to configure modules that\\n     * are added through upgrades and that require initialization.\\n     *\\n     * When `version` is 1, this modifier is similar to `initializer`, except that functions marked with `reinitializer`\\n     * cannot be nested. If one is invoked in the context of another, execution will revert.\\n     *\\n     * Note that versions can jump in increments greater than 1; this implies that if multiple reinitializers coexist in\\n     * a contract, executing them in the right order is up to the developer or operator.\\n     *\\n     * WARNING: setting the version to 255 will prevent any future reinitialization.\\n     *\\n     * Emits an {Initialized} event.\\n     */\\n    modifier reinitializer(uint8 version) {\\n        require(!_initializing && _initialized < version, \\\"Initializable: contract is already initialized\\\");\\n        _initialized = version;\\n        _initializing = true;\\n        _;\\n        _initializing = false;\\n        emit Initialized(version);\\n    }\\n\\n    /**\\n     * @dev Modifier to protect an initialization function so that it can only be invoked by functions with the\\n     * {initializer} and {reinitializer} modifiers, directly or indirectly.\\n     */\\n    modifier onlyInitializing() {\\n        require(_initializing, \\\"Initializable: contract is not initializing\\\");\\n        _;\\n    }\\n\\n    /**\\n     * @dev Locks the contract, preventing any future reinitialization. This cannot be part of an initializer call.\\n     * Calling this in the constructor of a contract will prevent that contract from being initialized or reinitialized\\n     * to any version. It is recommended to use this to lock implementation contracts that are designed to be called\\n     * through proxies.\\n     *\\n     * Emits an {Initialized} event the first time it is successfully executed.\\n     */\\n    function _disableInitializers() internal virtual {\\n        require(!_initializing, \\\"Initializable: contract is initializing\\\");\\n        if (_initialized != type(uint8).max) {\\n            _initialized = type(uint8).max;\\n            emit Initialized(type(uint8).max);\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the highest version that has been initialized. See {reinitializer}.\\n     */\\n    function _getInitializedVersion() internal view returns (uint8) {\\n        return _initialized;\\n    }\\n\\n    /**\\n     * @dev Returns `true` if the contract is currently initializing. See {onlyInitializing}.\\n     */\\n    function _isInitializing() internal view returns (bool) {\\n        return _initializing;\\n    }\\n}\\n\",\"keccak256\":\"0x89be10e757d242e9b18d5a32c9fbe2019f6d63052bbe46397a430a1d60d7f794\",\"license\":\"MIT\"},\"@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.9.0) (utils/Address.sol)\\n\\npragma solidity ^0.8.1;\\n\\n/**\\n * @dev Collection of functions related to the address type\\n */\\nlibrary AddressUpgradeable {\\n    /**\\n     * @dev Returns true if `account` is a contract.\\n     *\\n     * [IMPORTANT]\\n     * ====\\n     * It is unsafe to assume that an address for which this function returns\\n     * false is an externally-owned account (EOA) and not a contract.\\n     *\\n     * Among others, `isContract` will return false for the following\\n     * types of addresses:\\n     *\\n     *  - an externally-owned account\\n     *  - a contract in construction\\n     *  - an address where a contract will be created\\n     *  - an address where a contract lived, but was destroyed\\n     *\\n     * Furthermore, `isContract` will also return true if the target contract within\\n     * the same transaction is already scheduled for destruction by `SELFDESTRUCT`,\\n     * which only has an effect at the end of a transaction.\\n     * ====\\n     *\\n     * [IMPORTANT]\\n     * ====\\n     * You shouldn't rely on `isContract` to protect against flash loan attacks!\\n     *\\n     * Preventing calls from contracts is highly discouraged. It breaks composability, breaks support for smart wallets\\n     * like Gnosis Safe, and does not provide security since it can be circumvented by calling from a contract\\n     * constructor.\\n     * ====\\n     */\\n    function isContract(address account) internal view returns (bool) {\\n        // This method relies on extcodesize/address.code.length, which returns 0\\n        // for contracts in construction, since the code is only stored at the end\\n        // of the constructor execution.\\n\\n        return account.code.length > 0;\\n    }\\n\\n    /**\\n     * @dev Replacement for Solidity's `transfer`: sends `amount` wei to\\n     * `recipient`, forwarding all available gas and reverting on errors.\\n     *\\n     * https://eips.ethereum.org/EIPS/eip-1884[EIP1884] increases the gas cost\\n     * of certain opcodes, possibly making contracts go over the 2300 gas limit\\n     * imposed by `transfer`, making them unable to receive funds via\\n     * `transfer`. {sendValue} removes this limitation.\\n     *\\n     * https://consensys.net/diligence/blog/2019/09/stop-using-soliditys-transfer-now/[Learn more].\\n     *\\n     * IMPORTANT: because control is transferred to `recipient`, care must be\\n     * taken to not create reentrancy vulnerabilities. Consider using\\n     * {ReentrancyGuard} or the\\n     * https://solidity.readthedocs.io/en/v0.8.0/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].\\n     */\\n    function sendValue(address payable recipient, uint256 amount) internal {\\n        require(address(this).balance >= amount, \\\"Address: insufficient balance\\\");\\n\\n        (bool success, ) = recipient.call{value: amount}(\\\"\\\");\\n        require(success, \\\"Address: unable to send value, recipient may have reverted\\\");\\n    }\\n\\n    /**\\n     * @dev Performs a Solidity function call using a low level `call`. A\\n     * plain `call` is an unsafe replacement for a function call: use this\\n     * function instead.\\n     *\\n     * If `target` reverts with a revert reason, it is bubbled up by this\\n     * function (like regular Solidity function calls).\\n     *\\n     * Returns the raw returned data. To convert to the expected return value,\\n     * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].\\n     *\\n     * Requirements:\\n     *\\n     * - `target` must be a contract.\\n     * - calling `target` with `data` must not revert.\\n     *\\n     * _Available since v3.1._\\n     */\\n    function functionCall(address target, bytes memory data) internal returns (bytes memory) {\\n        return functionCallWithValue(target, data, 0, \\\"Address: low-level call failed\\\");\\n    }\\n\\n    /**\\n     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with\\n     * `errorMessage` as a fallback revert reason when `target` reverts.\\n     *\\n     * _Available since v3.1._\\n     */\\n    function functionCall(\\n        address target,\\n        bytes memory data,\\n        string memory errorMessage\\n    ) internal returns (bytes memory) {\\n        return functionCallWithValue(target, data, 0, errorMessage);\\n    }\\n\\n    /**\\n     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],\\n     * but also transferring `value` wei to `target`.\\n     *\\n     * Requirements:\\n     *\\n     * - the calling contract must have an ETH balance of at least `value`.\\n     * - the called Solidity function must be `payable`.\\n     *\\n     * _Available since v3.1._\\n     */\\n    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {\\n        return functionCallWithValue(target, data, value, \\\"Address: low-level call with value failed\\\");\\n    }\\n\\n    /**\\n     * @dev Same as {xref-Address-functionCallWithValue-address-bytes-uint256-}[`functionCallWithValue`], but\\n     * with `errorMessage` as a fallback revert reason when `target` reverts.\\n     *\\n     * _Available since v3.1._\\n     */\\n    function functionCallWithValue(\\n        address target,\\n        bytes memory data,\\n        uint256 value,\\n        string memory errorMessage\\n    ) internal returns (bytes memory) {\\n        require(address(this).balance >= value, \\\"Address: insufficient balance for call\\\");\\n        (bool success, bytes memory returndata) = target.call{value: value}(data);\\n        return verifyCallResultFromTarget(target, success, returndata, errorMessage);\\n    }\\n\\n    /**\\n     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],\\n     * but performing a static call.\\n     *\\n     * _Available since v3.3._\\n     */\\n    function functionStaticCall(address target, bytes memory data) internal view returns (bytes memory) {\\n        return functionStaticCall(target, data, \\\"Address: low-level static call failed\\\");\\n    }\\n\\n    /**\\n     * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],\\n     * but performing a static call.\\n     *\\n     * _Available since v3.3._\\n     */\\n    function functionStaticCall(\\n        address target,\\n        bytes memory data,\\n        string memory errorMessage\\n    ) internal view returns (bytes memory) {\\n        (bool success, bytes memory returndata) = target.staticcall(data);\\n        return verifyCallResultFromTarget(target, success, returndata, errorMessage);\\n    }\\n\\n    /**\\n     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],\\n     * but performing a delegate call.\\n     *\\n     * _Available since v3.4._\\n     */\\n    function functionDelegateCall(address target, bytes memory data) internal returns (bytes memory) {\\n        return functionDelegateCall(target, data, \\\"Address: low-level delegate call failed\\\");\\n    }\\n\\n    /**\\n     * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],\\n     * but performing a delegate call.\\n     *\\n     * _Available since v3.4._\\n     */\\n    function functionDelegateCall(\\n        address target,\\n        bytes memory data,\\n        string memory errorMessage\\n    ) internal returns (bytes memory) {\\n        (bool success, bytes memory returndata) = target.delegatecall(data);\\n        return verifyCallResultFromTarget(target, success, returndata, errorMessage);\\n    }\\n\\n    /**\\n     * @dev Tool to verify that a low level call to smart-contract was successful, and revert (either by bubbling\\n     * the revert reason or using the provided one) in case of unsuccessful call or if target was not a contract.\\n     *\\n     * _Available since v4.8._\\n     */\\n    function verifyCallResultFromTarget(\\n        address target,\\n        bool success,\\n        bytes memory returndata,\\n        string memory errorMessage\\n    ) internal view returns (bytes memory) {\\n        if (success) {\\n            if (returndata.length == 0) {\\n                // only check isContract if the call was successful and the return data is empty\\n                // otherwise we already know that it was a contract\\n                require(isContract(target), \\\"Address: call to non-contract\\\");\\n            }\\n            return returndata;\\n        } else {\\n            _revert(returndata, errorMessage);\\n        }\\n    }\\n\\n    /**\\n     * @dev Tool to verify that a low level call was successful, and revert if it wasn't, either by bubbling the\\n     * revert reason or using the provided one.\\n     *\\n     * _Available since v4.3._\\n     */\\n    function verifyCallResult(\\n        bool success,\\n        bytes memory returndata,\\n        string memory errorMessage\\n    ) internal pure returns (bytes memory) {\\n        if (success) {\\n            return returndata;\\n        } else {\\n            _revert(returndata, errorMessage);\\n        }\\n    }\\n\\n    function _revert(bytes memory returndata, string memory errorMessage) private pure {\\n        // Look for revert reason and bubble it up if present\\n        if (returndata.length > 0) {\\n            // The easiest way to bubble the revert reason is using memory via assembly\\n            /// @solidity memory-safe-assembly\\n            assembly {\\n                let returndata_size := mload(returndata)\\n                revert(add(32, returndata), returndata_size)\\n            }\\n        } else {\\n            revert(errorMessage);\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x9c80f545915582e63fe206c6ce27cbe85a86fc10b9cd2a0e8c9488fb7c2ee422\",\"license\":\"MIT\"},\"@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.9.4) (utils/Context.sol)\\n\\npragma solidity ^0.8.0;\\nimport {Initializable} from \\\"../proxy/utils/Initializable.sol\\\";\\n\\n/**\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract ContextUpgradeable is Initializable {\\n    function __Context_init() internal onlyInitializing {\\n    }\\n\\n    function __Context_init_unchained() internal onlyInitializing {\\n    }\\n    function _msgSender() internal view virtual returns (address) {\\n        return msg.sender;\\n    }\\n\\n    function _msgData() internal view virtual returns (bytes calldata) {\\n        return msg.data;\\n    }\\n\\n    function _contextSuffixLength() internal view virtual returns (uint256) {\\n        return 0;\\n    }\\n\\n    /**\\n     * @dev This empty reserved space is put in place to allow future versions to add new\\n     * variables without shifting down storage in the inheritance chain.\\n     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps\\n     */\\n    uint256[50] private __gap;\\n}\\n\",\"keccak256\":\"0x75097e35253e7fb282ee4d7f27a80eaacfa759923185bf17302a89cbc059c5ef\",\"license\":\"MIT\"},\"contracts/SequencerSet.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.8.20;\\n\\nimport {OwnableUpgradeable} from \\\"@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol\\\";\\n\\ncontract MetisSequencerSet is OwnableUpgradeable {\\n    uint256 public epochLength;\\n    address public mpcAddress;\\n\\n    // epoch details\\n    struct Epoch {\\n        uint256 number;\\n        address signer;\\n        uint256 startBlock;\\n        uint256 endBlock;\\n    }\\n\\n    mapping(uint256 number => Epoch epoch) public epochs; // epoch number => epoch\\n\\n    // current epoch number, starts from 0\\n    uint256 internal currentEpochId;\\n\\n    // event\\n    event NewEpoch(\\n        uint256 indexed epochId,\\n        uint256 startBlock,\\n        uint256 endBlock,\\n        address signer\\n    );\\n\\n    event ReCommitEpoch(\\n        uint256 indexed oldEpochId,\\n        uint256 indexed newEpochId,\\n        uint256 curEpochId,\\n        uint256 startBlock,\\n        uint256 endBlock,\\n        address newSigner\\n    );\\n    event MpcAddressUpdated(address _newMpcAddress);\\n    event EpochUpdated(uint256 _newLength);\\n\\n    modifier onlyMpc() {\\n        require(msg.sender == mpcAddress, \\\"Not Mpc\\\");\\n        _;\\n    }\\n\\n    modifier onlyMpcOrOwner() {\\n        require(\\n            msg.sender == mpcAddress || msg.sender == owner(),\\n            \\\"Not Mpc or Owner\\\"\\n        );\\n        _;\\n    }\\n\\n    function initialize(\\n        address _initialSequencer,\\n        address _mpcAddress,\\n        uint256 _firstStartBlock,\\n        uint256 _firstEndBlock,\\n        uint256 _epochLength\\n    ) external initializer {\\n        mpcAddress = _mpcAddress;\\n        epochLength = _epochLength;\\n\\n        // initial epoch\\n        uint256 epochId = 0;\\n\\n        // We do not check if the length between the start and end block matches the epoch length\\n        // the epoch length can only be used for next epoch\\n        require(\\n            _firstStartBlock > block.number &&\\n                _firstEndBlock > _firstStartBlock,\\n            \\\"Invalid block range\\\"\\n        );\\n\\n        // initial epoch item\\n        epochs[epochId] = Epoch({\\n            number: epochId,\\n            signer: _initialSequencer,\\n            startBlock: _firstStartBlock,\\n            endBlock: _firstEndBlock\\n        });\\n\\n        emit NewEpoch(\\n            epochId,\\n            _firstStartBlock,\\n            _firstEndBlock,\\n            _initialSequencer\\n        );\\n\\n        __Ownable_init();\\n    }\\n\\n    function UpdateMpcAddress(address _newMpc) public onlyOwner {\\n        require(_newMpc != address(0), \\\"Invalid new mpc\\\");\\n        mpcAddress = _newMpc;\\n        emit MpcAddressUpdated(_newMpc);\\n    }\\n\\n    function UpdateEpochLength(uint256 _newLength) public onlyMpcOrOwner {\\n        require(_newLength > 0, \\\"Invalid new epoch length\\\");\\n        epochLength = _newLength;\\n        emit EpochUpdated(_newLength);\\n    }\\n\\n    // get epoch number by block\\n    // It returns Max(uint256) if the height doesn't exist in any epochs\\n    function getEpochByBlock(uint256 _number) public view returns (uint256) {\\n        uint256 lastIndex = currentEpochId + 1;\\n        for (uint256 i = lastIndex; i > 0; i--) {\\n            Epoch memory epoch = epochs[i - 1];\\n            if (epoch.startBlock <= _number && _number <= epoch.endBlock) {\\n                return epoch.number;\\n            }\\n\\n            // not in the last epoch\\n            if (i == lastIndex && _number > epoch.endBlock) {\\n                return type(uint256).max;\\n            }\\n        }\\n\\n        // return default if not found any thing\\n        return type(uint256).max;\\n    }\\n\\n    function currentEpochNumber() public view returns (uint256) {\\n        return currentEpochId;\\n    }\\n\\n    // currentEpoch returns the latest epoch\\n    function currentEpoch() public view returns (Epoch memory epoch) {\\n        epoch = epochs[currentEpochId];\\n    }\\n\\n    // finalizedEpoch returns the finalized epoch\\n    // the epoch won't be recommitted by `recommitEpoch`\\n    // if there is no such epoch, the second return value will be false\\n    function finalizedEpoch()\\n        public\\n        view\\n        returns (Epoch memory epoch, bool exist)\\n    {\\n        uint256 lastIndex = currentEpochId + 1;\\n        for (uint256 i = lastIndex; i > 0; i--) {\\n            epoch = epochs[i - 1];\\n            if (block.number > epoch.endBlock) {\\n                return (epoch, true);\\n            }\\n        }\\n        // It's epoch 0 but not exist\\n        return (epoch, false);\\n    }\\n\\n    // finalizedBlock returns the finalized block number\\n    function finalizedBlock() public view returns (uint256) {\\n        (Epoch memory epoch, bool exist) = finalizedEpoch();\\n        if (exist) {\\n            return epoch.endBlock;\\n        }\\n        // the last block of epoch 0\\n        // since the startBlock must not be 0, so it's safe to minus 1\\n        return epoch.startBlock - 1;\\n    }\\n\\n    // get metis sequencer by block number\\n    function getMetisSequencer(uint256 _number) public view returns (address) {\\n        if (_number <= epochs[0].endBlock) {\\n            return epochs[0].signer;\\n        }\\n\\n        // epoch number by block\\n        uint256 epochId = getEpochByBlock(_number);\\n        if (epochId == type(uint256).max) {\\n            return address(0);\\n        }\\n\\n        Epoch memory epoch = epochs[epochId];\\n        return epoch.signer;\\n    }\\n\\n    function commitEpoch(\\n        uint256 _newEpoch,\\n        uint256 _startBlock,\\n        uint256 _endBlock,\\n        address _signer\\n    ) external onlyMpc {\\n        uint256 curEpochId = currentEpochId;\\n\\n        // the last epoch should be finished\\n        if (curEpochId > 1) {\\n            require(\\n                epochs[curEpochId - 1].endBlock < block.number,\\n                \\\"The last epoch not finished\\\"\\n            );\\n        }\\n\\n        // check conditions\\n        require(_newEpoch == curEpochId + 1, \\\"Invalid new epoch number\\\");\\n        require(\\n            _endBlock > _startBlock,\\n            \\\"End block must be greater than start block\\\"\\n        );\\n        require(\\n            _endBlock - _startBlock + 1 == epochLength,\\n            \\\"Mismatch epoch length and block length\\\"\\n        );\\n        require(\\n            epochs[curEpochId].endBlock + 1 == _startBlock,\\n            \\\"Start block must be greater than currentEpoch.endBlock by 1\\\"\\n        );\\n        require(_signer != address(0), \\\"Invalid signer\\\");\\n\\n        epochs[_newEpoch] = Epoch({\\n            number: _newEpoch,\\n            signer: _signer,\\n            startBlock: _startBlock,\\n            endBlock: _endBlock\\n        });\\n\\n        currentEpochId = _newEpoch;\\n        emit NewEpoch(_newEpoch, _startBlock, _endBlock, _signer);\\n    }\\n\\n    function recommitEpoch(\\n        uint256 _oldEpochId,\\n        uint256 _newEpochId,\\n        uint256 _startBlock,\\n        uint256 _endBlock,\\n        address _newSigner\\n    ) external onlyMpc {\\n        // check start block\\n        require(_startBlock == block.number, \\\"Invalid start block\\\");\\n        require(_newSigner != address(0), \\\"Invalid signer\\\");\\n\\n        // Note: We do not check if the length between the start and end block matches the epoch length\\n\\n        uint256 curEpochId = currentEpochId;\\n        // Case 1: recommitEpoch occurs in the latest epoch\\n        if (_oldEpochId == curEpochId) {\\n            Epoch storage epoch = epochs[curEpochId];\\n            // Current epoch can't be updated on the first block of the epoch\\n            // If the signer can't produce the first block\\n            // The mpc and consensus client should use case 2 section to recommit the epoch\\n            require(epoch.startBlock < block.number, \\\"Conflict on end block\\\");\\n            epoch.endBlock = block.number - 1;\\n\\n            // craete new epoch\\n            require(_newEpochId == curEpochId + 1, \\\"Invalid newEpochId\\\");\\n            require(\\n                _endBlock > _startBlock,\\n                \\\"End block must be greater than start block\\\"\\n            );\\n\\n            epochs[_newEpochId] = Epoch({\\n                number: _newEpochId,\\n                signer: _newSigner,\\n                startBlock: _startBlock,\\n                endBlock: _endBlock\\n            });\\n            currentEpochId = _newEpochId;\\n        }\\n        // Case 2: recommitEpoch occurs in last but one epoch\\n        else if (_oldEpochId + 1 == curEpochId) {\\n            Epoch storage epoch = epochs[_oldEpochId];\\n            // if the epoch is not finished then set end block to the last block\\n            // if the epoch is finished, then do nothing on the epoch\\n            if (epoch.endBlock >= block.number) {\\n                epoch.endBlock = block.number - 1;\\n            }\\n\\n            // update latest epoch\\n            require(_newEpochId == curEpochId, \\\"Invalid newEpochId\\\");\\n            require(\\n                _endBlock > _startBlock,\\n                \\\"End block must be greater than start block\\\"\\n            );\\n\\n            Epoch storage existNewEpoch = epochs[_newEpochId];\\n            require(\\n                existNewEpoch.startBlock >= block.number,\\n                \\\"The latest epoch producing\\\"\\n            );\\n            existNewEpoch.signer = _newSigner;\\n            existNewEpoch.startBlock = _startBlock;\\n            existNewEpoch.endBlock = _endBlock;\\n        } else {\\n            revert(\\\"Invalid oldEpochId\\\");\\n        }\\n\\n        emit ReCommitEpoch(\\n            _oldEpochId,\\n            _newEpochId,\\n            curEpochId,\\n            _startBlock,\\n            _endBlock,\\n            _newSigner\\n        );\\n    }\\n}\\n\",\"keccak256\":\"0xd947d679d436e8737aa73298298e2fc8ecbc25bb5879df4d081fc2ad04bd2b96\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b50611654806100206000396000f3fe608060405234801561001057600080fd5b506004361061011b5760003560e01c8063643dbfce116100b25780637667180811610081578063c6b61e4c11610066578063c6b61e4c14610263578063d13f90b4146102ca578063f2fde38b146102dd57600080fd5b8063766718081461023d5780638da5cb5b1461025257600080fd5b8063643dbfce146101d05780636903beb4146101e35780636bfa7398146101eb578063715018a61461023557600080fd5b80634084c3ab116100ee5780634084c3ab1461018b57806346df33d2146101a15780634fb71bdd146101b457806357d775f8146101c757600080fd5b8063111f46301461012057806324316ccb146101505780632c91c679146101655780633edae76914610178575b600080fd5b606654610133906001600160a01b031681565b6040516001600160a01b0390911681526020015b60405180910390f35b61016361015e366004611492565b6102f0565b005b6101636101733660046114c7565b6103f0565b610133610186366004611492565b610894565b61019361096f565b604051908152602001610147565b6101936101af366004611492565b6109a8565b6101636101c2366004611510565b610a81565b61019360655481565b6101636101de36600461154f565b610e0e565b606854610193565b6101f3610eba565b60408051835181526020808501516001600160a01b0316908201528382015191810191909152606092830151928101929092521515608082015260a001610147565b610163610f96565b610245610faa565b6040516101479190611571565b6033546001600160a01b0316610133565b6102a2610271366004611492565b606760205260009081526040902080546001820154600283015460039093015491926001600160a01b039091169184565b604080519485526001600160a01b039093166020850152918301526060820152608001610147565b6101636102d83660046115a7565b61102f565b6101636102eb36600461154f565b611274565b6066546001600160a01b031633148061031357506033546001600160a01b031633145b6103645760405162461bcd60e51b815260206004820152601060248201527f4e6f74204d7063206f72204f776e65720000000000000000000000000000000060448201526064015b60405180910390fd5b600081116103b45760405162461bcd60e51b815260206004820152601860248201527f496e76616c6964206e65772065706f6368206c656e6774680000000000000000604482015260640161035b565b60658190556040518181527fb33a1f54dde4e0082c45281b338d78b2c4b5be163b6ffffa5d0d6d1050ba5a58906020015b60405180910390a150565b6066546001600160a01b031633146104345760405162461bcd60e51b81526020600482015260076024820152664e6f74204d706360c81b604482015260640161035b565b4383146104835760405162461bcd60e51b815260206004820152601360248201527f496e76616c696420737461727420626c6f636b00000000000000000000000000604482015260640161035b565b6001600160a01b0381166104ca5760405162461bcd60e51b815260206004820152600e60248201526d24b73b30b634b21039b4b3b732b960911b604482015260640161035b565b606854808603610672576000818152606760205260409020600281015443116105355760405162461bcd60e51b815260206004820152601560248201527f436f6e666c696374206f6e20656e6420626c6f636b0000000000000000000000604482015260640161035b565b61054060014361160a565b600382015561055082600161161d565b861461059e5760405162461bcd60e51b815260206004820152601260248201527f496e76616c6964206e657745706f636849640000000000000000000000000000604482015260640161035b565b8484116106005760405162461bcd60e51b815260206004820152602a60248201527f456e6420626c6f636b206d7573742062652067726561746572207468616e20736044820152697461727420626c6f636b60b01b606482015260840161035b565b50604080516080810182528681526001600160a01b0384811660208084019182528385018981526060850189815260008c81526067909352959091209351845590516001840180546001600160a01b031916919093161790915551600282015590516003909101556068859055610838565b8061067e87600161161d565b036107f0576000868152606760205260409020600381015443116106ad576106a760014361160a565b60038201555b8186146106fc5760405162461bcd60e51b815260206004820152601260248201527f496e76616c6964206e657745706f636849640000000000000000000000000000604482015260640161035b565b84841161075e5760405162461bcd60e51b815260206004820152602a60248201527f456e6420626c6f636b206d7573742062652067726561746572207468616e20736044820152697461727420626c6f636b60b01b606482015260840161035b565b600086815260676020526040902060028101544311156107c05760405162461bcd60e51b815260206004820152601a60248201527f546865206c61746573742065706f63682070726f647563696e67000000000000604482015260640161035b565b6001810180546001600160a01b0319166001600160a01b0386161790556002810186905560030184905550610838565b60405162461bcd60e51b815260206004820152601260248201527f496e76616c6964206f6c6445706f636849640000000000000000000000000000604482015260640161035b565b60408051828152602081018690529081018490526001600160a01b0383166060820152859087907f2cfee2bd8227abd70bbef63ce6f35d2e365c731d553d9d2231073f80b01831da9060800160405180910390a3505050505050565b600080805260676020527fd4e1ac8b62c3ff1e2c1b7113742533b8310ce5ab8a8767ead9ba8b250c7e3ccc5482116108ff5750506000805260676020527fd4e1ac8b62c3ff1e2c1b7113742533b8310ce5ab8a8767ead9ba8b250c7e3cca546001600160a01b031690565b600061090a836109a8565b9050600019810361091e5750600092915050565b60009081526067602090815260409182902082516080810184528154815260018201546001600160a01b03169281018390526002820154938101939093526003015460609092019190915292915050565b600080600061097c610eba565b915091508015610990575060600151919050565b600182604001516109a1919061160a565b9250505090565b60008060685460016109ba919061161d565b9050805b8015610a765760006067816109d460018561160a565b8152602080820192909252604090810160002081516080810183528154815260018201546001600160a01b03169381019390935260028101549183018290526003015460608301529091508510801590610a32575080606001518511155b15610a405751949350505050565b8282148015610a525750806060015185115b15610a635750600019949350505050565b5080610a6e81611630565b9150506109be565b506000199392505050565b6066546001600160a01b03163314610ac55760405162461bcd60e51b81526020600482015260076024820152664e6f74204d706360c81b604482015260640161035b565b6068546001811115610b40574360676000610ae160018561160a565b81526020019081526020016000206003015410610b405760405162461bcd60e51b815260206004820152601b60248201527f546865206c6173742065706f6368206e6f742066696e69736865640000000000604482015260640161035b565b610b4b81600161161d565b8514610b995760405162461bcd60e51b815260206004820152601860248201527f496e76616c6964206e65772065706f6368206e756d6265720000000000000000604482015260640161035b565b838311610bfb5760405162461bcd60e51b815260206004820152602a60248201527f456e6420626c6f636b206d7573742062652067726561746572207468616e20736044820152697461727420626c6f636b60b01b606482015260840161035b565b606554610c08858561160a565b610c1390600161161d565b14610c865760405162461bcd60e51b815260206004820152602660248201527f4d69736d617463682065706f6368206c656e67746820616e6420626c6f636b2060448201527f6c656e6774680000000000000000000000000000000000000000000000000000606482015260840161035b565b6000818152606760205260409020600301548490610ca590600161161d565b14610d185760405162461bcd60e51b815260206004820152603b60248201527f537461727420626c6f636b206d7573742062652067726561746572207468616e60448201527f2063757272656e7445706f63682e656e64426c6f636b20627920310000000000606482015260840161035b565b6001600160a01b038216610d5f5760405162461bcd60e51b815260206004820152600e60248201526d24b73b30b634b21039b4b3b732b960911b604482015260640161035b565b604080516080810182528681526001600160a01b0384811660208084018281528486018a815260608087018b815260008e8152606786528990209751885592516001880180546001600160a01b0319169190971617909555516002860155516003909401939093556068899055835188815292830187905282840152915187927f9030849b7c46dbbea7911d67c5814a2ab19c0704c448defc9b87589447844cc6928290030190a25050505050565b610e16611304565b6001600160a01b038116610e6c5760405162461bcd60e51b815260206004820152600f60248201527f496e76616c6964206e6577206d70630000000000000000000000000000000000604482015260640161035b565b606680546001600160a01b0319166001600160a01b0383169081179091556040519081527f9416d5b743f4c1409b0213ee5d1e57e8515f4be68a32fbbda85f838891b421da906020016103e5565b610eee60405180608001604052806000815260200160006001600160a01b0316815260200160008152602001600081525090565b6000806068546001610f00919061161d565b9050805b8015610f8b5760676000610f1960018461160a565b8152602080820192909252604090810160002081516080810183528154815260018201546001600160a01b0316938101939093526002810154918301919091526003015460608201819052909450431115610f7957509192600192509050565b80610f8381611630565b915050610f04565b509192600092509050565b610f9e611304565b610fa8600061135e565b565b610fde60405180608001604052806000815260200160006001600160a01b0316815260200160008152602001600081525090565b5060685460009081526067602090815260409182902082516080810184528154815260018201546001600160a01b031692810192909252600281015492820192909252600390910154606082015290565b600054610100900460ff161580801561104f5750600054600160ff909116105b806110695750303b158015611069575060005460ff166001145b6110db5760405162461bcd60e51b815260206004820152602e60248201527f496e697469616c697a61626c653a20636f6e747261637420697320616c72656160448201527f647920696e697469616c697a6564000000000000000000000000000000000000606482015260840161035b565b6000805460ff1916600117905580156110fe576000805461ff0019166101001790555b606680546001600160a01b0319166001600160a01b03871617905560658290556000438511801561112e57508484115b61117a5760405162461bcd60e51b815260206004820152601360248201527f496e76616c696420626c6f636b2072616e676500000000000000000000000000604482015260640161035b565b604080516080810182528281526001600160a01b0389811660208084018281528486018b815260608087018c815260008a8152606786528990209751885592516001880180546001600160a01b031916919097161790955551600286015551600390940193909355835189815292830188905282840152915183927f9030849b7c46dbbea7911d67c5814a2ab19c0704c448defc9b87589447844cc6928290030190a26112256113b0565b50801561126c576000805461ff0019169055604051600181527f7f26b83ff96e1f2b6a682f133852f6798a09c465da95921460cefb38474024989060200160405180910390a15b505050505050565b61127c611304565b6001600160a01b0381166112f85760405162461bcd60e51b815260206004820152602660248201527f4f776e61626c653a206e6577206f776e657220697320746865207a65726f206160448201527f6464726573730000000000000000000000000000000000000000000000000000606482015260840161035b565b6113018161135e565b50565b6033546001600160a01b03163314610fa85760405162461bcd60e51b815260206004820181905260248201527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e6572604482015260640161035b565b603380546001600160a01b038381166001600160a01b0319831681179093556040519116919082907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e090600090a35050565b600054610100900460ff1661141b5760405162461bcd60e51b815260206004820152602b60248201527f496e697469616c697a61626c653a20636f6e7472616374206973206e6f74206960448201526a6e697469616c697a696e6760a81b606482015260840161035b565b610fa8600054610100900460ff166114895760405162461bcd60e51b815260206004820152602b60248201527f496e697469616c697a61626c653a20636f6e7472616374206973206e6f74206960448201526a6e697469616c697a696e6760a81b606482015260840161035b565b610fa83361135e565b6000602082840312156114a457600080fd5b5035919050565b80356001600160a01b03811681146114c257600080fd5b919050565b600080600080600060a086880312156114df57600080fd5b85359450602086013593506040860135925060608601359150611504608087016114ab565b90509295509295909350565b6000806000806080858703121561152657600080fd5b843593506020850135925060408501359150611544606086016114ab565b905092959194509250565b60006020828403121561156157600080fd5b61156a826114ab565b9392505050565b815181526020808301516001600160a01b0316908201526040808301519082015260608083015190820152608081015b92915050565b600080600080600060a086880312156115bf57600080fd5b6115c8866114ab565b94506115d6602087016114ab565b94979496505050506040830135926060810135926080909101359150565b634e487b7160e01b600052601160045260246000fd5b818103818111156115a1576115a16115f4565b808201808211156115a1576115a16115f4565b60008161163f5761163f6115f4565b50600019019056fea164736f6c6343000814000a",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061011b5760003560e01c8063643dbfce116100b25780637667180811610081578063c6b61e4c11610066578063c6b61e4c14610263578063d13f90b4146102ca578063f2fde38b146102dd57600080fd5b8063766718081461023d5780638da5cb5b1461025257600080fd5b8063643dbfce146101d05780636903beb4146101e35780636bfa7398146101eb578063715018a61461023557600080fd5b80634084c3ab116100ee5780634084c3ab1461018b57806346df33d2146101a15780634fb71bdd146101b457806357d775f8146101c757600080fd5b8063111f46301461012057806324316ccb146101505780632c91c679146101655780633edae76914610178575b600080fd5b606654610133906001600160a01b031681565b6040516001600160a01b0390911681526020015b60405180910390f35b61016361015e366004611492565b6102f0565b005b6101636101733660046114c7565b6103f0565b610133610186366004611492565b610894565b61019361096f565b604051908152602001610147565b6101936101af366004611492565b6109a8565b6101636101c2366004611510565b610a81565b61019360655481565b6101636101de36600461154f565b610e0e565b606854610193565b6101f3610eba565b60408051835181526020808501516001600160a01b0316908201528382015191810191909152606092830151928101929092521515608082015260a001610147565b610163610f96565b610245610faa565b6040516101479190611571565b6033546001600160a01b0316610133565b6102a2610271366004611492565b606760205260009081526040902080546001820154600283015460039093015491926001600160a01b039091169184565b604080519485526001600160a01b039093166020850152918301526060820152608001610147565b6101636102d83660046115a7565b61102f565b6101636102eb36600461154f565b611274565b6066546001600160a01b031633148061031357506033546001600160a01b031633145b6103645760405162461bcd60e51b815260206004820152601060248201527f4e6f74204d7063206f72204f776e65720000000000000000000000000000000060448201526064015b60405180910390fd5b600081116103b45760405162461bcd60e51b815260206004820152601860248201527f496e76616c6964206e65772065706f6368206c656e6774680000000000000000604482015260640161035b565b60658190556040518181527fb33a1f54dde4e0082c45281b338d78b2c4b5be163b6ffffa5d0d6d1050ba5a58906020015b60405180910390a150565b6066546001600160a01b031633146104345760405162461bcd60e51b81526020600482015260076024820152664e6f74204d706360c81b604482015260640161035b565b4383146104835760405162461bcd60e51b815260206004820152601360248201527f496e76616c696420737461727420626c6f636b00000000000000000000000000604482015260640161035b565b6001600160a01b0381166104ca5760405162461bcd60e51b815260206004820152600e60248201526d24b73b30b634b21039b4b3b732b960911b604482015260640161035b565b606854808603610672576000818152606760205260409020600281015443116105355760405162461bcd60e51b815260206004820152601560248201527f436f6e666c696374206f6e20656e6420626c6f636b0000000000000000000000604482015260640161035b565b61054060014361160a565b600382015561055082600161161d565b861461059e5760405162461bcd60e51b815260206004820152601260248201527f496e76616c6964206e657745706f636849640000000000000000000000000000604482015260640161035b565b8484116106005760405162461bcd60e51b815260206004820152602a60248201527f456e6420626c6f636b206d7573742062652067726561746572207468616e20736044820152697461727420626c6f636b60b01b606482015260840161035b565b50604080516080810182528681526001600160a01b0384811660208084019182528385018981526060850189815260008c81526067909352959091209351845590516001840180546001600160a01b031916919093161790915551600282015590516003909101556068859055610838565b8061067e87600161161d565b036107f0576000868152606760205260409020600381015443116106ad576106a760014361160a565b60038201555b8186146106fc5760405162461bcd60e51b815260206004820152601260248201527f496e76616c6964206e657745706f636849640000000000000000000000000000604482015260640161035b565b84841161075e5760405162461bcd60e51b815260206004820152602a60248201527f456e6420626c6f636b206d7573742062652067726561746572207468616e20736044820152697461727420626c6f636b60b01b606482015260840161035b565b600086815260676020526040902060028101544311156107c05760405162461bcd60e51b815260206004820152601a60248201527f546865206c61746573742065706f63682070726f647563696e67000000000000604482015260640161035b565b6001810180546001600160a01b0319166001600160a01b0386161790556002810186905560030184905550610838565b60405162461bcd60e51b815260206004820152601260248201527f496e76616c6964206f6c6445706f636849640000000000000000000000000000604482015260640161035b565b60408051828152602081018690529081018490526001600160a01b0383166060820152859087907f2cfee2bd8227abd70bbef63ce6f35d2e365c731d553d9d2231073f80b01831da9060800160405180910390a3505050505050565b600080805260676020527fd4e1ac8b62c3ff1e2c1b7113742533b8310ce5ab8a8767ead9ba8b250c7e3ccc5482116108ff5750506000805260676020527fd4e1ac8b62c3ff1e2c1b7113742533b8310ce5ab8a8767ead9ba8b250c7e3cca546001600160a01b031690565b600061090a836109a8565b9050600019810361091e5750600092915050565b60009081526067602090815260409182902082516080810184528154815260018201546001600160a01b03169281018390526002820154938101939093526003015460609092019190915292915050565b600080600061097c610eba565b915091508015610990575060600151919050565b600182604001516109a1919061160a565b9250505090565b60008060685460016109ba919061161d565b9050805b8015610a765760006067816109d460018561160a565b8152602080820192909252604090810160002081516080810183528154815260018201546001600160a01b03169381019390935260028101549183018290526003015460608301529091508510801590610a32575080606001518511155b15610a405751949350505050565b8282148015610a525750806060015185115b15610a635750600019949350505050565b5080610a6e81611630565b9150506109be565b506000199392505050565b6066546001600160a01b03163314610ac55760405162461bcd60e51b81526020600482015260076024820152664e6f74204d706360c81b604482015260640161035b565b6068546001811115610b40574360676000610ae160018561160a565b81526020019081526020016000206003015410610b405760405162461bcd60e51b815260206004820152601b60248201527f546865206c6173742065706f6368206e6f742066696e69736865640000000000604482015260640161035b565b610b4b81600161161d565b8514610b995760405162461bcd60e51b815260206004820152601860248201527f496e76616c6964206e65772065706f6368206e756d6265720000000000000000604482015260640161035b565b838311610bfb5760405162461bcd60e51b815260206004820152602a60248201527f456e6420626c6f636b206d7573742062652067726561746572207468616e20736044820152697461727420626c6f636b60b01b606482015260840161035b565b606554610c08858561160a565b610c1390600161161d565b14610c865760405162461bcd60e51b815260206004820152602660248201527f4d69736d617463682065706f6368206c656e67746820616e6420626c6f636b2060448201527f6c656e6774680000000000000000000000000000000000000000000000000000606482015260840161035b565b6000818152606760205260409020600301548490610ca590600161161d565b14610d185760405162461bcd60e51b815260206004820152603b60248201527f537461727420626c6f636b206d7573742062652067726561746572207468616e60448201527f2063757272656e7445706f63682e656e64426c6f636b20627920310000000000606482015260840161035b565b6001600160a01b038216610d5f5760405162461bcd60e51b815260206004820152600e60248201526d24b73b30b634b21039b4b3b732b960911b604482015260640161035b565b604080516080810182528681526001600160a01b0384811660208084018281528486018a815260608087018b815260008e8152606786528990209751885592516001880180546001600160a01b0319169190971617909555516002860155516003909401939093556068899055835188815292830187905282840152915187927f9030849b7c46dbbea7911d67c5814a2ab19c0704c448defc9b87589447844cc6928290030190a25050505050565b610e16611304565b6001600160a01b038116610e6c5760405162461bcd60e51b815260206004820152600f60248201527f496e76616c6964206e6577206d70630000000000000000000000000000000000604482015260640161035b565b606680546001600160a01b0319166001600160a01b0383169081179091556040519081527f9416d5b743f4c1409b0213ee5d1e57e8515f4be68a32fbbda85f838891b421da906020016103e5565b610eee60405180608001604052806000815260200160006001600160a01b0316815260200160008152602001600081525090565b6000806068546001610f00919061161d565b9050805b8015610f8b5760676000610f1960018461160a565b8152602080820192909252604090810160002081516080810183528154815260018201546001600160a01b0316938101939093526002810154918301919091526003015460608201819052909450431115610f7957509192600192509050565b80610f8381611630565b915050610f04565b509192600092509050565b610f9e611304565b610fa8600061135e565b565b610fde60405180608001604052806000815260200160006001600160a01b0316815260200160008152602001600081525090565b5060685460009081526067602090815260409182902082516080810184528154815260018201546001600160a01b031692810192909252600281015492820192909252600390910154606082015290565b600054610100900460ff161580801561104f5750600054600160ff909116105b806110695750303b158015611069575060005460ff166001145b6110db5760405162461bcd60e51b815260206004820152602e60248201527f496e697469616c697a61626c653a20636f6e747261637420697320616c72656160448201527f647920696e697469616c697a6564000000000000000000000000000000000000606482015260840161035b565b6000805460ff1916600117905580156110fe576000805461ff0019166101001790555b606680546001600160a01b0319166001600160a01b03871617905560658290556000438511801561112e57508484115b61117a5760405162461bcd60e51b815260206004820152601360248201527f496e76616c696420626c6f636b2072616e676500000000000000000000000000604482015260640161035b565b604080516080810182528281526001600160a01b0389811660208084018281528486018b815260608087018c815260008a8152606786528990209751885592516001880180546001600160a01b031916919097161790955551600286015551600390940193909355835189815292830188905282840152915183927f9030849b7c46dbbea7911d67c5814a2ab19c0704c448defc9b87589447844cc6928290030190a26112256113b0565b50801561126c576000805461ff0019169055604051600181527f7f26b83ff96e1f2b6a682f133852f6798a09c465da95921460cefb38474024989060200160405180910390a15b505050505050565b61127c611304565b6001600160a01b0381166112f85760405162461bcd60e51b815260206004820152602660248201527f4f776e61626c653a206e6577206f776e657220697320746865207a65726f206160448201527f6464726573730000000000000000000000000000000000000000000000000000606482015260840161035b565b6113018161135e565b50565b6033546001600160a01b03163314610fa85760405162461bcd60e51b815260206004820181905260248201527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e6572604482015260640161035b565b603380546001600160a01b038381166001600160a01b0319831681179093556040519116919082907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e090600090a35050565b600054610100900460ff1661141b5760405162461bcd60e51b815260206004820152602b60248201527f496e697469616c697a61626c653a20636f6e7472616374206973206e6f74206960448201526a6e697469616c697a696e6760a81b606482015260840161035b565b610fa8600054610100900460ff166114895760405162461bcd60e51b815260206004820152602b60248201527f496e697469616c697a61626c653a20636f6e7472616374206973206e6f74206960448201526a6e697469616c697a696e6760a81b606482015260840161035b565b610fa83361135e565b6000602082840312156114a457600080fd5b5035919050565b80356001600160a01b03811681146114c257600080fd5b919050565b600080600080600060a086880312156114df57600080fd5b85359450602086013593506040860135925060608601359150611504608087016114ab565b90509295509295909350565b6000806000806080858703121561152657600080fd5b843593506020850135925060408501359150611544606086016114ab565b905092959194509250565b60006020828403121561156157600080fd5b61156a826114ab565b9392505050565b815181526020808301516001600160a01b0316908201526040808301519082015260608083015190820152608081015b92915050565b600080600080600060a086880312156115bf57600080fd5b6115c8866114ab565b94506115d6602087016114ab565b94979496505050506040830135926060810135926080909101359150565b634e487b7160e01b600052601160045260246000fd5b818103818111156115a1576115a16115f4565b808201808211156115a1576115a16115f4565b60008161163f5761163f6115f4565b50600019019056fea164736f6c6343000814000a"
+}

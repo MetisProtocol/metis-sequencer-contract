@@ -51,17 +51,17 @@ const config: HardhatUserConfig = {
     mainnet: {
       url: process.env.MAINNET_RPC || "https://eth.llamarpc.com",
       accounts: [process.env.DEPLOYER_KEY as string],
-      tags: ["l1", "mainnet"],
+      tags: ["l1"],
     },
     sepolia: {
       url: process.env.SEPOLIA_RPC || "https://1rpc.io/sepolia",
       accounts: [process.env.DEPLOYER_KEY as string],
-      tags: ["l1", "testnet"],
+      tags: ["l1"],
     },
     holesky: {
       url: process.env.HOLESKY_RPC || "https://1rpc.io/holesky",
       accounts: [process.env.DEPLOYER_KEY as string],
-      tags: ["l1", "testnet"],
+      tags: ["l1"],
       verify: {
         etherscan: {
           apiKey: process.env.ETHERSCAN_API_KEY,
@@ -72,7 +72,7 @@ const config: HardhatUserConfig = {
     "metis-andromeda": {
       url: process.env.MAINNET_RPC || "https://andromeda.metis.io",
       accounts: [process.env.DEPLOYER_KEY as string],
-      tags: ["l2", "mainnet"],
+      tags: ["l2"],
       verify: {
         etherscan: {
           apiKey: "placeholder",
@@ -81,25 +81,26 @@ const config: HardhatUserConfig = {
       },
     },
     "metis-sepolia": {
-      url:
-        process.env.METIS_SEPOLIA_RPC || "https://sepolia.rpc.metisdevops.link",
+      url: process.env.METIS_SEPOLIA_RPC || "https://sepolia.metisdevops.link",
       accounts: [process.env.DEPLOYER_KEY as string],
-      tags: ["l2", "testnet"],
+      tags: ["l2"],
       verify: {
         etherscan: {
           apiKey: "placeholder",
-          apiUrl: "https://sepolia.explorer.metisdevops.link",
+          apiUrl: "https://sepolia-explorer-api.metisdevops.link",
         },
       },
     },
+    // metis holesky is not a public testnet developers
+    // it's only for internal testing and chain state can be updated and rollbacked at any time
     "metis-holesky": {
       url: process.env.METIS_HOLESKY_RPC || "https://holesky.metisdevops.link",
       accounts: [process.env.DEPLOYER_KEY as string],
-      tags: ["l2", "testnet"],
+      tags: ["l2"],
       verify: {
         etherscan: {
           apiKey: "placeholder",
-          apiUrl: "https://explorer-api.holesky.metisdevops.link",
+          apiUrl: "https://holesky-explorer-api.metisdevops.link",
         },
       },
     },
