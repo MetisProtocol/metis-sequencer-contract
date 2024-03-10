@@ -4,6 +4,7 @@ import "hardhat-deploy";
 
 import "./ts-src/tasks/l1";
 import "./ts-src/tasks/l2";
+import "./ts-src/tasks/dev";
 
 import "dotenv/config";
 
