@@ -8,14 +8,31 @@ const func: DeployFunction = async function (hre) {
 
   const { deployer } = await hre.getNamedAccounts();
 
-  const bridge = process.env.METIS_BRIDGE;
-  if (!hre.ethers.isAddress(bridge)) {
+  const bridgeAddr = process.env.METIS_BRIDGE;
+  if (!hre.ethers.isAddress(bridgeAddr)) {
     throw new Error(`METIS_BRIDGE env is not set or it's not an address`);
   }
 
-  const l1Metis = process.env.MEITS_L1_TOKEN;
-  if (!hre.ethers.isAddress(l1Metis)) {
+  const l1MetisAddr = process.env.MEITS_L1_TOKEN;
+  if (!hre.ethers.isAddress(l1MetisAddr)) {
     throw new Error(`MEITS_L1_TOKEN env is not set or it's not an address`);
+  }
+
+  const metisToken = await hre.ethers.getContractAt("TestERC20", l1MetisAddr);
+  if ((await metisToken.symbol()).toUpperCase() != "METIS") {
+    throw new Error(`${l1MetisAddr} is not METIS token`);
+  }
+
+  const bridge = await hre.ethers.getContractAt("TestBridge", bridgeAddr);
+  if ((await bridge.metis()).toLowerCase() != l1MetisAddr.toLowerCase()) {
+    throw new Error(`${l1MetisAddr} is not METIS token`);
+  }
+
+  if (
+    (await bridge.l2TokenBridge()) !=
+    "0x4200000000000000000000000000000000000010"
+  ) {
+    throw new Error(`${bridgeAddr} doesn't seem to be a valid bridge address`);
   }
 
   const l2Chainid = parseInt(process.env.METIS_L2_CHAINID as string, 0);
@@ -27,10 +44,10 @@ const func: DeployFunction = async function (hre) {
 
   console.log(
     "using",
-    bridge,
+    bridgeAddr,
     "bridge",
     "l1Metis",
-    l1Metis,
+    l1MetisAddr,
     "l2ChainId",
     l2Chainid,
   );
@@ -42,7 +59,7 @@ const func: DeployFunction = async function (hre) {
       execute: {
         init: {
           methodName: "initialize",
-          args: [bridge, l1Metis, l2Metis, l2Chainid],
+          args: [bridgeAddr, l1MetisAddr, l2Metis, l2Chainid],
         },
       },
     },
