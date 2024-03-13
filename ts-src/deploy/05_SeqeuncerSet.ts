@@ -1,6 +1,7 @@
 import { DeployFunction } from "hardhat-deploy/types";
-
-const ctName = "MetisSequencerSet";
+import readline from "node:readline/promises";
+import { stdin, stdout } from "node:process";
+import { SequencerSetContractName } from "../utils/constant";
 
 const func: DeployFunction = async function (hre) {
   if (!hre.network.tags["l2"]) {
@@ -71,8 +72,16 @@ const func: DeployFunction = async function (hre) {
     epochLength,
   );
 
-  await hre.deployments.deploy(ctName, {
-    contract: "MetisSequencerSet",
+  const prompt = readline.createInterface({ input: stdin, output: stdout });
+  const answer = await prompt.question(
+    "Do you want to continue? (Only 'yes' will be accepted to approve) ",
+  );
+  if (answer !== "yes") {
+    console.log("Okay, I will exit");
+    return;
+  }
+
+  await hre.deployments.deploy(SequencerSetContractName, {
     from: deployer,
     proxy: {
       proxyContract: "OpenZeppelinTransparentProxy",
@@ -89,6 +98,6 @@ const func: DeployFunction = async function (hre) {
   });
 };
 
-func.tags = [ctName, "l2"];
+func.tags = [SequencerSetContractName, "l2"];
 
 export default func;
