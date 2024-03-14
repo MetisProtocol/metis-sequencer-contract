@@ -50,17 +50,17 @@ const config: HardhatUserConfig = {
     },
     mainnet: {
       url: process.env.MAINNET_RPC || "https://eth.llamarpc.com",
-      accounts: [process.env.DEPLOYER_KEY as string],
+      accounts: [process.env.MAINNET_DEPLOYER_KEY as string],
       tags: ["l1"],
     },
     sepolia: {
       url: process.env.SEPOLIA_RPC || "https://1rpc.io/sepolia",
-      accounts: [process.env.DEPLOYER_KEY as string],
+      accounts: [process.env.SEPOLIA_DEPLOYER_KEY as string],
       tags: ["l1"],
     },
     holesky: {
       url: process.env.HOLESKY_RPC || "https://1rpc.io/holesky",
-      accounts: [process.env.DEPLOYER_KEY as string],
+      accounts: [process.env.HOLESKY_DEPLOYER_KEY as string],
       tags: ["l1"],
       verify: {
         etherscan: {
@@ -70,19 +70,19 @@ const config: HardhatUserConfig = {
       },
     },
     "metis-andromeda": {
-      url: process.env.MAINNET_RPC || "https://andromeda.metis.io",
-      accounts: [process.env.DEPLOYER_KEY as string],
+      url: process.env.METIS_MAINNET_RPC || "https://andromeda.metis.io",
+      accounts: [process.env.MAINNET_DEPLOYER_KEY as string],
       tags: ["l2"],
       verify: {
         etherscan: {
           apiKey: "placeholder",
-          apiUrl: "https://sepolia.explorer.metisdevops.link",
+          apiUrl: "https://andromeda-explorer.metis.io",
         },
       },
     },
     "metis-sepolia": {
       url: process.env.METIS_SEPOLIA_RPC || "https://sepolia.metisdevops.link",
-      accounts: [process.env.DEPLOYER_KEY as string],
+      accounts: [process.env.SEPOLIA_DEPLOYER_KEY as string],
       tags: ["l2"],
       verify: {
         etherscan: {
@@ -95,7 +95,7 @@ const config: HardhatUserConfig = {
     // it's only for internal testing and chain state can be updated and rollbacked at any time
     "metis-holesky": {
       url: process.env.METIS_HOLESKY_RPC || "https://holesky.metisdevops.link",
-      accounts: [process.env.DEPLOYER_KEY as string],
+      accounts: [process.env.HOLESKY_DEPLOYER_KEY as string],
       tags: ["l2"],
       verify: {
         etherscan: {

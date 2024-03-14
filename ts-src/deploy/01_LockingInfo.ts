@@ -1,26 +1,54 @@
 import { DeployFunction } from "hardhat-deploy/types";
 import { LockingInfoContractName } from "../utils/constant";
 
+const l2ChainIdMap: { [key: string]: number } = {
+  mainnet: 1088,
+  sepolia: 59902,
+  holesky: 59903,
+};
+
+const l1BridgeMap: { [key: string]: string } = {
+  mainnet: "0x3980c9ed79d2c191A89E02Fa3529C60eD6e9c04b",
+  sepolia: "0x9848dE505e6Aa301cEecfCf23A0a150140fc996e",
+  holesky: "0x890D4Ef96551C9904e7D4E73d2C22D3F207F5CFb",
+};
+
+const l1MetisMap: { [key: string]: string } = {
+  mainnet: "0x9e32b13ce7f2e80a01932b42553652e053d6ed8e",
+  sepolia: "0x7f49160EB9BB068101d445fe77E17ecDb37D0B47",
+  holesky: "0xaf8e5B10c69c983204505cDCD56Ec2aC2280D08e",
+};
+
 const func: DeployFunction = async function (hre) {
+  const networkName = hre.network.name;
+
   if (!hre.network.tags["l1"]) {
-    throw new Error(`current network ${hre.network.name} is not an L1`);
+    throw new Error(`current network ${networkName} is not an L1`);
   }
 
   const { deployer } = await hre.getNamedAccounts();
 
-  const bridgeAddr = process.env.METIS_BRIDGE;
+  const bridgeAddr = l1BridgeMap[networkName];
   if (!hre.ethers.isAddress(bridgeAddr)) {
-    throw new Error(`METIS_BRIDGE env is not set or it's not an address`);
+    throw new Error(`Not set bridge address for ${networkName}`);
   }
 
-  const l1MetisAddr = process.env.MEITS_L1_TOKEN;
+  const l1MetisAddr = l1MetisMap[networkName];
   if (!hre.ethers.isAddress(l1MetisAddr)) {
-    throw new Error(`MEITS_L1_TOKEN env is not set or it's not an address`);
+    throw new Error(`Not set metis token for ${networkName}`);
   }
 
   const metisToken = await hre.ethers.getContractAt("TestERC20", l1MetisAddr);
-  if ((await metisToken.symbol()).toUpperCase() != "METIS") {
-    throw new Error(`${l1MetisAddr} is not METIS token`);
+
+  const symbol = await metisToken.symbol();
+  if (networkName === "mainnet") {
+    if (symbol != "Metis") {
+      throw new Error(`${l1MetisAddr} is not METIS token on mainnet`);
+    }
+  } else {
+    if (symbol != "METIS") {
+      throw new Error(`${l1MetisAddr} is not METIS token on testnet`);
+    }
   }
 
   const bridge = await hre.ethers.getContractAt("TestBridge", bridgeAddr);
@@ -35,21 +63,21 @@ const func: DeployFunction = async function (hre) {
     throw new Error(`${bridgeAddr} doesn't seem to be a valid bridge address`);
   }
 
-  const l2Chainid = parseInt(process.env.METIS_L2_CHAINID as string, 0);
-  if (!l2Chainid) {
-    throw new Error(`METIS_L2_CHAINID env should be valid chainId`);
+  const l2ChainId = l2ChainIdMap[networkName];
+  if (!l2ChainId) {
+    throw new Error(`L2ChainId not set for ${networkName}`);
   }
 
   const l2Metis = "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000";
 
   console.log(
     "using",
-    bridgeAddr,
     "bridge",
+    bridgeAddr,
     "l1Metis",
     l1MetisAddr,
     "l2ChainId",
-    l2Chainid,
+    l2ChainId,
   );
 
   await hre.deployments.deploy(LockingInfoContractName, {
@@ -59,7 +87,7 @@ const func: DeployFunction = async function (hre) {
       execute: {
         init: {
           methodName: "initialize",
-          args: [bridgeAddr, l1MetisAddr, l2Metis, l2Chainid],
+          args: [bridgeAddr, l1MetisAddr, l2Metis, l2ChainId],
         },
       },
     },
