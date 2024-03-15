@@ -91,8 +91,9 @@ const config: HardhatUserConfig = {
         },
       },
     },
-    // metis holesky is not a public testnet developers
-    // it's only for internal testing and chain state can be updated and rollbacked at any time
+    // DON'T USE IT !
+    // metis holesky is not a public testnet for developers
+    // it's only for internal testing and the chain state can be deleted and rollbacked at any time
     "metis-holesky": {
       url: process.env.METIS_HOLESKY_RPC || "https://holesky.metisdevops.link",
       accounts: [process.env.HOLESKY_DEPLOYER_KEY as string],
