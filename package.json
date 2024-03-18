@@ -3,7 +3,7 @@
   "private": true,
   "license": "MIT",
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "dotenv": "^16.4.5",
     "hardhat": "^2.22.1",
     "hardhat-deploy": "^0.12.1",
