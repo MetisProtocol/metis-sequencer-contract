@@ -53,6 +53,17 @@ const config: HardhatUserConfig = {
       accounts: [process.env.MAINNET_DEPLOYER_KEY as string],
       tags: ["l1"],
     },
+    devnet: {
+      url: process.env.DEVNET_RPC,
+      accounts: [process.env.DEVNET_DEPLOYER_KEY as string],
+      tags: ["l1"],
+      verify: {
+        etherscan: {
+          apiKey: process.env.ETHERSCAN_API_KEY,
+          apiUrl: process.env.DEVNET_EXPLORER_API,
+        },
+      },
+    },
     sepolia: {
       url: process.env.SEPOLIA_RPC || "https://1rpc.io/sepolia",
       accounts: [process.env.SEPOLIA_DEPLOYER_KEY as string],
@@ -102,6 +113,17 @@ const config: HardhatUserConfig = {
         etherscan: {
           apiKey: "placeholder",
           apiUrl: "https://holesky-explorer-api.metisdevops.link",
+        },
+      },
+    },
+    "metis-devnet": {
+      url: process.env.METIS_DEVNET_RPC,
+      accounts: [process.env.DEVNET_DEPLOYER_KEY as string],
+      tags: ["l2"],
+      verify: {
+        etherscan: {
+          apiKey: "placeholder",
+          apiUrl: process.env.METIS_DEVNET_EXPLORER_API,
         },
       },
     },
