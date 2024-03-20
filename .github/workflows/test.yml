@@ -11,6 +11,7 @@ env:
   SEPOLIA_DEPLOYER_KEY: "0xdeadbeafdeadbeafdeadbeafdeadbeafdeadbeafdeadbeafdeadbeafdeadbeaf"
   HOLESKY_DEPLOYER_KEY: "0xdeadbeafdeadbeafdeadbeafdeadbeafdeadbeafdeadbeafdeadbeafdeadbeaf"
   DEVNET_DEPLOYER_KEY: "0xdeadbeafdeadbeafdeadbeafdeadbeafdeadbeafdeadbeafdeadbeafdeadbeaf"
+  DEVNET_RPC: "https://example.com"
   METIS_DEVNET_RPC: "https://example.com"
   DEVNET_EXPLORER_API: "https://example.com"
   METIS_DEVNET_EXPLORER_API: "https://example.com"
