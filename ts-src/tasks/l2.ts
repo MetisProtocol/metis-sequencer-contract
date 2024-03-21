@@ -44,6 +44,31 @@ task("l2:update-mpc-address", "Update MPC address for SequencerSet contract")
     }
   });
 
+task("l2:get-mpc-address", "Get current MPC address").setAction(
+  async (_, hre) => {
+    if (!hre.network.tags["l2"]) {
+      throw new Error(`${hre.network.name} is not an l2`);
+    }
+
+    const { address: seqsetAddress } = await hre.deployments.get(
+      SequencerSetContractName,
+    );
+    const seqset = await hre.ethers.getContractAt(
+      SequencerSetContractName,
+      seqsetAddress,
+    );
+    const address = await seqset.mpcAddress();
+    const balance = await hre.ethers.provider.getBalance(address);
+    console.log(
+      hre.network.name,
+      "address",
+      address,
+      "balance",
+      hre.ethers.formatEther(balance),
+    );
+  },
+);
+
 task("l2:update-epoch-length", "Update epoch(aka span) length")
   .addParam("length", "The new epoch length", "", types.int)
   .setAction(async (args, hre) => {
