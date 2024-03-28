@@ -56,9 +56,11 @@ const func: DeployFunction = async function (hre) {
     throw new Error(`epoch length(${epochLength}) < 1`);
   }
 
-  if ((endblock - startBlock + 1) % epochLength !== 0) {
-    throw new Error(`epoch length not match with startBlock and endBlock`);
-  }
+  // We do not check if the length between the start and end block matches the epoch length
+  // the epoch length can only be used for next epoch
+  // if ((endblock - startBlock + 1) % epochLength !== 0) {
+  //   throw new Error(`epoch length not match with startBlock and endBlock`);
+  // }
 
   console.log(
     "using params:",
