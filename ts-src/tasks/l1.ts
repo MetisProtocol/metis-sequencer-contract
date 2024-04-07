@@ -9,6 +9,7 @@ import {
   LockingInfoContractName,
   LockingPoolContractName,
 } from "../utils/constant";
+import { l1MetisMap } from "../utils/address";
 
 task("l1:whitelist", "Whitelist an sequencer address")
   .addParam("addr", "the sequencer address", "", types.string)
@@ -76,7 +77,7 @@ task("l1:lock", "Lock Metis to LockingPool contract")
       throw new Error(`${hre.network.name} is not an l1`);
     }
 
-    const metisL1Addr = process.env.MEITS_L1_TOKEN as string;
+    const metisL1Addr = l1MetisMap[hre.network.name];
     if (!hre.ethers.isAddress(metisL1Addr)) {
       throw new Error(`MEITS_L1_TOKEN env is not set or it's not an address`);
     }
@@ -409,7 +410,7 @@ task("l1:set-reward-payer", "Update reward payer")
         return;
       }
 
-      const metisL1Addr = process.env.MEITS_L1_TOKEN;
+      const metisL1Addr = l1MetisMap[hre.network.name];
       if (!hre.ethers.isAddress(metisL1Addr)) {
         throw new Error(`MEITS_L1_TOKEN env is not set or it's not an address`);
       }
