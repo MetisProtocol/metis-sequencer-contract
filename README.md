@@ -1,7 +1,3 @@
-# WORKING IN PROGRESS
-
----
-
 # Metis Sequencer Contracts
 
 Ethereum smart contracts that power the Metis sequencer.
