@@ -707,9 +707,18 @@ describe("locking", async () => {
       .and.to.be.emit(metisToken, "Transfer")
       .withArgs(await lockingInfo.getAddress(), wallet0, withdrawAmount);
 
-    const { nonce: newNonce, amount: newAmount } =
-      await lockingPool.sequencers(seqId);
+    await expect(
+      lockingPool.connect(wallet0).withdraw(seqId, withdrawAmount),
+      "throttle again",
+    ).to.be.revertedWith("withdraw throttle");
+
+    const {
+      nonce: newNonce,
+      amount: newAmount,
+      updatedBatch: newBatchId,
+    } = await lockingPool.sequencers(seqId);
     expect(newNonce, "newNonce").to.be.eq(curNonce);
+    expect(newBatchId, "newBatchId").to.be.eq(batchId + 1n);
     expect(newAmount, "newAmount").to.be.eq(locking);
   });
 
