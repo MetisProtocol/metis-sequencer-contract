@@ -8,7 +8,7 @@
     "reason-string": "off",
     "func-name-mixedcase": "off",
     "not-rely-on-time": "off",
-    "custom-errors": "off",
-    "immutable-vars-naming": "off"
+    "immutable-vars-naming": "off",
+    "gas-custom-errors": "off"
   }
 }
