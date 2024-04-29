@@ -416,6 +416,37 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
     }
 
     /**
+     * @dev withdraw allow sequencer operator to withdraw the locking
+     * @param _seqId the id of your sequencer
+     * @param _amount amount to withdraw
+     */
+    function withdraw(
+        uint256 _seqId,
+        uint256 _amount
+    ) external whenNotPaused whitelistRequired {
+        Sequencer storage seq = sequencers[_seqId];
+        if (seq.status != Status.Active) {
+            revert SeqNotActive();
+        }
+
+        if (seq.owner != msg.sender) {
+            revert NotSeqOwner();
+        }
+
+        // owner can only withdraw once in the current reward period
+        require(curBatchState.id > seq.updatedBatch, "withdraw throttle");
+
+        uint256 locked = seq.amount - _amount;
+        uint256 nonce = seq.nonce + 1;
+
+        seq.nonce = nonce;
+        seq.amount = locked;
+        seq.updatedBatch = curBatchState.id;
+
+        escrow.withdrawLocking(_seqId, seq.owner, nonce, _amount, locked);
+    }
+
+    /**
      * @dev batchSubmitRewards Allow to submit L2 sequencer block information, and attach Metis reward tokens for reward distribution
      * @param _batchId The batchId that submitted the reward is that
      * @param _startEpoch The startEpoch that submitted the reward is that
