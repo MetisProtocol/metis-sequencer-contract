@@ -73,6 +73,7 @@ const config: HardhatUserConfig = {
       url: process.env.HOLESKY_RPC || "https://1rpc.io/holesky",
       accounts: [process.env.HOLESKY_DEPLOYER_KEY as string],
       tags: ["l1"],
+      saveDeployments: false,
       verify: {
         etherscan: {
           apiKey: process.env.ETHERSCAN_API_KEY,
@@ -109,6 +110,7 @@ const config: HardhatUserConfig = {
       url: process.env.METIS_HOLESKY_RPC || "https://holesky.metisdevops.link",
       accounts: [process.env.HOLESKY_DEPLOYER_KEY as string],
       tags: ["l2"],
+      saveDeployments: false,
       verify: {
         etherscan: {
           apiKey: "placeholder",

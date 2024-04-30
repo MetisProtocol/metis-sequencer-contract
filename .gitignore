@@ -16,4 +16,6 @@ typechain-types
 /tmp
 
 /deployments/devnet
+/deployments/holesky
 /deployments/metis-devnet
+/deployments/metis-holesky
