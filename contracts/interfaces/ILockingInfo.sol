@@ -43,12 +43,19 @@ interface ILockingInfo {
     );
 
     /**
-     * @dev Emitted when the sequencer increase lock amoun in 'relock()'.
+     * @dev Emitted when the sequencer increase lock amount in 'relock()'.
      * @param sequencerId unique integer to identify a sequencer.
      * @param amount locking new amount
      * @param total the total locking amount
      */
     event Relocked(uint256 indexed sequencerId, uint256 amount, uint256 total);
+
+    /**
+     * @dev Emitted when the sequencer reduce lock amount in 'withdraw()'.
+     * @param sequencerId unique integer to identify a sequencer.
+     * @param amount withdraw new amount
+     */
+    event Withdraw(uint256 indexed sequencerId, uint256 amount);
 
     /**
      * @dev Emitted when sequencer relocking in 'relock()'.
@@ -151,6 +158,14 @@ interface ILockingInfo {
         uint256 _locked,
         uint256 _incoming,
         uint256 _fromReward
+    ) external;
+
+    function withdrawLocking(
+        uint256 _seqId,
+        address _owner,
+        uint256 _nonce,
+        uint256 _amount,
+        uint256 _locked
     ) external;
 
     function initializeUnlock(

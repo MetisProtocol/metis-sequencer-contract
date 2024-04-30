@@ -154,6 +154,30 @@ contract LockingInfo is ILockingInfo, OwnableUpgradeable {
     }
 
     /**
+     * @dev withdrawLocking is to withdraw locking
+     * @param _seqId the sequencer id
+     * @param _owner the sequencer owner address
+     * @param _nonce the sequencer nonce
+     * @param _amount amount to withdraw
+     * @param _locked the locked amount of the sequencer at last
+     */
+    function withdrawLocking(
+        uint256 _seqId,
+        address _owner,
+        uint256 _nonce,
+        uint256 _amount,
+        uint256 _locked
+    ) external override OnlyManager {
+        require(_amount > 0 && _locked >= minLock, "invalid amount");
+        // update current locked amount
+        totalLocked -= _amount;
+
+        IERC20(l1Token).safeTransfer(_owner, _amount);
+        emit Withdraw(_seqId, _amount);
+        emit LockUpdate(_seqId, _nonce, _locked);
+    }
+
+    /**
      * @dev initializeUnlock the first step to unlock
      *      current reward will be distributed
      * @param _seqId the sequencer id

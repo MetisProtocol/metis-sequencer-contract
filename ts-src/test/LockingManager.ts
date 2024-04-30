@@ -622,6 +622,98 @@ describe("locking", async () => {
     expect(newAmount, "newAmount").to.be.eq(minLock + relock);
   });
 
+  it("withdrawLocking", async () => {
+    const {
+      lockingInfo,
+      lockingPool,
+      whitelised,
+      unwhitelist,
+      admin,
+      mpc,
+      metisToken,
+    } = await loadFixture(fixture);
+
+    const [wallet0, wallet1] = whitelised;
+    const [wallet3] = unwhitelist;
+    const minLock = 1n;
+    await lockingInfo.setMinLock(minLock);
+    await lockingPool.updateMpc(mpc);
+    await metisToken.approve(await lockingInfo.getAddress(), ethers.MaxUint256);
+    await lockingInfo.setRewardPayer(admin);
+
+    const wallet0Pubkey = trimPubKeyPrefix(wallet0.signingKey.publicKey);
+    await lockingPool.connect(wallet0).lockFor(wallet0, minLock, wallet0Pubkey);
+    const seqId = 1n;
+
+    const withdrawAmount = 1n;
+
+    await expect(
+      lockingPool.connect(wallet3).withdraw(3, withdrawAmount),
+      "NotWhitelisted",
+    ).to.be.revertedWithCustomError(lockingPool, "NotWhitelisted");
+
+    await expect(
+      lockingPool.connect(wallet1).withdraw(2, withdrawAmount),
+      "SeqNotActive",
+    ).to.be.revertedWithCustomError(lockingPool, "SeqNotActive");
+
+    await expect(
+      lockingPool.connect(wallet1).withdraw(seqId, withdrawAmount),
+      "NotSeqOwner",
+    ).to.be.revertedWithCustomError(lockingPool, "NotSeqOwner");
+
+    await expect(
+      lockingPool.connect(wallet0).withdraw(seqId, withdrawAmount),
+      "throttle",
+    ).to.be.revertedWith("withdraw throttle");
+
+    await lockingPool
+      .connect(mpc)
+      .batchSubmitRewards(2n, 1n, 2n, [wallet0], [1]);
+
+    await expect(
+      lockingPool.connect(wallet0).withdraw(seqId, 0),
+      "zero withdraw",
+    ).to.be.revertedWith("invalid amount");
+
+    await expect(
+      lockingPool.connect(wallet0).withdraw(seqId, minLock),
+      "locking < minLock",
+    ).to.be.revertedWith("invalid amount");
+
+    // starts from 1, and add 1 after the relock
+    let seqNonce = 2;
+    const relock = 3n;
+    await lockingPool.connect(wallet0).relock(seqId, relock, false);
+
+    seqNonce++;
+    const locking = minLock + relock - withdrawAmount;
+    await expect(
+      await lockingPool.connect(wallet0).withdraw(seqId, withdrawAmount),
+      "withdraw",
+    )
+      .to.be.emit(lockingInfo, "Withdraw")
+      .withArgs(seqId, withdrawAmount)
+      .and.to.be.emit(lockingInfo, "LockUpdate")
+      .withArgs(seqId, seqNonce, locking)
+      .and.to.be.emit(metisToken, "Transfer")
+      .withArgs(await lockingInfo.getAddress(), wallet0, withdrawAmount);
+
+    await expect(
+      lockingPool.connect(wallet0).withdraw(seqId, withdrawAmount),
+      "throttle again",
+    ).to.be.revertedWith("withdraw throttle");
+
+    const {
+      nonce: newNonce,
+      amount: newAmount,
+      updatedBatch: newBatchId,
+    } = await lockingPool.sequencers(seqId);
+    expect(newNonce, "newNonce").to.be.eq(seqNonce);
+    expect(newBatchId, "newBatchId").to.be.eq(2n);
+    expect(newAmount, "newAmount").to.be.eq(locking);
+  });
+
   it("relock/withReward", async () => {
     const { admin, lockingInfo, lockingPool, whitelised, metisToken, mpc } =
       await loadFixture(fixture);
