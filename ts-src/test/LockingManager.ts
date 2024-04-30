@@ -667,17 +667,9 @@ describe("locking", async () => {
       "throttle",
     ).to.be.revertedWith("withdraw throttle");
 
-    const { id: batchId, startEpoch } = await lockingPool.curBatchState();
-
     await lockingPool
       .connect(mpc)
-      .batchSubmitRewards(
-        batchId + 1n,
-        startEpoch + 1n,
-        startEpoch + 2n,
-        [wallet0],
-        [1],
-      );
+      .batchSubmitRewards(2n, 1n, 2n, [wallet0], [1]);
 
     await expect(
       lockingPool.connect(wallet0).withdraw(seqId, 0),
@@ -718,7 +710,7 @@ describe("locking", async () => {
       updatedBatch: newBatchId,
     } = await lockingPool.sequencers(seqId);
     expect(newNonce, "newNonce").to.be.eq(seqNonce);
-    expect(newBatchId, "newBatchId").to.be.eq(batchId + 1n);
+    expect(newBatchId, "newBatchId").to.be.eq(2n);
     expect(newAmount, "newAmount").to.be.eq(locking);
   });
 
