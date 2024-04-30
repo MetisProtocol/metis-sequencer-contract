@@ -668,7 +668,6 @@ describe("locking", async () => {
     ).to.be.revertedWith("withdraw throttle");
 
     const { id: batchId, startEpoch } = await lockingPool.curBatchState();
-    let curNonce = batchId;
 
     await lockingPool
       .connect(mpc)
@@ -690,11 +689,12 @@ describe("locking", async () => {
       "locking < minLock",
     ).to.be.revertedWith("invalid amount");
 
-    curNonce++;
+    // starts from 1, and add 1 after the relock
+    let seqNonce = 2;
     const relock = 3n;
     await lockingPool.connect(wallet0).relock(seqId, relock, false);
 
-    curNonce++;
+    seqNonce++;
     const locking = minLock + relock - withdrawAmount;
     await expect(
       await lockingPool.connect(wallet0).withdraw(seqId, withdrawAmount),
@@ -703,7 +703,7 @@ describe("locking", async () => {
       .to.be.emit(lockingInfo, "Withdraw")
       .withArgs(seqId, withdrawAmount)
       .and.to.be.emit(lockingInfo, "LockUpdate")
-      .withArgs(seqId, curNonce, locking)
+      .withArgs(seqId, seqNonce, locking)
       .and.to.be.emit(metisToken, "Transfer")
       .withArgs(await lockingInfo.getAddress(), wallet0, withdrawAmount);
 
@@ -717,7 +717,7 @@ describe("locking", async () => {
       amount: newAmount,
       updatedBatch: newBatchId,
     } = await lockingPool.sequencers(seqId);
-    expect(newNonce, "newNonce").to.be.eq(curNonce);
+    expect(newNonce, "newNonce").to.be.eq(seqNonce);
     expect(newBatchId, "newBatchId").to.be.eq(batchId + 1n);
     expect(newAmount, "newAmount").to.be.eq(locking);
   });
