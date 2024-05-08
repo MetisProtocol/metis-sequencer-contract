@@ -95,52 +95,96 @@ task("l2:update-epoch-length", "Update epoch(aka span) length")
     console.log("Confrimed at", tx.hash);
   });
 
-task("l2:epoch", "Get current epoch info").setAction(async (_, hre) => {
-  if (!hre.network.tags["l2"]) {
-    throw new Error(`${hre.network.name} is not an l2`);
-  }
+task("l2:epoch", "Get current epoch info or provide an epoch i")
+  .addOptionalParam("epoch", "epoch number")
+  .addOptionalParam("block", "block number")
+  .setAction(async (args, hre) => {
+    if (!hre.network.tags["l2"]) {
+      throw new Error(`${hre.network.name} is not an l2`);
+    }
 
-  const { address: seqsetAddress } = await hre.deployments.get(
-    SequencerSetContractName,
-  );
-  const seqset = await hre.ethers.getContractAt(
-    SequencerSetContractName,
-    seqsetAddress,
-  );
-
-  {
-    const block = await hre.ethers.provider.getBlock("latest", false);
-    const epochNumber = await seqset.getEpochByBlock(block!.number);
-    console.log("height", block!.number);
-
-    const { number, signer, startBlock, endBlock } =
-      await seqset.epochs(epochNumber);
-
-    console.log(
-      "producingEpoch",
-      number,
-      "signer",
-      signer,
-      "startBlock",
-      startBlock,
-      "endBlock",
-      endBlock,
+    const { address: seqsetAddress } = await hre.deployments.get(
+      SequencerSetContractName,
     );
-  }
-
-  {
-    const { number, signer, startBlock, endBlock } =
-      await seqset.currentEpoch();
-
-    console.log(
-      "latestEpoch",
-      number,
-      "signer",
-      signer,
-      "startBlock",
-      startBlock,
-      "endBlock",
-      endBlock,
+    const seqset = await hre.ethers.getContractAt(
+      SequencerSetContractName,
+      seqsetAddress,
     );
-  }
-});
+
+    {
+      const epoch = parseInt(args["epoch"], 0);
+      if (epoch) {
+        const { number, signer, startBlock, endBlock } =
+          await seqset.epochs(epoch);
+
+        console.log(
+          "epochInfo",
+          number,
+          "signer",
+          signer,
+          "startBlock",
+          startBlock,
+          "endBlock",
+          endBlock,
+        );
+        return;
+      }
+    }
+
+    {
+      const block = parseInt(args["block"], 0);
+      if (block) {
+        const epoch = await seqset.getEpochByBlock(block);
+        const { number, signer, startBlock, endBlock } =
+          await seqset.epochs(epoch);
+
+        console.log(
+          "epochInfo",
+          number,
+          "signer",
+          signer,
+          "startBlock",
+          startBlock,
+          "endBlock",
+          endBlock,
+        );
+        return;
+      }
+    }
+
+    {
+      const block = await hre.ethers.provider.getBlock("latest", false);
+      const epochNumber = await seqset.getEpochByBlock(block!.number);
+      console.log("height", block!.number);
+
+      const { number, signer, startBlock, endBlock } =
+        await seqset.epochs(epochNumber);
+
+      console.log(
+        "producingEpoch",
+        number,
+        "signer",
+        signer,
+        "startBlock",
+        startBlock,
+        "endBlock",
+        endBlock,
+      );
+    }
+
+    {
+      const { number, signer, startBlock, endBlock } =
+        await seqset.currentEpoch();
+
+      console.log(
+        "latestEpoch",
+        number,
+        "signer",
+        signer,
+        "startBlock",
+        startBlock,
+        "endBlock",
+        endBlock,
+      );
+    }
+  });
