@@ -579,6 +579,8 @@ describe("locking", async () => {
     const wallet0Pubkey = trimPubKeyPrefix(wallet0.signingKey.publicKey);
     await lockingPool.connect(wallet0).lockFor(wallet0, minLock, wallet0Pubkey);
 
+    expect(await lockingInfo.totalLocked(), "TotalLocke-1").to.eq(minLock);
+
     await expect(
       lockingPool.connect(wallet3).relock(1, 1n, false),
       "NotWhitelisted",
@@ -615,6 +617,10 @@ describe("locking", async () => {
       .withArgs(1, 3, 4)
       .and.to.be.emit(lockingInfo, "LockUpdate")
       .withArgs(1, 2, 4);
+
+    expect(await lockingInfo.totalLocked(), "TotalLocke-2").to.eq(
+      minLock + relock,
+    );
 
     const { nonce: newNonce, amount: newAmount } =
       await lockingPool.sequencers(1);
@@ -704,6 +710,10 @@ describe("locking", async () => {
       "throttle again",
     ).to.be.revertedWith("withdraw throttle");
 
+    expect(await lockingInfo.totalLocked(), "totalLocked after withdrawing").eq(
+      locking,
+    );
+
     const {
       nonce: newNonce,
       amount: newAmount,
@@ -734,6 +744,8 @@ describe("locking", async () => {
         trimPubKeyPrefix(wallet0.signingKey.publicKey),
       );
 
+    expect(await lockingInfo.totalLocked(), "TotalLocke-1").to.eq(firstLocked);
+
     await lockingPool
       .connect(wallet1)
       .lockFor(
@@ -741,6 +753,10 @@ describe("locking", async () => {
         firstLocked,
         trimPubKeyPrefix(wallet1.signingKey.publicKey),
       );
+
+    expect(await lockingInfo.totalLocked(), "TotalLocked-2").to.eq(
+      firstLocked + firstLocked,
+    );
 
     const [{ id: curBatchId, endEpoch: lastEndEpoch }, rpb] = await Promise.all(
       [lockingPool.curBatchState(), lockingPool.BLOCK_REWARD()],
@@ -772,6 +788,10 @@ describe("locking", async () => {
       )
       .and.to.be.emit(lockingInfo, "LockUpdate")
       .withArgs(1, 2, firstLocked + relock + rpb * blocks[0]);
+
+    expect(await lockingInfo.totalLocked(), "TotalLocked-3").to.eq(
+      firstLocked + firstLocked + relock + rpb * blocks[0],
+    );
 
     // wallet 0
     {
@@ -1083,6 +1103,8 @@ describe("locking", async () => {
 
     const [wallet0, wallet1] = whitelised;
 
+    let totalLocked = toLock;
+
     await expect(
       lockingPool.unlock(1, 0),
       "NotWhitelisted",
@@ -1119,7 +1141,10 @@ describe("locking", async () => {
       await lockingPool
         .connect(wallet)
         .lockFor(wallet, toLock, trimPubKeyPrefix(wallet.signingKey.publicKey));
+      totalLocked += toLock;
     }
+
+    expect(await lockingInfo.totalLocked(), "TotalLock").to.eq(totalLocked);
 
     await expect(
       lockingPool.connect(wallet0).unlock(1, 0),
@@ -1170,6 +1195,10 @@ describe("locking", async () => {
         nextBlockTime + Number(theDelay),
         1,
       );
+
+    expect(await lockingInfo.totalLocked(), "TotalLocke is unchanged").to.eq(
+      totalLocked,
+    );
 
     expect(await lockingPool.seqStatuses(2), "active").eq(
       whitelised.length - 1,
@@ -1313,6 +1342,8 @@ describe("locking", async () => {
     const theDelay = 1000n;
     await lockingPool.updateWithdrawDelayTimeValue(theDelay);
 
+    let totalLocked = 0n;
+
     // seq1..5
     const recipient = others[0];
     for (const [index, wallet] of whitelised.entries()) {
@@ -1322,7 +1353,10 @@ describe("locking", async () => {
       await lockingPool
         .connect(wallet)
         .setSequencerRewardRecipient(index + 1, recipient);
+      totalLocked += toLock;
     }
+
+    expect(await lockingInfo.totalLocked(), "TotalLock").to.eq(totalLocked);
 
     const [wallet0] = whitelised;
     const blockInfo = await admin.provider.getBlock("latest");
@@ -1330,6 +1364,10 @@ describe("locking", async () => {
 
     await lockingPool.connect(whitelised[0]).unlock(1, 0);
     await timeHelper.setNextBlockTimestamp(blockInfo!.timestamp + 2);
+
+    expect(await lockingInfo.totalLocked(), "TotalLock is unchanged").to.eq(
+      totalLocked,
+    );
 
     await expect(
       lockingPool.connect(whitelised[0]).unlockClaim(1, 0),
@@ -1367,6 +1405,12 @@ describe("locking", async () => {
         await l1Bridge.getAddress(),
         blocks * rpb,
       );
+
+    totalLocked -= toLock;
+
+    expect(await lockingInfo.totalLocked(), "TotalLock changed").to.eq(
+      totalLocked,
+    );
 
     expect(await lockingPool.seqStatuses(1), "Inactive").eq(0);
     expect(await lockingPool.seqStatuses(2), "Active").eq(
