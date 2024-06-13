@@ -149,7 +149,7 @@ contract LockingInfo is ILockingInfo, OwnableUpgradeable {
         uint256 _totalLocked = totalLocked + increased;
         totalLocked = _totalLocked;
 
-        emit Relocked(_seqId, increased, totalLocked);
+        emit Relocked(_seqId, increased, _totalLocked);
         emit LockUpdate(_seqId, _nonce, _locked);
     }
 
