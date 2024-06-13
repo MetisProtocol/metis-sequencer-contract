@@ -5,8 +5,10 @@ import {
 } from "../utils/constant";
 
 const func: DeployFunction = async function (hre) {
+  const networkName = hre.network.name;
+
   if (!hre.network.tags["l1"]) {
-    throw new Error(`current network ${hre.network.name} is not an L1`);
+    throw new Error(`current network ${networkName} is not an L1`);
   }
 
   const { deployer } = await hre.getNamedAccounts();
@@ -15,10 +17,14 @@ const func: DeployFunction = async function (hre) {
     LockingInfoContractName,
   );
 
+  const proxyAdmin =
+    process.env[`${networkName}_proxy_admin`.toUpperCase()] || deployer;
+
   await hre.deployments.deploy(LockingPoolContractName, {
     from: deployer,
     proxy: {
       proxyContract: "OpenZeppelinTransparentProxy",
+      owner: proxyAdmin,
       execute: {
         init: {
           methodName: "initialize",

@@ -4,8 +4,9 @@ import { stdin, stdout } from "node:process";
 import { SequencerSetContractName } from "../utils/constant";
 
 const func: DeployFunction = async function (hre) {
+  const networkName = hre.network.name;
   if (!hre.network.tags["l2"]) {
-    throw new Error(`current network ${hre.network.name} is not an L2`);
+    throw new Error(`current network ${networkName} is not an L2`);
   }
 
   const { deployer } = await hre.getNamedAccounts();
@@ -83,10 +84,14 @@ const func: DeployFunction = async function (hre) {
     return;
   }
 
+  const proxyAdmin =
+    process.env[`${networkName}_proxy_admin`.toUpperCase()] || deployer;
+
   await hre.deployments.deploy(SequencerSetContractName, {
     from: deployer,
     proxy: {
       proxyContract: "OpenZeppelinTransparentProxy",
+      owner: proxyAdmin,
       execute: {
         init: {
           methodName: "initialize",

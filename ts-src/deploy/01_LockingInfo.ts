@@ -63,10 +63,14 @@ const func: DeployFunction = async function (hre) {
     l2ChainId,
   );
 
+  const proxyAdmin =
+    process.env[`${networkName}_proxy_admin`.toUpperCase()] || deployer;
+
   await hre.deployments.deploy(LockingInfoContractName, {
     from: deployer,
     proxy: {
       proxyContract: "OpenZeppelinTransparentProxy",
+      owner: proxyAdmin,
       execute: {
         init: {
           methodName: "initialize",
