@@ -103,6 +103,25 @@ task("l2:epoch", "Get current epoch info or provide an epoch i")
       throw new Error(`${hre.network.name} is not an l2`);
     }
 
+    const seqNames = new Map<string, string>();
+
+    if (
+      hre.network.name === "metis-sepolia" ||
+      hre.network.name === "metis-andromeda"
+    ) {
+      const chainId = await hre.getChainId();
+
+      const data: Array<{ name: string; seq_addr: string }> = await (
+        await fetch(
+          `https://metisprotocol.github.io/metis-sequencer-resources/${chainId}/all.json`,
+        )
+      ).json();
+
+      for (const item of data) {
+        seqNames.set(item.seq_addr.toLowerCase(), item["name"]);
+      }
+    }
+
     const { address: seqsetAddress } = await hre.deployments.get(
       SequencerSetContractName,
     );
@@ -117,11 +136,13 @@ task("l2:epoch", "Get current epoch info or provide an epoch i")
         const { number, signer, startBlock, endBlock } =
           await seqset.epochs(epoch);
 
+        const seqName = seqNames.get(signer.toLocaleLowerCase()) || signer;
+
         console.log(
           "epochInfo",
           number,
           "signer",
-          signer,
+          seqName,
           "startBlock",
           startBlock,
           "endBlock",
@@ -138,11 +159,13 @@ task("l2:epoch", "Get current epoch info or provide an epoch i")
         const { number, signer, startBlock, endBlock } =
           await seqset.epochs(epoch);
 
+        const seqName = seqNames.get(signer.toLocaleLowerCase()) || signer;
+
         console.log(
           "epochInfo",
           number,
           "signer",
-          signer,
+          seqName,
           "startBlock",
           startBlock,
           "endBlock",
@@ -160,11 +183,13 @@ task("l2:epoch", "Get current epoch info or provide an epoch i")
       const { number, signer, startBlock, endBlock } =
         await seqset.epochs(epochNumber);
 
+      const seqName = seqNames.get(signer.toLocaleLowerCase()) || signer;
+
       console.log(
         "producingEpoch",
         number,
         "signer",
-        signer,
+        seqName,
         "startBlock",
         startBlock,
         "endBlock",
@@ -176,11 +201,13 @@ task("l2:epoch", "Get current epoch info or provide an epoch i")
       const { number, signer, startBlock, endBlock } =
         await seqset.currentEpoch();
 
+      const seqName = seqNames.get(signer.toLocaleLowerCase()) || signer;
+
       console.log(
         "latestEpoch",
         number,
         "signer",
-        signer,
+        seqName,
         "startBlock",
         startBlock,
         "endBlock",
