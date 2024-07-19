@@ -111,14 +111,16 @@ task("l2:epoch", "Get current epoch info or provide an epoch i")
     ) {
       const chainId = await hre.getChainId();
 
-      const data: Array<{ name: string; seq_addr: string }> = await (
-        await fetch(
-          `https://metisprotocol.github.io/metis-sequencer-resources/${chainId}/all.json`,
-        )
-      ).json();
+      const resp = await fetch(
+        `https://metisprotocol.github.io/metis-sequencer-resources/${chainId}/all.json`,
+      );
 
-      for (const item of data) {
-        seqNames.set(item.seq_addr.toLowerCase(), item["name"]);
+      if (resp.ok) {
+        const data: Array<{ name: string; seq_addr: string }> =
+          await resp.json();
+        for (const item of data) {
+          seqNames.set(item.seq_addr.toLowerCase(), item["name"]);
+        }
       }
     }
 
