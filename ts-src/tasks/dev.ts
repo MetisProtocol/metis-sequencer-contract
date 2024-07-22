@@ -1,5 +1,13 @@
 import { task } from "hardhat/config";
 
+import {
+  LockingInfoContractName,
+  LockingPoolContractName,
+  SequencerSetContractName,
+} from "../utils/constant";
+
+import metisTokenABI from "./metis-abi.json";
+
 task("info", "print current network and wallet information", async (_, hre) => {
   const provider = hre.ethers.provider;
   const [network, blockNumber] = await Promise.all([
@@ -27,3 +35,25 @@ task("info", "print current network and wallet information", async (_, hre) => {
     );
   }
 });
+
+task("err-decode", "decode error info")
+  .addParam("error", "the encoded error data")
+  .setAction(async (args, hre) => {
+    for (const item of [
+      LockingInfoContractName,
+      LockingPoolContractName,
+      SequencerSetContractName,
+      metisTokenABI,
+    ] as Array<string | Array<any>>) {
+      let abi =
+        typeof item === "string"
+          ? (await hre.artifacts.readArtifact(item)).abi
+          : item;
+
+      const dedec = new hre.ethers.Interface(abi);
+      const result = dedec.parseError(args["error"]);
+      if (result) {
+        return console.log(result);
+      }
+    }
+  });
