@@ -1130,11 +1130,6 @@ describe("locking", async () => {
       "use wallet1 to unlock seq1",
     ).revertedWithCustomError(lockingPool, "NotSeqOwner");
 
-    await expect(
-      lockingPool.connect(wallet0).unlock(1, 0),
-      "use wallet0 to unlock seq1 but failing bft check",
-    ).revertedWith("BFT restriction");
-
     // seq2..5
     for (let i = 1; i < whitelised.length; i++) {
       const wallet = whitelised[i];

@@ -506,19 +506,12 @@ contract LockingPool is ILockingPool, PausableUpgradeable, SequencerInfo {
             revert SeqNotActive();
         }
 
-        uint256 actived = --seqStatuses[Status.Active];
-        uint256 inactived = ++seqStatuses[Status.Inactive];
-
-        if (!_force) {
-            if (seq.owner != msg.sender) {
-                revert NotSeqOwner();
-            }
-
-            // BFT check, actived sequencer count must be high than 2/3 of total
-            if (inactived * 3 > actived + inactived) {
-                revert("BFT restriction");
-            }
+        if (!_force && seq.owner != msg.sender) {
+            revert NotSeqOwner();
         }
+
+        --seqStatuses[Status.Active];
+        ++seqStatuses[Status.Inactive];
 
         address recipient = seq.rewardRecipient;
         if (recipient == address(0)) {
