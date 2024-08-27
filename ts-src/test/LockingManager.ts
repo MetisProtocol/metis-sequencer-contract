@@ -567,7 +567,8 @@ describe("locking", async () => {
   });
 
   it("setSequencerOwner", async () => {
-    const { lockingInfo, lockingPool, whitelised, unwhitelist } = await loadFixture(fixture);
+    const { lockingInfo, lockingPool, whitelised, unwhitelist } =
+      await loadFixture(fixture);
 
     const [wallet0, wallet1, wallet2] = whitelised;
     const [wallet3] = unwhitelist;
@@ -587,20 +588,29 @@ describe("locking", async () => {
     // seq2
     await lockingPool.connect(wallet1).lockFor(wallet1, minLock, wallet1Pubkey);
 
-    await expect(lockingPool.connect(wallet0).setSequencerOwner(1, ethers.ZeroAddress)).revertedWithCustomError(lockingPool, "NullAddress")
-    await expect(lockingPool.connect(wallet0).setSequencerOwner(1, wallet3)).revertedWithCustomError(lockingPool, "NotWhitelisted")
-    await expect(lockingPool.connect(wallet0).setSequencerOwner(1, wallet1)).revertedWithCustomError(lockingPool, "OwnedSequencer")
-    await expect(lockingPool.connect(wallet1).setSequencerOwner(1, wallet2)).revertedWithCustomError(lockingPool, "NotSeqOwner")
+    await expect(
+      lockingPool.connect(wallet0).setSequencerOwner(1, ethers.ZeroAddress),
+    ).revertedWithCustomError(lockingPool, "NullAddress");
+    await expect(
+      lockingPool.connect(wallet0).setSequencerOwner(1, wallet3),
+    ).revertedWithCustomError(lockingPool, "NotWhitelisted");
+    await expect(
+      lockingPool.connect(wallet0).setSequencerOwner(1, wallet1),
+    ).revertedWithCustomError(lockingPool, "OwnedSequencer");
+    await expect(
+      lockingPool.connect(wallet1).setSequencerOwner(1, wallet2),
+    ).revertedWithCustomError(lockingPool, "NotSeqOwner");
 
-    await lockingPool.setWhitelist(wallet0, false)
-    expect(await lockingPool.connect(wallet0).setSequencerOwner(1, wallet2)).emit(lockingPool, "SequencerOwnerChanged").withArgs(1n, wallet2.address)
+    await lockingPool.setWhitelist(wallet0, false);
+    expect(await lockingPool.connect(wallet0).setSequencerOwner(1, wallet2))
+      .emit(lockingPool, "SequencerOwnerChanged")
+      .withArgs(1n, wallet2.address);
 
-    const { owner } =
-      await lockingPool.sequencers(1);
+    const { owner } = await lockingPool.sequencers(1);
     expect(owner).eq(wallet2.address);
 
-    expect(await lockingPool.seqOwners(wallet2.address)).eq(1)
-    expect(await lockingPool.seqOwners(wallet0.address)).eq(0)
+    expect(await lockingPool.seqOwners(wallet2.address)).eq(1);
+    expect(await lockingPool.seqOwners(wallet0.address)).eq(0);
   });
 
   it("relock/withoutReward", async () => {
