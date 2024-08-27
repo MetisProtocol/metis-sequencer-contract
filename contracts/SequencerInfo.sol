@@ -81,13 +81,21 @@ contract SequencerInfo is OwnableUpgradeable, ISequencerInfo {
      * @dev setSequencerOwner update sequencer owner
      * @param _seqId The sequencerId
      * @param _owner the new owner
+     * @notice whitelisting is still required for the new owner
      */
-    function setSequencerOwner(
-        uint256 _seqId,
-        address _owner
-    ) external whitelistRequired {
+    function setSequencerOwner(uint256 _seqId, address _owner) external {
         if (_owner == address(0)) {
             revert NullAddress();
+        }
+
+        // the new owner should be whitelisted
+        if (!whitelist[_owner]) {
+            revert NotWhitelisted();
+        }
+
+        // the new owner doesn't have any sequencer nodes
+        if (seqOwners[_owner] != 0) {
+            revert OwnedSequencer();
         }
 
         Sequencer storage seq = sequencers[_seqId];
