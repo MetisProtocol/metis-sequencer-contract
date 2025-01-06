@@ -9,7 +9,7 @@
     "hardhat-deploy": "^0.14.0",
     "prettier": "^3.4.1",
     "prettier-plugin-solidity": "^1.4.1",
-    "solhint": "^5.0.3"
+    "solhint": "^5.0.4"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.9.6",
