@@ -1,15 +1,15 @@
-import { task, types } from "hardhat/config";
 import fs from "fs";
+import { task, types } from "hardhat/config";
 
-import readline from "node:readline/promises";
 import { stdin, stdout } from "node:process";
+import readline from "node:readline/promises";
 
-import { parseDuration, trimPubKeyPrefix } from "../utils/params";
+import { l1MetisMap } from "../utils/address";
 import {
   LockingInfoContractName,
   LockingPoolContractName,
 } from "../utils/constant";
-import { l1MetisMap } from "../utils/address";
+import { parseDuration, trimPubKeyPrefix } from "../utils/params";
 
 task("l1:whitelist", "Whitelist an sequencer address")
   .addParam("addr", "the sequencer address", "", types.string)
@@ -432,4 +432,33 @@ task("l1:set-reward-payer", "Update reward payer")
         "Note: You need to approve your Metis to LockingInfo contract later",
       );
     }
+  });
+
+task("l1:target-reward-per-block", "Update reward payer")
+  .addParam("interval", "The block generation interval", 8, types.int)
+  .addParam("rate", "The reward rate target", 20, types.int)
+  .setAction(async (args, hre) => {
+    if (!hre.network.tags["l1"]) {
+      throw new Error(`${hre.network.name} is not an l1`);
+    }
+
+    if (args["rate"] < 1 || args["rate"] > 50) {
+      throw new Error("The rate should be in 1-50");
+    }
+
+    const { address: LockingInfoAddress } = await hre.deployments.get(
+      LockingInfoContractName,
+    );
+
+    const lockingInfo = await hre.ethers.getContractAt(
+      LockingInfoContractName,
+      LockingInfoAddress,
+    );
+
+    const totalLocked = await lockingInfo.totalLocked();
+    console.log("totalLocked", totalLocked.toString());
+
+    const blocks = (365n * 24n * 3600n) / BigInt(args["interval"]);
+    const result = (totalLocked * BigInt(args["rate"])) / 100n / blocks;
+    console.log("targetRewardPerBlock", result.toString());
   });
