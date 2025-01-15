@@ -8,7 +8,7 @@
     "hardhat": "^2.22.17",
     "hardhat-deploy": "^0.14.0",
     "prettier": "^3.4.2",
-    "prettier-plugin-solidity": "^1.4.1",
+    "prettier-plugin-solidity": "^1.4.2",
     "solhint": "^5.0.4"
   },
   "dependencies": {
